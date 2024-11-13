@@ -21,6 +21,9 @@
   services.alloy = {
     enable = true;
     package = unstablePkgs.grafana-alloy;
+    extraFlags = [
+      "--server.http.listen-addr=0.0.0.0:12345"
+    ];
     configPath = let
       configAlloy = pkgs.writeText "config.alloy" ''
 
@@ -37,6 +40,16 @@
             listen_address = "0.0.0.0"
             listen_port = 9999
           }
+          forward_to = [prometheus.relabel.unpoller.receiver]
+        }
+
+        prometheus.relabel "unpoller" {
+          rule {
+            action        = "drop"
+            source_labels = ["job"]
+            regex         = "unpoller|homeassistant"
+          }
+
           forward_to = [grafana_cloud.stack.receivers.metrics]
         }
 
