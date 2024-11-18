@@ -5,44 +5,29 @@
   config,
   pkgs,
   unstablePkgs,
-  inputs,
-  lib,
   ...
 }: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    inputs.nixos-shell.nixosModules.nixos-shell
+    ./disk-config.nix
+    ../../../modules/node-exporter
   ];
 
   # Use the systemd-boot EFI boot loader.
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.device = "nodev"; # or "nodev" for efi only
-  #boot.loader.grub.device = "/dev/disk/by-label/nixos"; # or "nodev" for efi only
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
 
   networking = {
-    hostName = "nixos";
-  };
-
-  services.tailscale.enable = true;
-
-  virtualisation = {
-    forwardPorts = [
+    hostName = "k3s-01";
+    defaultGateway = "192.168.5.1";
+    nameservers = ["192.168.5.220"];
+    interfaces.enp0s31f6.ipv4.addresses = [
       {
-        from = "host";
-        host.port = 2222;
-        guest.port = 22;
+        address = "192.168.5.200";
+        prefixLength = 24;
       }
     ];
-    # libvirtd.enable = true;
-  };
-  services.getty.autologinUser = lib.mkDefault null;
-
-  nixos-shell.mounts = {
-    mountHome = false;
-    mountNixProfile = false;
-    cache = "none"; # default is "loose"
   };
 
   # Pick only one of the below networking options.
@@ -67,6 +52,10 @@
   # Enable the X11 windowing system.
   # services.xserver.enable = true;
 
+  # Configure keymap in X11
+  # services.xserver.xkb.layout = "us";
+  # services.xserver.xkb.options = "eurosign:e,caps:escape";
+
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
@@ -81,7 +70,7 @@
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEbIFTdml6HkOUMHN7krdP3eIYSPQN6oOGKVu8aA8IVW tomcotton@Toms-MBP.lan"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
     ];
   };
 
@@ -142,5 +131,5 @@
   # and migrated your data accordingly.
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "23.11"; # Did you read the comment?
 }
