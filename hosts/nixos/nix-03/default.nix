@@ -4,6 +4,7 @@
 {
   config,
   pkgs,
+  lib,
   unstablePkgs,
   ...
 }: {
@@ -12,8 +13,11 @@
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
+    ../../../modules/k3s
     # ../../../modules/frigate
   ];
+  services.k3s.role = lib.mkForce "agent";
+
 
   services.tailscale.enable = true;
 

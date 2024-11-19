@@ -4,6 +4,7 @@
 {
   config,
   pkgs,
+  lib,
   unstablePkgs,
   ...
 }: {
@@ -12,9 +13,13 @@
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
+    ../../../modules/k3s
     ../../../modules/roon-server
     ../../../modules/docker/immich
   ];
+
+  services.k3s.role = lib.mkForce "agent";
+
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;

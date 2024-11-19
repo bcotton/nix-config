@@ -50,7 +50,8 @@ fmt:
 vm:
   nix run '.#nixosConfigurations.nixos.config.system.build.nixos-shell'
 
-
+repl:
+  nix repl --expr "builtins.getFlake \"$PWD\""
 
 # Garbage collect old OS generations and remove stale packages from the nix store
 gc generations="5d":

@@ -4,47 +4,31 @@
 {
   config,
   pkgs,
-  lib,
   unstablePkgs,
   ...
 }: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./disk-config.nix
     ../../../modules/node-exporter
-    ../../../modules/nfs
     ../../../modules/k3s
-    ../../../modules/docker/minecraft
-    ../../../modules/docker/audiobookshelf
   ];
-
-  services.k3s.role = lib.mkForce "agent";
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking = {
-    hostName = "nix-01";
+    hostName = "k3s-03";
     defaultGateway = "192.168.5.1";
     nameservers = ["192.168.5.220"];
-    interfaces.enp3s0.ipv4.addresses = [
+    interfaces.enp0s31f6.ipv4.addresses = [
       {
-        address = "192.168.5.210";
+        address = "192.168.5.202";
         prefixLength = 24;
       }
     ];
-    interfaces.enp2s0.ipv4.addresses = [
-      {
-        address = "192.168.5.211";
-        prefixLength = 24;
-      }
-    ];
-  };
-  services.tailscale.enable = true;
-
-  age.secrets."tailscale-keys.env" = {
-    file = ../../../secrets/tailscale-keys.env;
   };
 
   # Pick only one of the below networking options.
@@ -126,8 +110,6 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
-
-  virtualisation.libvirtd.enable = true;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you

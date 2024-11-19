@@ -12,6 +12,7 @@
     ./hardware-configuration.nix
     ./disk-config.nix
     ../../../modules/node-exporter
+    ../../../modules/k3s
   ];
 
   # Use the systemd-boot EFI boot loader.
