@@ -13,7 +13,7 @@
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/k3s
+    ../../../modules/k3s-agent
     ../../../modules/docker/minecraft
     ../../../modules/docker/audiobookshelf
   ];

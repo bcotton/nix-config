@@ -27,20 +27,20 @@ groups:
       severity: warning
     annotations:
       description: "OOM kill detected"
-  - alert: HostNetworkPacketDropEgress
-    expr: rate(node_network_transmit_drop_total[2m]) > 0
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      description: '{{ $labels.instance }} drops packages for more than 5 minutes'
-  - alert: HostNetworkPacketDropIngress
-    expr: rate(node_network_receive_drop_total[2m]) > 0.5
-    for: 5m
-    labels:
-      severity: warning
-    annotations:
-      description: '{{ $labels.instance }} drops packages for more than 5 minutes'
+  # - alert: HostNetworkPacketDropEgress
+  #   expr: rate(node_network_transmit_drop_total{device!="flannel.1"}[2m]) > 0
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: '{{ $labels.instance }} drops packages for more than 5 minutes'
+  # - alert: HostNetworkPacketDropIngress
+  #   expr: rate(node_network_receive_drop_total[2m]) > 0.5
+  #   for: 5m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: '{{ $labels.instance }} drops packages for more than 5 minutes'
   - alert: HostNetworkBondDegraded
     expr: ((node_bonding_active - node_bonding_slaves) != 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
     for: 2m

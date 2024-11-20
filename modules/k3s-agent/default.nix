@@ -20,9 +20,8 @@
       "--disable servicelb"
       "--disable traefik"
       "--disable local-storage"
+      "--flannel-iface enp2s0"
       "--flannel-backend=host-gw"
-      "--flannel-iface enp0s31f6"
-      "--node-taint k3s-controlplane=true:NoSchedule"
     ];
     clusterInit = config.networking.hostName == "k3s-01";
   };

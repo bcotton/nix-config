@@ -13,11 +13,10 @@
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/k3s
+    ../../../modules/k3s-agent
     # ../../../modules/frigate
   ];
   services.k3s.role = lib.mkForce "agent";
-
 
   services.tailscale.enable = true;
 
