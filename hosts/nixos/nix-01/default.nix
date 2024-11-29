@@ -14,6 +14,7 @@
     ../../../modules/nfs
     ../../../modules/docker/minecraft
     ../../../modules/docker/audiobookshelf
+    ../../../modules/code-server
   ];
 
   # Use the systemd-boot EFI boot loader.
