@@ -66,17 +66,17 @@ in {
 
   programs.git = {
     enable = true;
-    userEmail = "bob.cotton@gmail.com";
-    userName = "Bob Cotton";
+    userEmail = "thomaswileycotton@gmail.com";
+    userName = "wileycotton";
     extraConfig = {
       alias = {
-        br = "branch";
-        co = "checkout";
-        ci = "commit";
-        d = "diff";
-        dc = "diff --cached";
-        st = "status";
-        la = "config --get-regexp alias";
+        # br = "branch";
+        # co = "checkout";
+        # ci = "commit";
+        # d = "diff";
+        # dc = "diff --cached";
+        gs = "status";
+        # la = "config --get-regexp alias";
         lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit";
         lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
       };
@@ -100,30 +100,30 @@ in {
       };
       # difftool."difftastic".cmd = "difft $LOCAL $REMOTE";
     };
-    difftastic = {
-      enable = false;
-      background = "dark";
-      display = "side-by-side";
-    };
+    # difftastic = {
+    #   enable = false;
+    #   background = "dark";
+    #   display = "side-by-side";
+    # };
     includes = [
       {path = "${pkgs.delta}/share/themes.gitconfig";}
     ];
-    delta = {
-      enable = true;
-      options = {
-        # decorations = {
-        #   commit-decoration-style = "bold yellow box ul";
-        #   file-decoration-style = "none";
-        #   file-style = "bold yellow ul";
-        # };
-        # features = "mellow-barbet";
-        features = "collared-trogon";
-        # whitespace-error-style = "22 reverse";
-        navigate = true;
-        light = false;
-        side-by-side = true;
-      };
-    };
+    # delta = {
+    #   enable = true;
+    #   options = {
+    #     # decorations = {
+    #     #   commit-decoration-style = "bold yellow box ul";
+    #     #   file-decoration-style = "none";
+    #     #   file-style = "bold yellow ul";
+    #     # };
+    #     # features = "mellow-barbet";
+    #     features = "collared-trogon";
+    #     # whitespace-error-style = "22 reverse";
+    #     navigate = true;
+    #     light = false;
+    #     side-by-side = true;
+    #   };
+    # };
   };
 
   programs.htop = {
@@ -133,7 +133,7 @@ in {
 
   programs.tmux = {
     enable = true;
-    keyMode = "vi";
+    keyMode = "vi"; # Seems fine? May mess with keybindings
     clock24 = true;
     mouse = true;
     prefix = "C-b";
@@ -236,6 +236,13 @@ in {
     target = ".oh-my-zsh-custom";
   };
 
+  home.file.".config/karabiner" = {
+    enable = true;
+    force = true;
+    source = tomcotton.config/karabiner.json;
+    target = ".config/karabiner/karabiner.json";
+  };
+
   xdg = {
     enable = true;
     configFile."containers/registries.conf" = {
@@ -260,7 +267,7 @@ in {
 
     dirHashes = {
       docs = "$HOME/Documents";
-      proj = "$HOME/projects";
+      vdocs = "/Volumes/Files_Tom/Documents";
       dl = "$HOME/Downloads";
     };
 
@@ -271,7 +278,7 @@ in {
       export LESS="-iMSx4 -FXR"
       export PAGER=less
       export EDITOR=nano
-      export FULLNAME='Tom Cotton'
+      export FULLNAME='Thomas Wiley Cotton'
       export EMAIL=thomaswileycotton@gmail.com
       export GOPATH=$HOME/go
       export PATH=$GOPATH/bin:$PATH
@@ -379,9 +386,12 @@ in {
 
   home.packages = with pkgs; [
     ffmpeg
-    kubernetes-helm
-    kubectx
-    kubectl
+    rsync
+    rhash
+    restic
+    # kubernetes-helm
+    # kubectx
+    # kubectl
     #   ## unstable
     #   unstablePkgs.yt-dlp
     #   unstablePkgs.terraform
@@ -402,7 +412,7 @@ in {
     #   fd
     #   #fzf # programs.fzf
     #   #git # programs.git
-    #   gh
+    gh
     #   go
     #   gnused
     #   #htop # programs.htop

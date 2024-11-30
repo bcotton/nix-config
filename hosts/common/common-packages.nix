@@ -49,7 +49,6 @@
       dua
       duf
       entr # Modern Unix `watch`
-      esptool
       eza
       #  ffmpeg
       #  fira-code
@@ -81,10 +80,6 @@
       neofetch
       nmap
 
-      # Node and friends
-      nodejs_22
-      yarn-berry
-
       # qmk
       unstablePkgs.qmk
       ripgrep
@@ -103,7 +98,6 @@
       viddy
       vim
       vscode
-      wezterm
       yq
       zsh
       zsh-syntax-highlighting

@@ -57,14 +57,14 @@
     ];
   };
   virtualisation.oci-containers.containers."immich_machine_learning" = {
-    image = "ghcr.io/immich-app/immich-machine-learning:v1.106.4";
+    image = "ghcr.io/immich-app/immich-machine-learning:v1.121.0";
     environment = {
       DB_DATABASE_NAME = "immich";
       DB_DATA_LOCATION = "/mnt/docker_volumes/immich/immich_pgdata";
       DB_HOSTNAME = "immich_postgres";
       DB_PASSWORD = "postgres";
       DB_USERNAME = "postgres";
-      IMMICH_VERSION = "v1.106.4";
+      IMMICH_VERSION = "v1.121.0";
       REDIS_HOSTNAME = "immich_redis";
       TYPESENSE_API_KEY = "some-random-text";
       UPLOAD_LOCATION = "/mnt/docker_volumes/immich/immich-data/upload";
@@ -103,7 +103,7 @@
       DB_HOSTNAME = "immich_postgres";
       DB_PASSWORD = "postgres";
       DB_USERNAME = "postgres";
-      IMMICH_VERSION = "v1.106.4";
+      IMMICH_VERSION = "v1.121.0";
       POSTGRES_DB = "immich";
       POSTGRES_PASSWORD = "postgres";
       POSTGRES_USER = "postgres";
@@ -163,14 +163,14 @@
     ];
   };
   virtualisation.oci-containers.containers."immich_server" = {
-    image = "ghcr.io/immich-app/immich-server:v1.106.4";
+    image = "ghcr.io/immich-app/immich-server:v1.121.0";
     environment = {
       DB_DATABASE_NAME = "immich";
       DB_DATA_LOCATION = "/mnt/docker_volumes/immich/immich_pgdata";
       DB_HOSTNAME = "immich_postgres";
       DB_PASSWORD = "postgres";
       DB_USERNAME = "postgres";
-      IMMICH_VERSION = "v1.106.4";
+      IMMICH_VERSION = "v1.121.0";
       IMMICH_PORT = "80";
       REDIS_HOSTNAME = "immich_redis";
       TYPESENSE_API_KEY = "some-random-text";
@@ -181,7 +181,7 @@
       "/mnt/docker_volumes/immich/immich-data/upload:/usr/src/app/upload:rw"
     ];
     ports = [
-      "2283:3001/tcp"
+      "2283:2283/tcp"
     ];
     dependsOn = [
       "immich-tailscale"

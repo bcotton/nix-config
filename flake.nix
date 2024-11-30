@@ -145,10 +145,12 @@
   in {
     apps = nixinate.nixinate.x86_64-linux self;
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
+    formatter.x86_64-darwin = nixpkgs.legacyPackages.x86_64-darwin.alejandra;
     formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.alejandra;
 
     darwinConfigurations = {
       bobs-laptop = darwinSystem "aarch64-darwin" "bobs-laptop" "bcotton";
+      toms-MBP = darwinSystem "x86_64-darwin" "toms-MBP" "tomcotton";
     };
 
     nixosConfigurations = {
@@ -163,6 +165,7 @@
       k3s-01 = nixosSystem "x86_64-linux" "k3s-01" ["bcotton"];
       k3s-02 = nixosSystem "x86_64-linux" "k3s-02" ["bcotton"];
       k3s-03 = nixosSystem "x86_64-linux" "k3s-03" ["bcotton"];
+      nixbox = nixosSystem "x86_64-linux" "nixbox" ["bcotton" "tomcotton"];
     };
   };
 }

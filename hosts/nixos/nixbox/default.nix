@@ -4,49 +4,25 @@
 {
   config,
   pkgs,
-  lib,
   unstablePkgs,
   ...
 }: {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ../../../modules/node-exporter
-    ../../../modules/nfs
-    ../../../modules/k3s-agent
-    ../../../modules/docker/minecraft
-    ../../../modules/docker/audiobookshelf
-    ../../../modules/code-server
   ];
 
-  services.k3s.role = lib.mkForce "agent";
-
   # Use the systemd-boot EFI boot loader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
+  # boot.loader.systemd-boot.enable = true;
+  # boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.device = "nodev"; # or "nodev" for efi only
+  #boot.loader.grub.device = "/dev/disk/by-label/nixos"; # or "nodev" for efi only
 
   networking = {
-    hostName = "nix-01";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp3s0.ipv4.addresses = [
-      {
-        address = "192.168.5.210";
-        prefixLength = 24;
-      }
-    ];
-    interfaces.enp2s0.ipv4.addresses = [
-      {
-        address = "192.168.5.211";
-        prefixLength = 24;
-      }
-    ];
+    hostName = "nixbox";
   };
-  services.tailscale.enable = true;
 
-  age.secrets."tailscale-keys.env" = {
-    file = ../../../secrets/tailscale-keys.env;
-  };
+  services.tailscale.enable = true;
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -70,10 +46,6 @@
   # Enable the X11 windowing system.
   # services.xserver.enable = true;
 
-  # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
@@ -88,7 +60,7 @@
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEbIFTdml6HkOUMHN7krdP3eIYSPQN6oOGKVu8aA8IVW tomcotton@Toms-MBP.lan"
     ];
   };
 
@@ -128,8 +100,6 @@
   # Or disable the firewall altogether.
   networking.firewall.enable = false;
 
-  virtualisation.libvirtd.enable = true;
-
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
   # accidentally delete configuration.nix.
@@ -151,5 +121,5 @@
   # and migrated your data accordingly.
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = "24.05"; # Did you read the comment?
 }

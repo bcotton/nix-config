@@ -10,7 +10,7 @@
     extraGroups = ["wheel" "docker"]; # Enable ‘sudo’ for the user.
     hashedPassword = "$6$icZo8IyqPlu1YOgc$aRlFcb7dxOOmOebE/hYdLXWPEboyEm5sfBBJZopuRfD1Hu7MQYw0eQokQecb0n5HUgaGXRWMrs2TUqcZMIzC71";
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEbIFTdml6HkOUMHN7krdP3eIYSPQN6oOGKVu8aA8IVW tomcotton@Toms-MBP.lan"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local"
     ];
     packages = with pkgs; [
       tree
