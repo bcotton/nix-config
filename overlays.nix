@@ -5,7 +5,7 @@
   unstablePkgs,
   ...
 }: let
-  roonVersion = "2.0-1413";
+  roonVersion = "2.0-1483";
   roonUrlVersion = builtins.replaceStrings ["." "-"] ["00" "0"] roonVersion;
 in {
   nixpkgs.overlays = [
@@ -14,7 +14,7 @@ in {
         version = roonVersion;
         src = pkgs.fetchurl {
           url = "https://download.roonlabs.com/updates/production/RoonServer_linuxx64_${roonUrlVersion}.tar.bz2";
-          hash = "sha256-VoTJu5+zuFFknDolGJ/69e1i6B4vfR9ev7sAKhfeRlU=";
+          hash = "sha256-y8MYiWlc3HfF7a3n7yrs84H/9KbEoANd8+7t2ORIm6w=";
         };
         #    src = newsrc;
       };
