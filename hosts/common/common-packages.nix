@@ -10,11 +10,11 @@
     environment.systemPackages = with pkgs; [
       inputs.agenix.packages."${system}".default
       ## unstable
-      unstablePkgs.yt-dlp
-      unstablePkgs.get_iplayer
-      unstablePkgs.monaspace
+      yt-dlp
+      get_iplayer
+      monaspace
 
-      unstablePkgs.diffnav
+      diffnav
 
       ## stable
       #  asciinema
@@ -55,7 +55,7 @@
       #  fira-mono
       fd
       gh
-      unstablePkgs.go_1_23
+      go_1_23
       glow
       go-migrate
       gron
@@ -81,7 +81,7 @@
       nmap
 
       # qmk
-      unstablePkgs.qmk
+      qmk
       ripgrep
       redis
       stern

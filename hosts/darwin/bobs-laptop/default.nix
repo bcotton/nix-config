@@ -14,7 +14,7 @@ in {
     # These are packages are just for darwin systems
     environment.systemPackages = with pkgs; [
       kind
-      unstablePkgs.esphome
+      esphome
       esptool
       # Node and friends
       nodejs_22

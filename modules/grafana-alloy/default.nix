@@ -5,8 +5,6 @@
   inputs,
   ...
 }: {
-  imports = ["${inputs.nixpkgs-unstable}/nixos/modules/services/monitoring/alloy.nix"];
-
   # Can't seem to get LoadCredential to work, it would appear that the
   # permissions on the file are not correct.
   systemd.services.alloy.serviceConfig = {
@@ -20,7 +18,6 @@
 
   services.alloy = {
     enable = true;
-    package = unstablePkgs.grafana-alloy;
     configPath = let
       configAlloy = pkgs.writeText "config.alloy" ''
 

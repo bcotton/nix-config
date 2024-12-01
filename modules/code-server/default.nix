@@ -3,7 +3,6 @@
   pkgs,
   ...
 }: {
-
   services.code-server = {
     enable = true;
     auth = "none"; # Protected by Tailscale
@@ -17,5 +16,5 @@
     extraPackages = with pkgs; [
       nil
     ];
-  };    
+  };
 }

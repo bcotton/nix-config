@@ -14,7 +14,6 @@ in {
     # These are packages are just for darwin systems
     environment.systemPackages = [
       pkgs.kind
-      # unstablePkgs.esphome
     ];
 
     nixpkgs.config.allowUnfree = true;

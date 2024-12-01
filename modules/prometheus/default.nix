@@ -8,11 +8,12 @@
   lib = pkgs.lib;
   # Find all the hosts who have a node_exporter enabled
   enabledNodeExportersF = hostName: host:
-    lib.filterAttrs (k: v:
-      if builtins.isAttrs v && k == "node"
-      then v.enable == true
-      else false)
-    host.config.services.prometheus.exporters;
+  let 
+    nodeExporter = host.config.services.prometheus.exporters.node;
+  in 
+    if nodeExporter.enable == true
+    then { node = nodeExporter; }
+    else {};
 
   # Build the scrape config for each enabled node_exporter
   mkScrapeConfigExporterF = hostname: ename: ecfg: {

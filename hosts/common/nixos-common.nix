@@ -25,13 +25,13 @@ in {
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    alsaUtils
+    alsa-utils
     intel-gpu-tools
     libva-utils
     intel-media-driver
     jellyfin-ffmpeg
     hddtemp
-    unstablePkgs.nixos-shell
+    nixos-shell
     synergy
     qemu
     quickemu
