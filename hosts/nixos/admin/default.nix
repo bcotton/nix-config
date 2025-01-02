@@ -50,6 +50,16 @@
     tailscaleAuthKeyPath = config.age.secrets.tailscale-keys.path;
   };
 
+  services.vscode-server.enableFHS = true;
+  services.vscode-server.extraRuntimeDependencies = pkgs:
+    with pkgs; [
+      curl
+    ];
+
+  environment.systemPackages = with pkgs; [
+    nodejs_22
+  ];
+
   age.secrets."tailscale-keys.env" = {
     file = ../../../secrets/tailscale-keys.env;
   };
