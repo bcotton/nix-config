@@ -172,6 +172,40 @@
             "com.sun:auto-snapshot" = "true";
           };
         };
+
+        # tomcotton tree
+        "local/tomcotton" = {
+          type = "zfs_fs";
+          mountpoint = "/media/tomcotton";
+          options = {
+            mountpoint = "legacy";
+            "com.sun:auto-snapshot" = "false"; # Parent FS, no data
+          };
+        };
+        "local/tomcotton/data" = {
+          type = "zfs_fs";
+          mountpoint = "/media/tomcotton/documents";
+          options = {
+            mountpoint = "legacy";
+            "com.sun:auto-snapshot" = "true"; 
+          };
+        };
+        "local/tomcotton/cold-data" = { # Separated for alternate possible offsite backup method
+          type = "zfs_fs";
+          mountpoint = "/media/tomcotton/documents";
+          options = {
+            mountpoint = "legacy";
+            "com.sun:auto-snapshot" = "true"; 
+          };
+        };
+        "local/tomcotton/audio-library" = {
+          type = "zfs_fs";
+          mountpoint = "/media/tomcotton/audio-library";
+          options = {
+            mountpoint = "legacy";
+            "com.sun:auto-snapshot" = "true"; 
+          };
+        };
       }; # filesystems
     };
     backuppool = {
@@ -201,6 +235,36 @@
             "com.sun:auto-snapshot" = "true";
           };
         };
+        "local/backups/toms-mini" = { # Seperate backups filesystems for simpler snapshotting
+          type = "zfs_fs";
+          mountpoint = "/backups/toms-mini";
+          options = {
+            mountpoint = "legacy";
+            recordsize = "1M"; # for large files
+            "com.sun:auto-snapshot" = "true";
+          };
+        };
+        "local/backups/toms-MBP" = { # Seperate backups filesystems for simpler snapshotting
+          type = "zfs_fs";
+          mountpoint = "/backups/toms-MBP";
+          options = {
+            mountpoint = "legacy";
+            recordsize = "1M"; # for large files
+            "com.sun:auto-snapshot" = "true";
+          };
+        };
+        "local/backups/toms-devices" = { # iPhone etc...
+          type = "zfs_fs";
+          mountpoint = "/backups/toms-devices";
+          options = {
+            mountpoint = "legacy";
+            recordsize = "1M"; # for large files
+            "com.sun:auto-snapshot" = "true";
+          };
+        };
+        # EX: backups/nix-01 
+        # EX: backups/nix-02
+        # EX: etc...
       }; # filesystems
     };
   };
