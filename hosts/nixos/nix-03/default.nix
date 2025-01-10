@@ -14,8 +14,17 @@
     ../../../modules/node-exporter
     ../../../modules/nfs
     ../../../modules/k3s-agent
+    ../../../modules/build-machine
     # ../../../modules/frigated
   ];
+
+  # Enable build machine capabilities
+  services.clubcotton.build-machine = {
+    enable = true;
+    systems = ["x86_64-linux"];
+    maxJobs = 12; # Adjust based on CPU cores
+    speedFactor = 2;
+  };
 
   services.clubcotton.services.tailscale.enable = true;
   virtualisation.containers.enable = true;
