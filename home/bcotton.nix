@@ -394,7 +394,10 @@ in {
       Host github.com
         Hostname ssh.github.com
         Port 443
-    '';
+
+      Host nix-03
+        LocalForward 10350 localhost:10350
+   '';
     matchBlocks = {
     };
   };

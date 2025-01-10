@@ -286,6 +286,24 @@
     formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.alejandra;
     formatter.x86_64-darwin = nixpkgs.legacyPackages.x86_64-darwin.alejandra;
 
+    packages = {
+      aarch64-darwin = let
+        pkgs = genDarwinPkgs "aarch64-darwin";
+      in {
+        vscode-extensions = import ./pkgs/applications/editors/vscode/extensions {
+          inherit (pkgs) lib pkgs;
+        };
+      };
+
+      x86_64-linux = let
+        pkgs = genPkgs "x86_64-linux";
+      in {
+        vscode-extensions = import ./pkgs/applications/editors/vscode/extensions {
+          inherit (pkgs) lib pkgs;
+        };
+      };
+    };
+
     darwinConfigurations = {
       bobs-laptop = darwinSystem "aarch64-darwin" "bobs-laptop" "bcotton";
       toms-MBP = darwinSystem "x86_64-darwin" "toms-MBP" "tomcotton";
