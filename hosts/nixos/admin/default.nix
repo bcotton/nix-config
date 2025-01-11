@@ -24,6 +24,7 @@
     ../../../modules/grafana-alloy
     ../../../modules/tmate-ssh-server
     ../../../modules/code-server
+    ../../../modules/build-machine
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -124,6 +125,13 @@
 
   # List services that you want to enable:
   services.openssh.enable = true;
+  # programs.ssh.extraConfig = ''
+  #   Host nix-01
+  #     IdentitiesOnly yes
+  #     IdentityFile /run/agenix/builder-private-key
+  #     # The weakly privileged user on the remote builder – if not set, 'root' is used – which will hopefully fail
+  #     User nixremote
+  # '';
   services.nfs.server.enable = true;
 
   # See https://xeiaso.net/blog/prometheus-grafana-loki-nixos-2020-11-20/

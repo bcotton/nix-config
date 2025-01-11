@@ -16,6 +16,7 @@
     ../../../modules/k3s-agent
     ../../../modules/docker/immich
     ../../../modules/incus
+    ../../../modules/build-machine
     # ../../../modules/terminal-server
   ];
 
@@ -26,6 +27,8 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  nix.settings.trusted-users = ["root" "builder"];
 
   networking = {
     useDHCP = false;

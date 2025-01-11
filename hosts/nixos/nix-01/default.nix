@@ -17,6 +17,7 @@
     ../../../modules/k3s-agent
     ../../../modules/docker/minecraft
     ../../../modules/docker/audiobookshelf
+    ../../../modules/build-machine
   ];
 
   services.k3s.role = lib.mkForce "agent";
@@ -24,6 +25,8 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+
+  nix.settings.trusted-users = ["root" "builder"];
 
   networking = {
     useDHCP = false;

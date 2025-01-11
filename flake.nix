@@ -295,9 +295,9 @@
     nixosConfigurations = {
       admin = nixosSystem "x86_64-linux" "admin" ["bcotton"];
       nas-01 = nixosSystem "x86_64-linux" "nas-01" ["bcotton" "tomcotton"];
-      nix-01 = nixosSystem "x86_64-linux" "nix-01" ["bcotton" "tomcotton"];
-      nix-02 = nixosSystem "x86_64-linux" "nix-02" ["bcotton" "tomcotton"];
-      nix-03 = nixosSystem "x86_64-linux" "nix-03" ["bcotton" "tomcotton"];
+      nix-01 = nixosSystem "x86_64-linux" "nix-01" ["bcotton" "tomcotton" "builder"];
+      nix-02 = nixosSystem "x86_64-linux" "nix-02" ["bcotton" "tomcotton" "builder"];
+      nix-03 = nixosSystem "x86_64-linux" "nix-03" ["bcotton" "tomcotton" "builder"];
       dns-01 = nixosSystem "x86_64-linux" "dns-01" ["bcotton"];
       octoprint = nixosSystem "x86_64-linux" "octoprint" ["bcotton" "tomcotton"];
       frigate-host = nixosSystem "x86_64-linux" "frigate-host" ["bcotton"];

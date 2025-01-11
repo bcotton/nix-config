@@ -400,6 +400,7 @@ in {
   };
 
   home.packages = with pkgs; [
+    golangci-lint
     kubernetes-helm
     kubectx
     kubectl

@@ -23,6 +23,13 @@
     file = ./wireless-config.age;
   };
 
+  age.secrets."builder-private-key" = {
+    file = ./builder-private-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0600"; # Correct permissions for a private key
+  };
+
   # Conditional secrets based on services
   age.secrets."pushover-key" = lib.mkIf config.services.prometheus.alertmanager.enable {
     file = ./pushover-key.age;

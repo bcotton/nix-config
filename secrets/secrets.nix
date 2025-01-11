@@ -1,4 +1,3 @@
-
 # to add or edit the secrets run 'agenix -e <file>.age'
 # to add a file, add it to the list below, then run 'agenix -e <file>.age'
 let
@@ -30,4 +29,5 @@ in {
   "grafana-cloud.age".publicKeys = users ++ systems;
   "immich-database.age".publicKeys = users ++ systems;
   "open-webui.age".publicKeys = users ++ systems;
+  "builder-private-key.age".publicKeys = users ++ systems;
 }

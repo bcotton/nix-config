@@ -14,6 +14,7 @@
     ../../../modules/node-exporter
     ../../../modules/nfs
     ../../../modules/k3s-agent
+    ../../../modules/build-machine
     # ../../../modules/frigated
   ];
 
