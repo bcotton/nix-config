@@ -5,7 +5,7 @@
   ...
 }:
 with lib; let
-  service = "sonarr";
+  service = "lidarr";
   cfg = config.services.clubcotton.${service};
   clubcotton = config.clubcotton;
 in {
@@ -24,10 +24,6 @@ in {
     };
   };
   config = lib.mkIf cfg.enable {
-    nixpkgs.config.permittedInsecurePackages = [
-      "dotnet-sdk-6.0.428"
-      "aspnetcore-runtime-6.0.36"
-    ];
     services.${service} = {
       enable = true;
       user = clubcotton.user;
@@ -40,7 +36,7 @@ in {
 
       services."${cfg.tailnetHostname}" = mkIf (cfg.tailnetHostname != "") {
         ephemeral = true;
-        toURL = "http://127.0.0.1:8989/";
+        toURL = "http://127.0.0.1:8686/";
       };
     };
   };

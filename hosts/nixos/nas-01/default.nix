@@ -56,6 +56,26 @@
     tailnetHostname = "radarr";
   };
 
+  services.clubcotton.sonarr = {
+    enable = true;
+    tailnetHostname = "sonarr";
+  };
+
+  services.clubcotton.prowlarr = {
+    enable = true;
+    tailnetHostname = "prowlarr";
+  };
+
+  services.clubcotton.lidarr = {
+    enable = true;
+    tailnetHostname = "lidarr";
+  };
+
+  services.clubcotton.readarr = {
+    enable = true;
+    tailnetHostname = "readarr";
+  };
+
   services.clubcotton.jellyfin = {
     enable = true;
     tailnetHostname = "jellyfin";
@@ -187,6 +207,14 @@
           options = {
             mountpoint = "legacy";
             recordsize = "1M"; # for large files
+            "com.sun:auto-snapshot" = "true";
+          };
+        };
+        "local/photots" = {
+          type = "zfs_fs";
+          mountpoint = "/media/photos";
+          options = {
+            mountpoint = "legacy";
             "com.sun:auto-snapshot" = "true";
           };
         };

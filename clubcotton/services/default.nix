@@ -1,4 +1,8 @@
-{lib, ...}: {
+{
+  lib,
+  unstablePkgs,
+  ...
+}: {
   imports = [
     ./arr
     ./jellyfin
