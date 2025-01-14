@@ -73,7 +73,14 @@
 
   services.clubcotton.readarr = {
     enable = true;
-    tailnetHostname = "readarr";
+    epub = {
+      dataDir = "/var/lib/readarr-epub";
+      tailnetHostname = "readarr-epub";
+    };
+    audio = {
+      dataDir = "/var/lib/readarr-audio";
+      tailnetHostname = "readarr-audio";
+    };
   };
 
   services.clubcotton.jellyfin = {
