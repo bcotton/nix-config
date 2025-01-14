@@ -5,6 +5,7 @@
 }: {
   imports = [
     ./arr
+    ./calibre
     ./jellyfin
     ./open-webui
     ./roon-server

@@ -85,6 +85,12 @@
     };
   };
 
+  services.clubcotton.calibre = {
+    enable = true;
+    tailnetHostname = "calibre";
+  };
+
+
   services.clubcotton.jellyfin = {
     enable = true;
     tailnetHostname = "jellyfin";
