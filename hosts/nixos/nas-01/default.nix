@@ -76,10 +76,12 @@
     epub = {
       dataDir = "/var/lib/readarr-epub";
       tailnetHostname = "readarr-epub";
+      port = 8787;
     };
     audio = {
       dataDir = "/var/lib/readarr-audio";
       tailnetHostname = "readarr-audio";
+      port = 8788;
     };
   };
 

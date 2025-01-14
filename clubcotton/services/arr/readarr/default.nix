@@ -72,7 +72,7 @@ in {
         mkService = cfg:
           lib.mkIf (cfg != null && cfg.tailnetHostname != null) {
             ${cfg.tailnetHostname} = {
-              enable = true;
+              # enable = true;
               ephemeral = true;
               toURL = "http://127.0.0.1:${toString cfg.port}/";
             };
