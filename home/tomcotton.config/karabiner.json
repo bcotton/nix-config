@@ -4,26 +4,26 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Caps Lock to Ctrl",
+                        "description": "Caps Lock to Fn",
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "caps_lock",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "key_code": "left_control" }],
+                                "to": [{ "key_code": "fn" }],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "Ctrl + I/J/K/L to Arrow Keys",
+                        "description": "Fn + I/J/K/L to Arrow Keys, Fn + U/O option right left, m to mdash, n to uNderscore",
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "i",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
@@ -34,7 +34,7 @@
                                 "from": {
                                     "key_code": "j",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
@@ -45,7 +45,7 @@
                                 "from": {
                                     "key_code": "k",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
@@ -56,50 +56,67 @@
                                 "from": {
                                     "key_code": "l",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
                                 "to": [{ "key_code": "right_arrow" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Ctrl + U/O forward backward word",
-                        "manipulators": [
+                            },
                             {
                                 "from": {
-                                    "key_code": "b",
+                                    "key_code": "u",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "left_arrow", "modifiers": "left_option" }],
+                                "to": [{ "key_code": "left_arrow" , "modifiers": "left_option" }],
                                 "type": "basic"
                             },
                             {
                                 "from": {
-                                    "key_code": "f",
+                                    "key_code": "o",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
-                                "to": [{ "key_code": "right_arrow", "modifiers": "left_option" }],
+                                "to": [{ "key_code": "right_arrow" , "modifiers": "left_option" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "m", 
+                                    "modifiers": {
+                                        "mandatory": ["fn"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "hyphen" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "n",
+                                    "modifiers": {
+                                        "mandatory": ["fn"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "hyphen" , "modifiers": "left_shift" }],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "Ctrl + H to Delete",
+                        "description": "Fn + H to Delete, Fn + B to Delete Word",
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "h",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
@@ -110,11 +127,22 @@
                                 "from": {
                                     "key_code": "semicolon",
                                     "modifiers": {
-                                        "mandatory": ["left_control"],
+                                        "mandatory": ["fn"],
                                         "optional": ["any"]
                                     }
                                 },
                                 "to": [{ "key_code": "delete_forward"}],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": {
+                                        "mandatory": ["fn"], 
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "delete_or_backspace", "modifiers": "left_option" }],
                                 "type": "basic"
                             }
                         ]
@@ -155,30 +183,68 @@
                         ]
                     },
                     {
-                        "description": "Shift+spacebar to underscore",
+                        "description": "Scroll down when fn + spacebar is pressed. shift space is up",
                         "manipulators": [
-                            {
+                            { 
+                                "type": "basic",
                                 "from": {
                                     "key_code": "spacebar",
                                     "modifiers": {
-                                        "mandatory": ["right_shift"],
-                                        "optional": ["any"]
+                                        "mandatory": ["fn"]
                                     }
                                 },
                                 "to": [
                                     {
-                                        "key_code": "hyphen",
-                                        "modifiers": ["right_shift"]
+                                        "mouse_key": {
+                                            "vertical_wheel": 65
+                                        }
                                     }
-                                ],
+                                ]
+                            },
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": {
+                                        "mandatory": ["fn", "shift"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "mouse_key": {
+                                            "vertical_wheel": -65
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "name": "Caps to Fn, Fn is layer key",
+            "selected": true,
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        },
+        {
+            "complex_modifications": {
+                "rules": [
+                    {
+                        "description": "Caps Lock to Fn",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_control" }],
                                 "type": "basic"
                             }
                         ]
                     }
                 ]
             },
-            "name": "Default profile",
-            "selected": true,
+            "name": "Caps to ctrl, no changes",
+            "selected": false,
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         }
     ]

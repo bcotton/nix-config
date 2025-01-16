@@ -256,6 +256,7 @@
       # nix build '.#checks.x86_64-linux.postgresql-integration'
       # nix run '.#checks.x86_64-linux.postgresql-integration.driverInteractive'
       postgresql = nixpkgs.legacyPackages.${system}.nixosTest (import ./modules/postgresql/test.nix {inherit nixpkgs;});
+      webdav = nixpkgs.legacyPackages.${system}.nixosTest (import ./clubcotton/services/webdav/test.nix {inherit nixpkgs;});
       postgresql-integration = nixpkgs.legacyPackages.${system}.nixosTest (import ./tests/postgresql-integration.nix {inherit nixpkgs unstablePkgs inputs;});
       zfs-single-root = let
         system = "x86_64-linux";
@@ -289,6 +290,7 @@
     darwinConfigurations = {
       bobs-laptop = darwinSystem "aarch64-darwin" "bobs-laptop" "bcotton";
       toms-MBP = darwinSystem "x86_64-darwin" "toms-MBP" "tomcotton";
+      toms-mini = darwinSystem "aarch64-darwin" "toms-mini" "tomcotton";
       bobs-imac = darwinSystem "x86_64-darwin" "bobs-imac" "bcotton";
     };
 

@@ -11,6 +11,6 @@
 
   services.clubcotton.toms-darwin = {
     enable = true;
-    useP11KitOverlay = true;
+    useP11KitOverlay = false;
   };
 }

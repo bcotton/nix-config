@@ -75,7 +75,6 @@ in {
         # ci = "commit";
         # d = "diff";
         # dc = "diff --cached";
-        gs = "status";
         # la = "config --get-regexp alias";
         lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit";
         lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
@@ -299,7 +298,8 @@ in {
       enable = true;
       custom = "$HOME/.oh-my-zsh-custom";
 
-      theme = "git-taculous";
+      theme = "headline";
+      # theme = "git-taculous";
       # theme = "agnoster-nix";
 
       extraConfig = ''
@@ -342,7 +342,7 @@ in {
       tmux-window-name() {
         (${builtins.toString tmux-window-name}/share/tmux-plugins/tmux-window-name/scripts/rename_session_windows.py &)
       }
-      if [[ `uname` == "Darwin" ]]; then
+      if [[ $TERM_PROGRAM == "tmux" && `uname` == "Darwin" ]]; then
         add-zsh-hook chpwd tmux-window-name
       fi
 
@@ -385,10 +385,15 @@ in {
   };
 
   home.packages = with pkgs; [
+    (pkgs.python311.withPackages (ppkgs: [
+      ppkgs.numpy
+      ppkgs.libtmux
+    ]))
     ffmpeg
     rsync
     rhash
     restic
+    # python3Packages.libtmux
     # kubernetes-helm
     # kubectx
     # kubectl
@@ -427,7 +432,7 @@ in {
     #   mosh
     #   neofetch
     #    nmap
-    #      (python311.withPackages(ps: with ps; [ libtmux ]))
+    # (python311.withPackages(ps: with ps; [ libtmux ]))
     #   ripgrep
     #   skopeo
     #   smartmontools

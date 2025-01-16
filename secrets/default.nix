@@ -68,4 +68,10 @@
   age.secrets."immich-database" = lib.mkIf config.services.immich.enable {
     file = ./immich-database.age;
   };
+
+  age.secrets."webdav" = lib.mkIf config.services.clubcotton.webdav.enable {
+    file = ./webdav.age;
+    owner = "webdav";
+    group = "webdav";
+  };
 }
