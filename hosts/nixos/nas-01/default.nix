@@ -90,6 +90,10 @@
     tailnetHostname = "calibre";
   };
 
+  services.clubcotton.calibre-web = {
+    enable = true;
+    tailnetHostname = "calibre-web";
+  };
 
   services.clubcotton.jellyfin = {
     enable = true;
