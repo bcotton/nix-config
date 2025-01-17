@@ -17,4 +17,14 @@
       }
     ];
   };
+  portForward = hostPort: targetPort: {
+    virtualisation.forwardPorts = [
+      {
+        from = "host";
+        host.port = hostPort;
+        guest.port = targetPort;
+      }
+    ];
+    networking.firewall.allowedTCPPorts = [targetPort];
+  };
 }

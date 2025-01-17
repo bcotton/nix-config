@@ -3,9 +3,13 @@
 {nixpkgs}: {
   name = "webdav";
   interactive.nodes = let
-    testLib = import ../../tests/libtest.nix {};
+    testLib = import ../../../tests/libtest.nix {};
+    lib = nixpkgs.lib;
   in {
-    machine = {...}: testLib.mkSshConfig 2223;
+    machine = {...}:
+      lib.recursiveUpdate
+      (testLib.mkSshConfig 2223)
+      (testLib.portForward 6065 6065);
   };
 
   nodes.machine = {
