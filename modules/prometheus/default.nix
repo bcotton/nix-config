@@ -50,8 +50,42 @@
     builtins.mapAttrs (mkScrapeConfigExporterF name) exporters;
   scrapeConfigsByHost = builtins.mapAttrs mkScrapeConfigHost enabledExporters;
 
-  # Flatten the scrapeConfigsByHost into a list
-  autogenScrapeConfigs = lib.flatten (map builtins.attrValues (builtins.attrValues scrapeConfigsByHost));
+  # Check which hosts have tailscale enabled
+  enabledTailscaleF = hostName: host:
+    if host.config.services.clubcotton.services.tailscale.enable or false
+    then true
+    else false;
+
+  # Generate scrape configs for tailscale metrics
+  mkTailscaleScrapeConfigF = hostname: enabled:
+    if enabled
+    then [
+      {
+        job_name = "${hostname}-tailscale";
+        scrape_interval = "30s";
+        static_configs = [{targets = ["${hostname}:5252"];}];
+        relabel_configs = [
+          {
+            target_label = "instance";
+            replacement = "${hostname}";
+          }
+          {
+            target_label = "job";
+            replacement = "tailscale";
+          }
+        ];
+      }
+    ]
+    else [];
+
+  # Get tailscale status for all hosts
+  enabledTailscale = builtins.mapAttrs enabledTailscaleF self.nixosConfigurations;
+
+  # Generate tailscale scrape configs
+  tailscaleScrapeConfigs = lib.flatten (builtins.attrValues (builtins.mapAttrs mkTailscaleScrapeConfigF enabledTailscale));
+
+  # Flatten the scrapeConfigsByHost into a list and add tailscale configs
+  autogenScrapeConfigs = lib.flatten (map builtins.attrValues (builtins.attrValues scrapeConfigsByHost)) ++ tailscaleScrapeConfigs;
 in {
   imports = [
     ./alert-manager.nix

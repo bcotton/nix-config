@@ -20,5 +20,17 @@ in {
       package = pkgs.tailscale;
       authKeyFile = config.age.secrets.tailscale-keys.path;
     };
+
+    # Add oneshot service to enable webclient
+    systemd.services.tailscale-webclient = {
+      description = "Enable Tailscale webclient";
+      after = ["tailscale.service"];
+      wantedBy = ["multi-user.target"];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.tailscale}/bin/tailscale set --webclient";
+        RemainAfterExit = true;
+      };
+    };
   };
 }
