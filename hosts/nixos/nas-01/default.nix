@@ -120,6 +120,28 @@
         directory = "/media/webdav/zotero-sync";
         permissions = "CRUD";
       };
+      media-readonly = {
+        password = "{env}MEDIA_RO_PASSWORD";
+        directory = "/media";
+        permissions = "R";
+        # these are evaluated in reverse order
+          rules = [
+            {
+              regex = ".*";
+              permissions = "none";
+            }
+            # This is the directory listing
+            {
+              regex = "^/$";
+              permissions = "R";
+            }
+            {
+              regex = "music|movies|books";
+              permissions = "R";
+            }
+          ];
+
+      };
     };
   };
 

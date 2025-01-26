@@ -42,6 +42,42 @@ with lib; let
             CRUD = Create, Read, Update, Delete
         '';
       };
+
+      rules = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            path = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Path to apply permissions to";
+              example = "/media/files";
+            };
+            regex = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Regular expression to match paths";
+              example = "^.+\\.mp4$";
+            };
+            permissions = mkOption {
+              type = types.str;
+              description = "Permissions for this rule (none, R, RU, CRUD)";
+              example = "R";
+            };
+          };
+        });
+        default = [];
+        description = "List of path/regex rules with specific permissions";
+        example = [
+          {
+            path = "/media/files";
+            permissions = "R";
+          }
+          {
+            regex = "^.+\\.mp4$";
+            permissions = "R";
+          }
+        ];
+      };
     };
   };
 in {
@@ -54,15 +90,27 @@ in {
       description = "Attribute set of WebDAV users and their configurations";
       example = literalExpression ''
         {
+          # Basic user with full access to their directory
           user1 = {
             password = "pass1";
             directory = "/media/webdav/user1";
             permissions = "CRUD";
           };
-          user2 = {
+          # User with read-only base permissions and specific rules
+          media-readonly = {
             password = "pass2";
-            directory = "/media/webdav/user2";
-            permissions = "R";
+            directory = "/media";
+            permissions = "none";  # Default to no access
+            rules = [
+              {
+                path = "/media";  # Allow read access to media directory
+                permissions = "R";
+              }
+              {
+                regex = "^.+\\.(mp4|mkv)$";  # Read-only access to video files
+                permissions = "R";
+              }
+            ];
           };
         }
       '';
@@ -70,8 +118,18 @@ in {
   };
 
   config = mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = all (user: all (rule: 
+          (rule.path != null) != (rule.regex != null)
+        ) user.rules) (attrValues cfg.users);
+        message = "Each rule must have exactly one of path or regex set";
+      }
+    ];
+
     services.webdav = {
       enable = true;
+      group = "share";
       settings = {
         address = "0.0.0.0";
         port = 6065;
@@ -89,6 +147,13 @@ in {
           (name: user: {
             username = name;
             inherit (user) password directory permissions;
+            rules = map (rule: 
+              filterAttrs (n: v: v != null) {
+                inherit (rule) permissions;
+                path = rule.path;
+                regex = rule.regex;
+              }
+            ) user.rules;
           })
           cfg.users;
       };

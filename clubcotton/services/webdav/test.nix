@@ -21,6 +21,10 @@
       ./default.nix
     ];
 
+    environment.systemPackages = with pkgs; [
+      xq-xml
+    ];
+
     services.clubcotton.webdav = {
       enable = true;
       users = {
@@ -48,6 +52,26 @@
           directory = "/var/lib/webdav/env-user";
           permissions = "CRUD";
         };
+        # Test user with rules
+        rules-user = {
+          password = "rulespass";
+          directory = "/var/lib/webdav/rules-user";
+          permissions = "R";  # Default to no access
+          rules = [
+            {
+              regex = ".*";
+              permissions = "none";
+            }
+            {
+              regex = "^/$";
+              permissions = "R";
+            }
+            {
+              regex = "readable|writeable";
+              permissions = "R";
+            }
+          ];
+        };
       };
     };
 
@@ -69,6 +93,14 @@
       "f /var/lib/webdav/reader/test.txt 0644 webdav webdav - hello-reader"
       "f /var/lib/webdav/env-user/test.txt 0644 webdav webdav - hello-env-user"
       "f /var/lib/webdav/test-env 0600 webdav webdav - WEBDAV_TEST_PASSWORD=testpass123"
+      # Test directories and files for rules testing
+      "d /var/lib/webdav/rules-user 0755 webdav webdav"
+      "d /var/lib/webdav/rules-user/readable 0755 webdav webdav"
+      "d /var/lib/webdav/rules-user/writable 0755 webdav webdav"
+      "d /var/lib/webdav/rules-user/blocked 0755 webdav webdav"
+      "f /var/lib/webdav/rules-user/readable/test.txt 0644 webdav webdav - readable-text"
+      "f /var/lib/webdav/rules-user/readable/test.mp4 0644 webdav webdav - readable-video"
+      "f /var/lib/webdav/rules-user/blocked/test.txt 0644 webdav webdav - blocked-text"
     ];
   };
 
@@ -135,6 +167,20 @@
     # Test that wrong password fails for env user
     machine.fail(
       "curl -f -u env-user:wrongpass http://localhost:6065/test.txt"
+    )
+
+    # Test rules-based access
+    machine.succeed(
+      # should be able to list the root
+      "curl -f -u rules-user:rulespass http://localhost:6065/ | xq | grep href | wc -l | grep 4",
+      # should be able to list readable directory
+      "curl -f -u rules-user:rulespass http://localhost:6065/readable | xq | grep href | wc -l | grep 3",
+      # Should be able to read from readable directory
+      "curl -f -u rules-user:rulespass http://localhost:6065/readable/test.txt | grep readable-text",
+    )
+    machine.fail(
+      # Should not be able to read blocked directory
+      "curl -f -u rules-user:rulespass http://localhost:6065/blocked/test.txt",
     )
 
     # Test directory isolation and path traversal prevention
