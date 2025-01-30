@@ -32,5 +32,6 @@ in {
   "open-webui.age".publicKeys = users ++ systems;
   "webdav.age".publicKeys = users ++ systems;
   "kavita-token.age".publicKeys = users ++ systems;
+  "paperless.age".publicKeys = users ++ systems;
   "navidrome.age".publicKeys = users ++ systems;
 }

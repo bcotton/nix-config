@@ -16,16 +16,38 @@
     ./hardware-configuration.nix
   ];
 
-  virtualisation.podman.enable = true;
+  services.clubcotton = {
+    paperless.enable = true;
+  };
+
   clubcotton.zfs_single_root.enable = true;
+
+  virtualisation.podman.enable = true;
   virtualisation.libvirtd.enable = true;
   programs.zsh.enable = true;
   services.openssh.enable = true; # Enable the OpenSSH daemon.
+
+  services.clubcotton.paperless = {
+    mediaDir = "/var/lib/paperless/media";
+    configDir = "/var/lib/paperless";
+    consumptionDir = "/var/lib/paperless/consume";
+    passwordFile = config.age.secrets."paperless".path;
+    database.createLocally = true;
+    tailnetHostname = "paperless";
+  };
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local"
     ];
+  };
+
+  virtualisation.podman = {
+    dockerSocket.enable = true;
+    dockerCompat = true;
+    autoPrune.enable = true;
+    # Required for containers under podman-compose to be able to talk to each other.
+    defaultNetwork.settings.dns_enabled = true;
   };
 
   virtualisation.podman = {

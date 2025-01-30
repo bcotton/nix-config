@@ -78,6 +78,12 @@
   age.secrets."kavita-token" = lib.mkIf config.services.clubcotton.kavita.enable {
     file = ./kavita-token.age;
   };
+
+  age.secrets."paperless" = lib.mkIf config.services.clubcotton.paperless.enable {
+    file = ./paperless.age;
+    owner = "paperless";
+    group = "paperless";
+  };
   
   age.secrets."navidrome" = lib.mkIf config.services.clubcotton.navidrome.enable {
     file = ./navidrome.age;

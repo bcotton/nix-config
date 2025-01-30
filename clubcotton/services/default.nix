@@ -11,6 +11,7 @@
     ./kavita
     ./navidrome
     ./open-webui
+    ./paperless
     ./roon-server
     ./sabnzbd
     ./webdav

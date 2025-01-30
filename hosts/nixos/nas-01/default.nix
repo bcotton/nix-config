@@ -22,6 +22,7 @@
     kavita.enable = false;
     lidarr.enable = true;
     navidrome.enable = true;
+    paperless.enable = true;
     prowlarr.enable = true;
     radarr.enable = true;
     readarr.enable = true;
@@ -61,6 +62,15 @@
 
   # Set your time zone.
   time.timeZone = "America/Denver";
+
+  services.clubcotton.paperless = {
+    mediaDir = "/media/tomcotton/data/paperless";
+    configDir = "/var/lib/paperless";
+    consumptionDir = "/var/lib/paperless/consume";
+    passwordFile = config.age.secrets."paperless".path;
+    database.createLocally = true;
+    tailnetHostname = "paperless";
+  };
 
   services.clubcotton.sabnzbd = {
     tailnetHostname = "sabnzbd";
