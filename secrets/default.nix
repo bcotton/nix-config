@@ -3,6 +3,9 @@
   lib,
   ...
 }: {
+  
+  # Generate postgres secrets here: https://supercaracal.github.io/scram-sha-256/
+
   # Unconditional secrets (no special permissions needed)
   age.secrets."tailscale-keys.env" = {
     file = ./tailscale-keys.env;
@@ -81,6 +84,17 @@
     file = ./open-webui-database.age;
     owner = "postgres";
     group = "postgres";
+  };
+
+  age.secrets."atuin-database" = lib.mkIf config.services.clubcotton.postgresql.atuin.enable {
+    file = ./atuin-database.age;
+    owner = "postgres";
+    group = "postgres";
+  };
+  age.secrets."atuin" = lib.mkIf config.services.clubcotton.atuin.enable {
+    file = ./atuin.age;
+    owner = "atuin";
+    group = "atuin";
   };
 
   age.secrets."webdav" = lib.mkIf config.services.clubcotton.webdav.enable {

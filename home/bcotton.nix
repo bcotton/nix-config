@@ -268,24 +268,25 @@ in {
       dl = "$HOME/Downloads";
     };
 
+    # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra = ''
-      export DFT_DISPLAY=side-by-side
-      export XDG_CONFIG_HOME="$HOME/.config"
-      export LESS="-iMSx4 -FXR"
-      export PAGER=less
-      export EDITOR=vim
-      export FULLNAME='Bob Cotton'
-      export EMAIL=bob.cotton@gmail.com
-      export GOPATH=$HOME/go
-      export PATH=$GOPATH/bin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
-      export OKTA_MFA_OPTION=1
-
-      export GOPRIVATE="github.com/grafana/*"
-      export QMK_HOME=~/projects/qmk_firmware
       #export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
-      export EXA_COLORS="da=1;35"
+      export ATUIN_SYNC_ADDRESS=https://atuin.bobtail-clownfish.ts.net
       export BAT_THEME="Visual Studio Dark+"
+      export DFT_DISPLAY=side-by-side
+      export EDITOR=vim
+      export EMAIL=bob.cotton@gmail.com
+      export EXA_COLORS="da=1;35"
+      export FULLNAME='Bob Cotton'
+      export GOPATH=$HOME/go
+      export GOPRIVATE="github.com/grafana/*"
+      export LESS="-iMSx4 -FXR"
+      export OKTA_MFA_OPTION=1
+      export PAGER=less
+      export PATH=$GOPATH/bin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
+      export QMK_HOME=~/projects/qmk_firmware
       export TMPDIR=/tmp/
+      export XDG_CONFIG_HOME="$HOME/.config"
 
       export FZF_CTRL_R_OPTS="--reverse"
       export FZF_TMUX_OPTS="-p"
@@ -361,6 +362,7 @@ in {
       fi
       source <(kubectl completion zsh)
       eval "$(tv init zsh)"
+      eval "$(atuin init zsh)"
 
       bindkey -e
       bindkey '^[[A' up-history

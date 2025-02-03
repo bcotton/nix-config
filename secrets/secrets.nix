@@ -16,23 +16,25 @@ let
 
   systems = [admin nix-01 nix-02 nix-03 nix-04 nas-01 octoprint frigate-host];
 in {
-  "librespot.age".publicKeys = users ++ systems;
-  "mopidy.age".publicKeys = users ++ systems;
-  "tailscale-keys.env".publicKeys = users ++ systems;
-  "tailscale-keys.raw".publicKeys = users ++ systems;
-  "pushover-token.age".publicKeys = users ++ systems;
-  "pushover-key.age".publicKeys = users ++ systems;
+  "atuin.age".publicKeys = users ++ systems;
+  "atuin-database.age".publicKeys = users ++ systems;
   "condo-ha-token.age".publicKeys = users ++ systems;
-  "homeassistant-token.age".publicKeys = users ++ systems;
-  "wireless-config.age".publicKeys = users ++ systems;
-  "mqtt.age".publicKeys = users ++ systems;
-  "unpoller.age".publicKeys = users ++ systems;
   "grafana-cloud.age".publicKeys = users ++ systems;
+  "homeassistant-token.age".publicKeys = users ++ systems;
   "immich-database.age".publicKeys = users ++ systems;
   "immich.age".publicKeys = users ++ systems;
-  "open-webui.age".publicKeys = users ++ systems;
-  "open-webui-database.age".publicKeys = users ++ systems;
-  "webdav.age".publicKeys = users ++ systems;
   "kavita-token.age".publicKeys = users ++ systems;
+  "librespot.age".publicKeys = users ++ systems;
+  "mopidy.age".publicKeys = users ++ systems;
+  "mqtt.age".publicKeys = users ++ systems;
   "navidrome.age".publicKeys = users ++ systems;
+  "open-webui-database.age".publicKeys = users ++ systems;
+  "open-webui.age".publicKeys = users ++ systems;
+  "pushover-key.age".publicKeys = users ++ systems;
+  "pushover-token.age".publicKeys = users ++ systems;
+  "tailscale-keys.env".publicKeys = users ++ systems;
+  "tailscale-keys.raw".publicKeys = users ++ systems;
+  "unpoller.age".publicKeys = users ++ systems;
+  "webdav.age".publicKeys = users ++ systems;
+  "wireless-config.age".publicKeys = users ++ systems;
 }

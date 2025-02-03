@@ -5,6 +5,7 @@
 }: {
   imports = [
     ./arr
+    ./atuin
     ./calibre
     ./calibre-web
     ./jellyfin

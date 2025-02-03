@@ -15,6 +15,7 @@
   ];
 
   services.clubcotton = {
+    atuin.enable = true;
     calibre.enable = true;
     calibre-web.enable = true;
     jellyfin.enable = true;
@@ -92,6 +93,10 @@
     open-webui = {
       enable = true;
       passwordFile = config.age.secrets."open-webui-database".path;
+    };
+    atuin = {
+      enable = true;
+      passwordFile = config.age.secrets."atuin-database".path;
     };
   };
 

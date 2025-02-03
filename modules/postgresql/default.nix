@@ -8,6 +8,7 @@ with lib; let
   cfg = config.services.clubcotton.postgresql;
 in {
   imports = [
+    ./atuin.nix
     ./immich.nix
     ./open-webui.nix
   ];

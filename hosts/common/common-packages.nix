@@ -9,6 +9,7 @@
   config = {
     environment.systemPackages = with pkgs; [
       inputs.agenix.packages."${system}".default
+      atuin
       ## unstable
       yt-dlp
       get_iplayer
