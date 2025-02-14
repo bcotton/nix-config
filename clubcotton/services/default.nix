@@ -8,6 +8,7 @@
     ./atuin
     ./calibre
     ./calibre-web
+    ./filebrowser
     ./freshrss
     ./jellyfin
     ./kavita

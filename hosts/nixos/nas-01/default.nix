@@ -18,6 +18,7 @@
     atuin.enable = true;
     calibre.enable = true;
     calibre-web.enable = true;
+    filebrowser.enable = true;
     freshrss.enable = true;
     immich.enable = true;
     jellyfin.enable = true;
@@ -108,6 +109,11 @@
       enable = true;
       passwordFile = config.age.secrets."paperless-database".path;
     };
+  };
+
+  services.clubcotton.filebrowser = {
+    port = 8082;
+    tailnetHostname = "files";
   };
 
   services.clubcotton.freshrss = {

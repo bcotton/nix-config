@@ -19,6 +19,19 @@
   services.clubcotton = {
     freshrss.enable = false;
     paperless.enable = false;
+    filebrowser.enable = false;
+    tailscale.enable = true;
+  };
+
+  users = {
+    groups.share = {
+      gid = 993;
+    };
+    users.share = {
+      uid = 994;
+      isSystemUser = true;
+      group = "share";
+    };
   };
 
   # services.clubcotton.services.tailscale.enable = true;
@@ -27,6 +40,7 @@
 
   virtualisation.podman.enable = true;
   virtualisation.libvirtd.enable = true;
+
   programs.zsh.enable = true;
   services.openssh.enable = true; # Enable the OpenSSH daemon.
 

@@ -36,9 +36,9 @@ in {
       # types.package indicates this option expects a Nix package
       type = types.package;
       # default value comes from unstable package set for newer features
-      default = (unstablePkgs.open-webui.override {
+      default = unstablePkgs.open-webui.override {
         python312 = pkgs.python312;
-      });
+      };
       description = "Open WebUI package to use.";
     };
 
