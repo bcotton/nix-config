@@ -18,6 +18,7 @@
     ./nut-server
     ./open-webui
     ./paperless
+    ./pinchflat
     ./roon-server
     ./sabnzbd
     ./scanner

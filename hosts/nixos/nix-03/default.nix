@@ -21,27 +21,6 @@
     nut-client.enable = true;
   };
 
-  virtualisation.oci-containers.containers.pinchflat = {
-    image = "ghcr.io/kieraneglin/pinchflat:latest";
-    autoStart = true;
-    user = "994:993";
-    volumes = [
-      "/var/lib/pinchflat/config:/config"
-      "/var/lib/pinchflat/media:/downloads"
-    ];
-    environment = {
-      TZ = "America/New_York";
-    };
-    # ports = ["${toString cfg.port}:80"];
-    ports = ["8945:8945"];
-  };
-
-  systemd.tmpfiles.rules = [
-      "d /var/lib/pinchflat 0750 share share - -"
-      "d /var/lib/pinchflat/config 0750 share share - -"
-      "d /var/lib/pinchflat/media 0750 share share - -"
-    ];
-
   # Create share user and group for services with explicit IDs
   users = {
     groups.share = {
