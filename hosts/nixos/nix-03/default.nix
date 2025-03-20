@@ -21,19 +21,6 @@
     nut-client.enable = true;
   };
 
-  # Create share user and group for services with explicit IDs
-  users = {
-    groups.share = {
-      gid = 993;
-    };
-    users.share = {
-      uid = 994;
-      isSystemUser = true;
-      group = "share";
-      description = "Shared services user";
-    };
-  };
-
   virtualisation.containers.enable = true;
 
   virtualisation.podman = {
