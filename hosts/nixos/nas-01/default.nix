@@ -27,6 +27,7 @@
     navidrome.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
+    pinchflat.enable = true;
     postgresql.enable = true;
     prowlarr.enable = true;
     radarr.enable = true;
@@ -78,6 +79,10 @@
 
   # Set your time zone.
   time.timeZone = "America/Denver";
+
+  services.clubcotton.pinchflat = {
+    mediaDir = "/media/shows/YouTube"
+  };
 
   services.clubcotton.readarr = {
     epub = {
