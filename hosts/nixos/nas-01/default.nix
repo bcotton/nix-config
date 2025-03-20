@@ -81,7 +81,7 @@
   time.timeZone = "America/Denver";
 
   services.clubcotton.pinchflat = {
-    mediaDir = "/media/shows/YouTube";
+    mediaDir = "/media/youtube/pinchflat";
   };
 
   services.clubcotton.readarr = {
