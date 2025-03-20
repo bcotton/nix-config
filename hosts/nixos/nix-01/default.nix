@@ -86,7 +86,6 @@
     subsonicUrl = "http://nas-01.lan:${toString config.services.navidrome.settings.Port}/";
   };
 
-
   # Set your time zone.
   time.timeZone = "America/Denver";
 
