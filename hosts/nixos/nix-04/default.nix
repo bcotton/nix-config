@@ -14,6 +14,7 @@
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ../../../modules/incus
   ];
 
   services.clubcotton = {
@@ -23,16 +24,16 @@
     tailscale.enable = true;
   };
 
-  users = {
-    groups.share = {
-      gid = 993;
-    };
-    users.share = {
-      uid = 994;
-      isSystemUser = true;
-      group = "share";
-    };
-  };
+  # users = {
+  #   groups.share = {
+  #     gid = 993;
+  #   };
+  #   users.share = {
+  #     uid = 994;
+  #     isSystemUser = true;
+  #     group = "share";
+  #   };
+  # };
 
   # services.clubcotton.services.tailscale.enable = true;
 
@@ -64,6 +65,7 @@
   users.users.root = {
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
     ];
   };
 
@@ -86,14 +88,51 @@
   networking = {
     hostId = "3fa4e0cb";
     hostName = "nix-04";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.eno1.ipv4.addresses = [
-      {
-        address = "192.168.5.54";
-        prefixLength = 24;
-      }
-    ];
+    useDHCP = false;
+  };
+
+  systemd.network = {
+    enable = true;
+    netdevs = {
+      "20-br0" = {
+        netdevConfig = {
+          Kind = "bridge";
+          Name = "br0";
+          MACAddress = "none";
+        };
+      };
+    };
+    networks = {
+      "30-eno1" = {
+        matchConfig.Name = "eno1";
+        networkConfig = {
+          Bridge = "br0";
+          DHCP = "no";
+          DNS = "192.168.5.220";
+        };
+        address = ["192.168.5.54/24"];
+        routes = [
+          {
+            Gateway = "192.168.5.1";
+            Destination = "0.0.0.0/0";
+          }
+        ];
+        linkConfig.RequiredForOnline = "enslaved";
+      };
+
+      "40-br0" = {
+        matchConfig.Name = "br0";
+        networkConfig = {
+          DHCP = "no";
+          LinkLocalAddressing = "no";
+        };
+        # bridgeConfig = {
+        #   STP = "no";
+        #   ForwardDelaySec = "0";
+        # };
+        linkConfig.RequiredForOnline = "carrier";
+      };
+    };
   };
 
   # Pick only one of the below networking options.
