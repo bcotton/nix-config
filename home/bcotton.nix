@@ -98,7 +98,6 @@ in {
     settings.show_program_path = true;
   };
 
-
   services.vscode-server.enable = true;
   services.vscode-server.installPath = [
     "$HOME/.vscode-server"
@@ -113,19 +112,6 @@ in {
 
   xdg = {
     enable = true;
-    configFile."containers/registries.conf" = {
-      source = ./dot.config/containers/registries.conf;
-    };
-    configFile."ghostty/config" = {
-      source = ./bcotton.config/ghostty/config;
-    };
-    configFile."sesh/sesh.toml" = {
-      source = ./bcotton.config/sesh/sesh.toml;
-    };
-    configFile."tmux/cp-kubeconfig" = {
-      executable = true;
-      source = ./bcotton.config/tmux/cp-kubeconfig;
-    };
   };
 
   programs.zsh = {

@@ -1,14 +1,10 @@
 # Library of functions for generating Prometheus scrape configurations
 {lib}: let
-  # Common domain suffix for tailscale services
-  tailscaleDomain = ".bobtail-clownfish.ts.net";
-
   /*
   * Exporter-related functions
   * These functions handle the discovery and configuration of Prometheus exporters
   * across NixOS hosts in the fleet.
   */
-
   # List of exporters to monitor across all hosts
   monitoredExporters = [
     "node"
@@ -54,94 +50,10 @@
       }
     ];
   };
-
-  /*
-  * Tailscale-related functions
-  * These functions handle the discovery and configuration of Tailscale metrics
-  * for hosts with Tailscale enabled.
-  */
-
-  # Check which hosts have tailscale enabled
-  # Args:
-  #   hostName: The name of the host to check
-  #   host: The NixOS configuration for the host
-  # Returns: Boolean indicating if tailscale is enabled
-  enabledTailscaleF = hostName: host:
-    if host.config.services.clubcotton.services.tailscale.enable or false
-    then true
-    else false;
-
-  # Generate scrape configs for tailscale metrics
-  # Args:
-  #   hostname: The name of the host
-  #   enabled: Boolean indicating if tailscale is enabled
-  # Returns: List of scrape configurations for tailscale metrics
-  mkTailscaleScrapeConfigF = hostname: enabled:
-    if enabled
-    then [
-      {
-        job_name = "${hostname}-tailscale";
-        scrape_interval = "30s";
-        static_configs = [{targets = ["${hostname}:5252"];}];
-        relabel_configs = [
-          {
-            target_label = "instance";
-            replacement = "${hostname}";
-          }
-          {
-            target_label = "job";
-            replacement = "tailscale";
-          }
-        ];
-      }
-    ]
-    else [];
-
-  /*
-  * Tsnsrv-related functions
-  * These functions handle the discovery and configuration of services exposed
-  * through tsnsrv (Tailscale-based service exposure).
-  */
-
-  # Check which hosts have tsnsrv services configured
-  # Args:
-  #   hostName: The name of the host to check
-  #   host: The NixOS configuration for the host
-  # Returns: Attribute set of configured tsnsrv services
-  enabledTsnsrvServicesF = hostName: host:
-    host.config.services.tsnsrv.services or {};
-
-  # Generate blackbox scrape configs for tsnsrv services
-  # Args:
-  #   hostname: The name of the host
-  #   services: Attribute set of tsnsrv services
-  #   excludeList: Optional list of service names to exclude from monitoring
-  # Returns: List of blackbox exporter targets for the services
-  mkTsnsrvBlackboxConfigF = hostname: services: excludeList:
-    lib.mapAttrsToList (name: _: {
-      targets = ["https://${name}${tailscaleDomain}"];
-    })
-    (lib.filterAttrs
-      (name: _:
-        !(builtins.elem name (
-          if excludeList == null
-          then []
-          else excludeList
-        )))
-      services);
 in {
-  # Export the domain constant
-  inherit tailscaleDomain;
 
   # Functions for working with exporters
   inherit monitoredExporters enabledExportersF mkScrapeConfigExporterF;
-
-  # Functions for working with tailscale
-  inherit enabledTailscaleF mkTailscaleScrapeConfigF;
-
-  # Functions for working with tsnsrv
-  inherit enabledTsnsrvServicesF mkTsnsrvBlackboxConfigF;
-
   /*
   * Helper functions for generating complete scrape configurations
   */
@@ -160,15 +72,6 @@ in {
       builtins.mapAttrs (mkScrapeConfigExporterF name) exporters;
     scrapeConfigsByHost = builtins.mapAttrs mkScrapeConfigHost enabledExporters;
 
-    # Get tailscale status for all hosts
-    enabledTailscale = builtins.mapAttrs enabledTailscaleF self.nixosConfigurations;
-
-    # Generate tailscale scrape configs
-    tailscaleScrapeConfigs = lib.flatten (builtins.attrValues (builtins.mapAttrs mkTailscaleScrapeConfigF enabledTailscale));
-
-    # Get tsnsrv services for all hosts
-    enabledTsnsrvServices = builtins.mapAttrs enabledTsnsrvServicesF self.nixosConfigurations;
-
     # Generate blackbox configs for tsnsrv services
     tsnsrvBlackboxConfigs = lib.flatten (
       lib.mapAttrsToList (hostname: services: mkTsnsrvBlackboxConfigF hostname services tsnsrvExcludeList) enabledTsnsrvServices
@@ -179,7 +82,6 @@ in {
 
     # Combine all auto-generated scrape configs
     autogenScrapeConfigs =
-      lib.flatten (map builtins.attrValues (builtins.attrValues scrapeConfigsByHost))
-      ++ tailscaleScrapeConfigs;
+      lib.flatten (map builtins.attrValues (builtins.attrValues scrapeConfigsByHost));
   };
 }

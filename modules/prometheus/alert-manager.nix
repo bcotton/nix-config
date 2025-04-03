@@ -9,7 +9,6 @@ in {
     enable = true;
     listenAddress = "";
     logLevel = "debug";
-    # webExternalUrl = "https://alertmanager.routing.rocks";
     configuration = {
       route = {
         group_by = ["..."];
@@ -21,8 +20,8 @@ in {
           name = "pushover";
           pushover_configs = [
             {
-              token_file = config.age.secrets.pushover-token.path;
-              user_key_file = config.age.secrets.pushover-key.path;
+              # token_file = config.age.secrets.pushover-token.path;
+              # user_key_file = config.age.secrets.pushover-key.path;
               # severity = "{{ .GroupLabels.severity }}";
             }
           ];

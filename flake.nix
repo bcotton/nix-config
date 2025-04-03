@@ -79,9 +79,6 @@
                 localPackages = localPackages;
               };
             }
-            # Nixinate configuration with conditional host setting. There is a potentation that
-            # tailscale is down, and the host is not accessible. In that case, we can use the
-            # local hostname.
             ({config, ...}: {
               _module.args.nixinate = {
                 host = hostName;
@@ -94,7 +91,6 @@
             ./overlays.nix
 
             disko.nixosModules.disko
-            ./modules/tailscale
 
             ./hosts/nixos/${hostName} # ip address, host specific stuff
             vscode-server.nixosModules.default

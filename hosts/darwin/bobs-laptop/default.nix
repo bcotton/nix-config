@@ -44,14 +44,13 @@ in {
       enable = true;
       enableCompletion = true;
       promptInit = builtins.readFile ./mac-dot-zshrc;
-      #interactiveShellInit = "/Users/alex/go/bin/figurine -f \"Rammstein.flf\" magrathea";
     };
 
     homebrew = {
       enable = true;
       # updates homebrew packages on activation,
       # can make darwin-rebuild much slower (otherwise i'd forget to do it ever though)
-      # onActivation.upgrade = true;
+      onActivation.upgrade = true;
 
       taps = [
         #

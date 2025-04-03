@@ -37,14 +37,6 @@ in {
       (builtins.readFile ./prometheus.rules.yaml)
     ];
 
-    # Send to the local Alloy instance for forwarding to Grafana Cloud
-    # remoteWrite = [
-    #   {
-    #     name = "alloy";
-    #     url = "http://localhost:9999/api/v1/metrics/write";
-    #   }
-    # ];
-
     exporters = {
       blackbox = {
         enable = true;
@@ -83,50 +75,6 @@ in {
     scrapeConfigs =
       [
         {
-          job_name = "unpoller";
-          static_configs = [
-            {
-              targets = ["localhost:${toString config.services.prometheus.exporters.unpoller.port}"];
-            }
-          ];
-        }
-        {
-          job_name = "smokeping";
-          static_configs = [
-            {
-              targets = ["localhost:${toString config.services.prometheus.exporters.smokeping.port}"];
-            }
-          ];
-        }
-        {
-          job_name = "condo-ha";
-          honor_timestamps = true;
-          scrape_interval = "30s";
-          scrape_timeout = "10s";
-          metrics_path = "/api/prometheus";
-          scheme = "http";
-          bearer_token_file = config.age.secrets.condo-ha-token.path;
-          static_configs = [
-            {
-              targets = ["condo-ha:8123"];
-            }
-          ];
-        }
-        {
-          job_name = "homeassistant";
-          honor_timestamps = true;
-          scrape_interval = "30s";
-          scrape_timeout = "10s";
-          metrics_path = "/api/prometheus";
-          scheme = "http";
-          bearer_token_file = config.age.secrets.homeassistant-token.path;
-          static_configs = [
-            {
-              targets = ["homeassistant:8123"];
-            }
-          ];
-        }
-        {
           job_name = "blackbox_http";
           metrics_path = "/probe";
           params = {
@@ -145,44 +93,6 @@ in {
             {
               target_label = "__address__";
               replacement = "127.0.0.1:9115";
-            }
-          ];
-        }
-        {
-          job_name = "homeassistant_node";
-          scrape_interval = "30s";
-          static_configs = [
-            {
-              targets = ["homeassistant:9100"];
-            }
-          ];
-          relabel_configs = [
-            {
-              target_label = "instance";
-              replacement = "homeassistant";
-            }
-            {
-              target_label = "job";
-              replacement = "node";
-            }
-          ];
-        }
-        {
-          job_name = "condo_ha_node";
-          scrape_interval = "30s";
-          static_configs = [
-            {
-              targets = ["condo-ha:9100"];
-            }
-          ];
-          relabel_configs = [
-            {
-              target_label = "instance";
-              replacement = "condo-ha";
-            }
-            {
-              target_label = "job";
-              replacement = "node";
             }
           ];
         }
