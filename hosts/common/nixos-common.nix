@@ -25,7 +25,6 @@ in {
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
-    inputs.isd.packages."${system}".default
     alsa-utils
     intel-gpu-tools
     libva-utils
@@ -34,12 +33,10 @@ in {
     jellyfin-ffmpeg
     hddtemp
     nil
-    nixos-shell
     synergy
     television
     qemu
     quickemu
-    inputs.ghostty.packages."${system}".default
   ];
 
   ## pins to stable as unstable updates very often
