@@ -7,7 +7,7 @@
 }: let
   nixVsCodeServer = fetchTarball {
     url = "https://github.com/zeyugao/nixos-vscode-server/tarball/master";
-    sha256 = "sha256:0p0dz0q1rbccncjgw4na680a5i40w59nbk5ip34zcac8rg8qx381";
+    sha256 = "sha256:1l77kybmghws3y834b1agb69vs6h4l746ga5xccvz4p1y8wc67h7";
   };
 in {
   home.stateVersion = "23.05";
