@@ -19,6 +19,7 @@ in {
       # Node and friends
       nodejs_22
       yarn-berry
+      (pkgs.callPackage ../../../pkgs/tmuxai {}) # Add tmuxai package
     ];
 
     nixpkgs.config.allowUnfree = true;

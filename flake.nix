@@ -310,6 +310,17 @@
       };
     in {
       primp = pkgs.python3Packages.callPackage ./pkgs/primp {};
+      tmuxai = pkgs.callPackage ./pkgs/tmuxai {};
+    };
+
+    packages.aarch64-darwin = let
+      pkgs = import nixpkgs {
+        system = "aarch64-darwin";
+        config.allowUnfree = true;
+      };
+    in {
+      primp = pkgs.python3Packages.callPackage ./pkgs/primp {};
+      tmuxai = pkgs.callPackage ./pkgs/tmuxai {};
     };
 
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;

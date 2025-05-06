@@ -18,6 +18,7 @@
         ((import ./overlays/yq.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/primp.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/beets.nix {inherit config pkgs lib unstablePkgs;}) final prev)
+        ((import ./overlays/tmuxai.nix {inherit config pkgs lib unstablePkgs;}) final prev)
 
         # Conditional overlays based on service/module usage
         (lib.optionalAttrs (config.services.jellyfin.enable or false)
