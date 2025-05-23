@@ -40,6 +40,7 @@
     sonarr.enable = true;
     syncoid.enable = true;
     tailscale.enable = true;
+    wallabag.enable = true;
     webdav.enable = true;
   };
 

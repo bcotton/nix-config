@@ -59,7 +59,6 @@ in {
     users.users.${cfg.user} = {
       isSystemUser = true;
       group = cfg.group;
-      home = cfg.dataDir;
     };
 
     users.groups.${cfg.group} = {};
@@ -68,7 +67,7 @@ in {
       image = "wallabag/wallabag";
       autoStart = true;
       environment = {
-        SYMFONY__ENV__DOMAIN_NAME = "http://127.0.0.1:${toString cfg.port}";
+        SYMFONY__ENV__DOMAIN_NAME = "http://localhost:${toString cfg.port}";
         SYMFONY__ENV__DATABASE_DRIVER = "pdo_sqlite";
         SYMFONY__ENV__SECRET = cfg.secret;
         PHP_MEMORY_LIMIT = cfg.memoryLimit;

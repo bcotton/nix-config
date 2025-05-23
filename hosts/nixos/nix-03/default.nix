@@ -15,16 +15,12 @@
     ../../../modules/nfs
     ../../../modules/k3s-agent
     ../../../modules/incus
-    ../../../clubcotton/services/wallabag
   ];
 
   services.clubcotton = {
     tailscale.enable = true;
     nut-client.enable = true;
-    wallabag.enable = true;
   };
-
-  services.tsnsrv.enable = true;
 
   virtualisation.containers.enable = true;
 
