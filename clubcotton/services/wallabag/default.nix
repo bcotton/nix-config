@@ -36,12 +36,6 @@ in {
       description = "Group to run Wallabag as";
     };
 
-    domain = mkOption {
-      type = types.str;
-      default = "http://localhost:${toString cfg.port}";
-      description = "Domain name for Wallabag";
-    };
-
     secret = mkOption {
       type = types.str;
       default = "some_secret_string_for_wallabag";
@@ -74,7 +68,7 @@ in {
       image = "wallabag/wallabag";
       autoStart = true;
       environment = {
-        SYMFONY__ENV__DOMAIN_NAME = cfg.domain;
+        SYMFONY__ENV__DOMAIN_NAME = "http://127.0.0.1:${toString cfg.port}";
         SYMFONY__ENV__DATABASE_DRIVER = "pdo_sqlite";
         SYMFONY__ENV__SECRET = cfg.secret;
         PHP_MEMORY_LIMIT = cfg.memoryLimit;

@@ -47,7 +47,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-
   networking = {
     hostName = "imac-01";
     hostId = "238f8e1e";
