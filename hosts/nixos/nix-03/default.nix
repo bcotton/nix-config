@@ -32,6 +32,38 @@
     defaultNetwork.settings.dns_enabled = true;
   };
 
+virtualisation.oci-containers.containers = {
+  wallabag = {
+    image = "wallabag/wallabag";
+    autoStart = true;
+    environment = {
+      SYMFONY__ENV__DOMAIN_NAME = "http://127.0.0.1";
+    };
+    volumes = [
+      "/var/lib/wallabag/data:/var/www/wallabag/data"
+      "/var/lib/wallabag/images:/var/www/wallabag/web/assets/images"
+    ];
+    ports = ["127.0.0.1:9880:80"];
+    extraOptions = [
+      "--restart=unless-stopped"
+      "--user=wallabag:wallabag"
+    ];
+  };
+};
+
+users.users.wallabag = {
+  isSystemUser = true;
+  group = "wallabag";
+  home = "/var/lib/wallabag";
+};
+
+users.groups.wallabag = {};
+
+systemd.tmpfiles.rules = [
+  "d /var/lib/wallabag/data 0750 wallabag wallabag - -"
+  "d /var/lib/wallabag/images 0750 wallabag wallabag - -"
+];
+
   services.k3s.role = lib.mkForce "agent";
 
   clubcotton.zfs_single_root = {
