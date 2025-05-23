@@ -15,11 +15,13 @@
     ../../../modules/nfs
     ../../../modules/k3s-agent
     ../../../modules/incus
+    ../../../clubcotton/services/wallabag
   ];
 
   services.clubcotton = {
     tailscale.enable = true;
     nut-client.enable = true;
+    wallabag.enable = true;
   };
 
   virtualisation.containers.enable = true;
@@ -32,40 +34,6 @@
     defaultNetwork.settings.dns_enabled = true;
   };
 
-virtualisation.oci-containers.containers = {
-  wallabag = {
-    image = "wallabag/wallabag";
-    autoStart = true;
-    environment = {
-      SYMFONY__ENV__DOMAIN_NAME = "http://127.0.0.1:9880";
-      SYMFONY__ENV__DATABASE_DRIVER = "pdo_sqlite";
-      SYMFONY__ENV__DATABASE_HOST = "127.0.0.1";
-      SYMFONY__ENV__SECRET = "some_secret_string_for_wallabag";
-      PHP_MEMORY_LIMIT = "256M";
-      POPULATE_DATABASE = "True";
-    };
-    volumes = [
-      "/var/lib/wallabag/data:/var/www/wallabag/data"
-      "/var/lib/wallabag/images:/var/www/wallabag/web/assets/images"
-    ];
-    ports = ["9880:80"];
-    # Temporarily run as root to allow initial setup
-    extraOptions = [];
-  };
-};
-
-users.users.wallabag = {
-  isSystemUser = true;
-  group = "wallabag";
-  home = "/var/lib/wallabag";
-};
-
-users.groups.wallabag = {};
-
-systemd.tmpfiles.rules = [
-  "d /var/lib/wallabag/data 0750 wallabag wallabag - -"
-  "d /var/lib/wallabag/images 0750 wallabag wallabag - -"
-];
 
   services.k3s.role = lib.mkForce "agent";
 

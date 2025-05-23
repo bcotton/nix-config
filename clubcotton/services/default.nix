@@ -23,6 +23,7 @@
     ./sabnzbd
     ./scanner
     ./syncoid
+    ./wallabag
     ./webdav
   ];
 }
