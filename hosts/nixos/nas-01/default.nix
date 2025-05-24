@@ -215,7 +215,6 @@
 
   services.clubcotton.wallabag = {
     dataDir = "/media/documents/wallabag";
-  
   };
 
   services.clubcotton.kavita = {

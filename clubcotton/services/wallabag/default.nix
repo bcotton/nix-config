@@ -80,12 +80,16 @@ in {
         "${cfg.dataDir}/images:/var/www/wallabag/web/assets/images"
       ];
       ports = ["${toString cfg.port}:80"];
+      environment = {
+        PUID = toString config.users.users.${cfg.user}.uid;
+        PGID = toString config.users.groups.${cfg.group}.gid;
+      };
     };
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir}/data 0777 ${cfg.user} ${cfg.group} - -"
       "d ${cfg.dataDir}/images 0777 ${cfg.user} ${cfg.group} - -"
-      "f ${cfg.dataDir}/data/wallabag.sqlite 0666 ${cfg.user} ${cfg.group} - -"
+      # "f ${cfg.dataDir}/data/wallabag.sqlite 0666 ${cfg.user} ${cfg.group} - -"
     ];
 
     services.tsnsrv = {
