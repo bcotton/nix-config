@@ -370,6 +370,8 @@ in {
         "kubectl-fzf-get"
         "git-reflog-fzf"
         "sesh"
+        "rgf-search"
+        "gwt"
       ];
     };
 
@@ -393,7 +395,7 @@ in {
       # z = "zoxide";
     };
 
-    initExtra = ''
+    initContent = ''
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
@@ -406,7 +408,6 @@ in {
       [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
 
       source <(kubectl completion zsh)
-      eval "$(tv init zsh)"
       eval "$(atuin init zsh --disable-up-arrow)"
       eval "$(zoxide init zsh)"
 
@@ -512,7 +513,7 @@ in {
     kubectx
     kubectl
     llm
-    nodejs_22
+    # nodejs_22
     opentofu
     unstablePkgs.sesh
     unstablePkgs.uv

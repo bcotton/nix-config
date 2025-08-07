@@ -36,7 +36,6 @@ in {
     nil
     nixos-shell
     synergy
-    television
     qemu
     quickemu
     inputs.ghostty.packages."${system}".default

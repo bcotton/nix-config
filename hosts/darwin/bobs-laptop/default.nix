@@ -9,7 +9,10 @@
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
   config = {
+    system.primaryUser = "bcotton";
     users.users.bcotton.home = "/Users/bcotton";
+    ids.gids.nixbld = 30000;
+
 
     # These are packages are just for darwin systems
     environment.systemPackages = with pkgs; [
@@ -19,6 +22,7 @@ in {
       # Node and friends
       nodejs_22
       yarn-berry
+      pnpm_10
     ];
 
     nixpkgs.config.allowUnfree = true;
@@ -38,7 +42,11 @@ in {
     system.keyboard.remapCapsLockToEscape = false;
 
     # Add ability to used TouchID for sudo authentication
-    security.pam.enableSudoTouchIdAuth = true;
+    security.pam.services.sudo_local = {
+      touchIdAuth = true;
+      watchIdAuth = true;
+      reattach = true;
+    };
 
     programs.zsh = {
       enable = true;
@@ -160,10 +168,6 @@ in {
     };
 
     # macOS configuration
-    system.activationScripts.postUserActivation.text = ''
-      # Following line should allow us to avoid a logout/login cycle
-      /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-    '';
     system.defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.AppleShowScrollBars = "Always";
