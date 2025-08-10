@@ -315,6 +315,8 @@ in {
       export LESS="-iMSx4 -FXR"
       export OKTA_MFA_OPTION=1
       export PAGER=less
+      export PNPM_HOME="$HOME/.local/share/pnpm"
+      export PATH="$PNPM_HOME:$PATH"
       export PATH=$GOPATH/bin:/opt/homebrew/sbin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
       export QMK_HOME=~/projects/qmk_firmware
       export TMPDIR=/tmp/
