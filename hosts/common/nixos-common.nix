@@ -35,6 +35,8 @@ in {
     hddtemp
     nil
     nixos-shell
+    nodejs_22
+    pnpm_10
     synergy
     qemu
     quickemu
