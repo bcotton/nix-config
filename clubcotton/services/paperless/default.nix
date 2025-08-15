@@ -87,7 +87,7 @@ in {
         PAPERLESS_DBPORT = "5432";
         PAPERLESS_DBPASS = "{env}PAPERLESS_DBPASS";
         PAPERLESS_CONSUMER_RECURSIVE = "true";
-        PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS = "true";
+        PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS = "false";
         PAPERLESS_TASK_WORKERS = "10";
         PAPERLESS_URL = "https://paperless.bobtail-clownfish.ts.net";
       };
