@@ -331,12 +331,19 @@ in {
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+      # Fix the docker host for podman on nix-03
+      # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
+      # This sould only run on linux hosts
+      if [ -L "$HOME/.config/systemd/user/podman.service" ] && [ "$(uname)" = "Linux" ]; then
+        echo "Fixing podman.service"
+        systemctl --user enable podman.socket
+        systemctl --user start podman.socket
+      fi
+
       if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
          export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
          export DOCKER_BUILDKIT=0
       fi
-
-
 
       [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
     '';
