@@ -315,6 +315,8 @@ in {
       export LESS="-iMSx4 -FXR"
       export OKTA_MFA_OPTION=1
       export PAGER=less
+      export PNPM_HOME="$HOME/.local/share/pnpm"
+      export PATH="$PNPM_HOME:$PATH"
       export PATH=$GOPATH/bin:/opt/homebrew/sbin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
       export QMK_HOME=~/projects/qmk_firmware
       export TMPDIR=/tmp/
@@ -329,12 +331,19 @@ in {
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
+      # Fix the docker host for podman on nix-03
+      # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
+      # This sould only run on linux hosts
+      if [ -L "$HOME/.config/systemd/user/podman.service" ] && [ "$(uname)" = "Linux" ]; then
+        echo "Fixing podman.service"
+        systemctl --user enable podman.socket
+        systemctl --user start podman.socket
+      fi
+
       if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
          export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
          export DOCKER_BUILDKIT=0
       fi
-
-
 
       [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
     '';
@@ -370,6 +379,8 @@ in {
         "kubectl-fzf-get"
         "git-reflog-fzf"
         "sesh"
+        "rgf-search"
+        "gwt"
       ];
     };
 
@@ -393,7 +404,7 @@ in {
       # z = "zoxide";
     };
 
-    initExtra = ''
+    initContent = ''
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
@@ -406,7 +417,6 @@ in {
       [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
 
       source <(kubectl completion zsh)
-      eval "$(tv init zsh)"
       eval "$(atuin init zsh --disable-up-arrow)"
       eval "$(zoxide init zsh)"
 
@@ -512,7 +522,7 @@ in {
     kubectx
     kubectl
     llm
-    nodejs_22
+    # nodejs_22
     opentofu
     unstablePkgs.sesh
     unstablePkgs.uv

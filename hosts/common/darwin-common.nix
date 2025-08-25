@@ -16,7 +16,7 @@
         warn-dirty = false;
       };
     };
-    services.nix-daemon.enable = true;
+  
 
     # pins to stable as unstable updates very often
     nix.registry.nixpkgs.flake = inputs.nixpkgs;

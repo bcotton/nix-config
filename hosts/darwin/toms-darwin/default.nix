@@ -50,6 +50,8 @@ in {
     users.users.tomcotton.home = "/Users/tomcotton";
     # Define a user named "tomcotton" with home directory "/Users/tomcotton".
 
+    system.primaryUser = "tomcotton";
+
     # These are packages are just for darwin systems
     environment.systemPackages = [
       pkgs.kind
@@ -73,7 +75,7 @@ in {
     system.keyboard.remapCapsLockToControl = false;
 
     # Add ability to used TouchID for sudo authentication
-    security.pam.enableSudoTouchIdAuth = true;
+    security.pam.services.sudo_local.touchIdAuth = true;
 
     programs.zsh = {
       enable = true;
@@ -210,10 +212,6 @@ in {
     };
 
     # macOS configuration
-    system.activationScripts.postUserActivation.text = ''
-      # Following line should allow us to avoid a logout/login cycle
-      /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-    '';
     # Blocks mac from storing window presence and location. Results in only startup apps at startup.
     system.activationScripts.blockWindowLogging.text = "" "
       sudo chown root ~/Library/Preferences/ByHost/com.apple.loginwindow.*

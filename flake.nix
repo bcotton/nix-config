@@ -3,11 +3,11 @@
     agenix.url = "github:ryantm/agenix";
     nixinate.url = "github:matthewcroughan/nixinate";
 
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-24.11";
+      url = "github:LnL7/nix-darwin/nix-darwin-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -17,7 +17,7 @@
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     vscode-server.url = "github:zeyugao/nixos-vscode-server";
-    home-manager.url = "github:nix-community/home-manager/release-24.11";
+    home-manager.url = "github:nix-community/home-manager/release-25.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nixos-shell.url = "github:Mic92/nixos-shell";
