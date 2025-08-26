@@ -418,7 +418,12 @@ in {
 
       source <(kubectl completion zsh)
       eval "$(atuin init zsh --disable-up-arrow)"
-      eval "$(zoxide init zsh)"
+
+      if [[ "$CLAUDECODE" != "1" ]]; then
+        eval "$(zoxide init zsh)"
+      fi
+
+      eval "$(sesh init zsh)"
 
       bindkey -e
       bindkey '^[[A' up-history

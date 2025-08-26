@@ -16,7 +16,6 @@
         warn-dirty = false;
       };
     };
-  
 
     # pins to stable as unstable updates very often
     nix.registry.nixpkgs.flake = inputs.nixpkgs;

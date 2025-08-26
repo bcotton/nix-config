@@ -13,7 +13,6 @@ in {
     users.users.bcotton.home = "/Users/bcotton";
     ids.gids.nixbld = 30000;
 
-
     # These are packages are just for darwin systems
     environment.systemPackages = with pkgs; [
       kind
