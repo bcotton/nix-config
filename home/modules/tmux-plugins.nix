@@ -86,7 +86,7 @@ in {
       '';
     };
 
-    programs.zsh.initExtra = ''
+    programs.zsh.initContent = ''
       tmux-window-name() {
         (${builtins.toString tmux-window-name}/share/tmux-plugins/tmux-window-name/scripts/rename_session_windows.py &)
       }

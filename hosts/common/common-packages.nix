@@ -32,7 +32,7 @@
 
       # K8s development tools
       ctlptl
-      tilt
+      unstablePkgs.tilt
       kind
 
       coreutils
@@ -92,7 +92,6 @@
       #  skopeo
       #  smartmontools
       #  terraform
-      television
       tree
       ttyplot
       unzip

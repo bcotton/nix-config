@@ -45,7 +45,7 @@
     };
   nixVsCodeServer = fetchTarball {
     url = "https://github.com/msteen/nixos-vscode-server/tarball/master";
-    sha256 = "sha256:09j4kvsxw1d5dvnhbsgih0icbrxqv90nzf0b589rb5z6gnzwjnqf";
+    sha256 = "sha256:1rdn70jrg5mxmkkrpy2xk8lydmlc707sk0zb35426v1yxxka10by";
   };
 in {
   home.stateVersion = "24.05";
@@ -353,7 +353,7 @@ in {
       py3 = "python3";
     };
 
-    initExtra = ''
+    initContent = ''
       tmux-window-name() {
         (${builtins.toString tmux-window-name}/share/tmux-plugins/tmux-window-name/scripts/rename_session_windows.py &)
       }
@@ -379,7 +379,7 @@ in {
 
     '';
 
-    #initExtra = (builtins.readFile ../mac-dot-zshrc);
+    #initContent = (builtins.readFile ../mac-dot-zshrc);
   };
 
   programs.eza.enable = true;
