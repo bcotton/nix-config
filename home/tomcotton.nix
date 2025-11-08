@@ -97,7 +97,7 @@ in {
   programs.git = {
     enable = true;
     userEmail = "thomaswileycotton@gmail.com";
-    userName = "wileycotton";
+    userName = "5wiley";
     extraConfig = {
       alias = {
         # br = "branch";
