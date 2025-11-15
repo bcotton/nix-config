@@ -520,7 +520,7 @@ in {
     (pkgs.python312.withPackages (ppkgs: [
       ppkgs.libtmux
     ]))
-    unstablePkgs.aider-chat
+    # unstablePkgs.aider-chat
     devenv
     fx
     kubernetes-helm
@@ -529,10 +529,10 @@ in {
     llm
     # nodejs_22
     opentofu
-    unstablePkgs.sesh
+    # unstablePkgs.sesh
     unstablePkgs.uv
     tldr
-    unstablePkgs.spotdl
+    #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
   ];
 }
