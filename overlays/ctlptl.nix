@@ -6,7 +6,7 @@
   ...
 }: self: super: {
   ctlptl = super.ctlptl.overrideAttrs (oldAttrs: rec {
-    version = "0.8.37";
+    version = "0.8.42";
     src = pkgs.fetchFromGitHub {
       owner = "tilt-dev";
       repo = "ctlptl";
