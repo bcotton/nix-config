@@ -200,7 +200,7 @@ in {
     services.postgresql = mkIf cfg.database.enable {
       enable = true;
       package = pkgs.postgresql_16;
-      extraPlugins = with pkgs.postgresql16Packages; [pgvecto-rs];
+      extraPlugins = with pkgs.postgresql16Packages; [vectorchord];
       settings = {
         shared_preload_libraries = "vectors.so";
         search_path = "\"$user\", public, vectors";
