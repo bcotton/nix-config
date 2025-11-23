@@ -35,8 +35,9 @@ in {
     hddtemp
     nil
     nixos-shell
+    nodejs_22
+    pnpm_10
     synergy
-    television
     qemu
     quickemu
     inputs.ghostty.packages."${system}".default

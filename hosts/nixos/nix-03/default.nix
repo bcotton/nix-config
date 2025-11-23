@@ -91,7 +91,7 @@
   };
 
   # An attemp at a headless x server
-  services.x2goserver.enable = true;
+  # services.x2goserver.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh = {

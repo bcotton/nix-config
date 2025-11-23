@@ -7,6 +7,10 @@
   ...
 }: {
   config = {
+    nixpkgs.config.permittedInsecurePackages = [
+      "python3.12-ecdsa-0.19.1"
+    ];
+
     # let home-manager override files, but back them up first
     home-manager.backupFileExtension = "home-manager-backup";
 
@@ -32,7 +36,7 @@
 
       # K8s development tools
       ctlptl
-      tilt
+      unstablePkgs.tilt
       kind
 
       coreutils
@@ -92,7 +96,6 @@
       #  skopeo
       #  smartmontools
       #  terraform
-      television
       tree
       ttyplot
       unzip
