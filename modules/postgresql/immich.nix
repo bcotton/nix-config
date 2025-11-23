@@ -42,10 +42,10 @@ in {
         }
       ];
       settings = {
-        shared_preload_libraries = ["vectors.so"];
-        search_path = "\"$user\", public, vectors";
+        shared_preload_libraries = ["vchord.so" "vector.so"];
+        search_path = "\"$user\", public, vector, vchor";
       };
-      extensions = ps: with ps; [pgvecto-rs];
+      extensions = ps: with ps; [vectorchord pgvector];
     };
 
     # https://discourse.nixos.org/t/set-password-for-a-postgresql-user-from-a-file-agenix/41377/13
@@ -68,19 +68,20 @@ in {
       sqlFile = pkgs.writeText "immich-pgvectors-setup.sql" ''
         CREATE EXTENSION IF NOT EXISTS unaccent;
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-        CREATE EXTENSION IF NOT EXISTS vectors;
+        CREATE EXTENSION IF NOT EXISTS vchord;
+        CREATE EXTENSION IF NOT EXISTS vector;
         CREATE EXTENSION IF NOT EXISTS cube;
         CREATE EXTENSION IF NOT EXISTS earthdistance;
         CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
         ALTER SCHEMA public OWNER TO "${cfg.immich.user}";
-        ALTER SCHEMA vectors OWNER TO "${cfg.immich.user}";
         GRANT SELECT ON TABLE pg_vector_index_stat TO "${cfg.immich.user}";
 
         ALTER USER immich WITH CREATEDB;
         GRANT pg_read_all_data TO "${cfg.immich.user}";
 
-        ALTER EXTENSION vectors UPDATE;
+        ALTER EXTENSION vchord UPDATE;
+        ALTER EXTENSION vector UPDATE;
       '';
     in [
       ''

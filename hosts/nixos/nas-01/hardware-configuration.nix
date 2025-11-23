@@ -36,7 +36,7 @@
       # OpenCL and compute support
       intel-compute-runtime
       intel-gmmlib
-      onevpl-intel-gpu
+      vpl-gpu-rt
 
       # VA-API utilities and libraries
       libva
