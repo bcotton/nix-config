@@ -158,6 +158,12 @@
   };
 
   services.clubcotton.open-webui = {
+   package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
+      dependencies = (oldAttrs.dependencies or []) ++ [
+        unstablePkgs.python313Packages.psycopg2-binary
+      ];
+    });
+
     tailnetHostname = "llm";
     environment = {
       WEBUI_AUTH = "True";
