@@ -147,6 +147,8 @@ in {
         "wine-stable"
         "xcodes-app" # Manages downloads enabling of xcode versions
         "cryptomator" # encrypts files, used to back up bitwarden
+        "zen" # zen browser
+        "nikitabobko/tap/aerospace"
       ];
       masApps = {
         # "Xcode" = 497799835;
