@@ -43,8 +43,7 @@ local plugin_specs = {
         "pyright",
         "ts_ls",
         "rust_analyzer",
-        "clangd",
-        "cmake"
+        "clangd"
       },
     },
   },
