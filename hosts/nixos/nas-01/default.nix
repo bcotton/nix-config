@@ -277,7 +277,6 @@
   # CUPS PDF service for paperless consumption
   services.printing = {
     enable = true;
-    drivers = [pkgs.cups-pdf];
     # Enable network printing and sharing
     listenAddresses = ["*:631"];
     allowFrom = ["all"];
@@ -303,7 +302,7 @@
         settings = {
           Out = "/var/lib/paperless/consume/bcotton";
           UserUMask = "0022";
-          Grp = "users";
+          Grp = "lp";
           UserPrefix = "PDF";
           TitlePref = "TRUE";
           Label = 1;
@@ -314,7 +313,7 @@
         settings = {
           Out = "/var/lib/paperless/consume/tomcotton";
           UserUMask = "0022";
-          Grp = "users";
+          Grp = "lp";
           UserPrefix = "PDF";
           TitlePref = "TRUE";
           Label = 1;
