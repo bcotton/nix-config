@@ -158,10 +158,12 @@
   };
 
   services.clubcotton.open-webui = {
-   package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
-      dependencies = (oldAttrs.dependencies or []) ++ [
-        unstablePkgs.python313Packages.psycopg2-binary
-      ];
+    package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
+      dependencies =
+        (oldAttrs.dependencies or [])
+        ++ [
+          unstablePkgs.python313Packages.psycopg2-binary
+        ];
     });
 
     tailnetHostname = "llm";
@@ -271,6 +273,67 @@
 
   networking.firewall.enable = false;
   networking.hostId = "007f0200";
+
+  # CUPS PDF service for paperless consumption
+  services.printing = {
+    enable = true;
+    drivers = [pkgs.cups-pdf];
+    # Enable network printing and sharing
+    listenAddresses = ["*:631"];
+    allowFrom = ["all"];
+    browsing = true;
+    defaultShared = true;
+  };
+
+  # Enable Avahi for printer discovery
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+    publish = {
+      enable = true;
+      userServices = true;
+    };
+  };
+
+  services.printing.cups-pdf = {
+    enable = true;
+    instances = {
+      bcotton = {
+        settings = {
+          Out = "/var/lib/paperless/consume/bcotton";
+          UserUMask = "0022";
+          Grp = "users";
+          UserPrefix = "PDF";
+          TitlePref = "TRUE";
+          Label = 1;
+          GSCall = "${pkgs.ghostscript}/bin/gs -q -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -dSAFER -sDEVICE=pdfwrite -sOutputFile=\"%s\" -dAutoRotatePages=/PageByPage -dAutoFilterColorImages=false -dColorImageFilter=/FlateEncode -dPDFSETTINGS=/prepress -c save pop -f \"%s\"";
+        };
+      };
+      tomcotton = {
+        settings = {
+          Out = "/var/lib/paperless/consume/tomcotton";
+          UserUMask = "0022";
+          Grp = "users";
+          UserPrefix = "PDF";
+          TitlePref = "TRUE";
+          Label = 1;
+          GSCall = "${pkgs.ghostscript}/bin/gs -q -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -dSAFER -sDEVICE=pdfwrite -sOutputFile=\"%s\" -dAutoRotatePages=/PageByPage -dAutoFilterColorImages=false -dColorImageFilter=/FlateEncode -dPDFSETTINGS=/prepress -c save pop -f \"%s\"";
+        };
+      };
+    };
+  };
+
+  # Create consumption directories and set permissions
+  # Make directories writable by cups user and owned by respective users
+  systemd.tmpfiles.rules = [
+    "d /var/lib/paperless/consume/bcotton 0775 bcotton lp - -"
+    "d /var/lib/paperless/consume/tomcotton 0775 tomcotton lp - -"
+  ];
+
+  # Ensure users are in the lp group so cups can write files they can read
+  users.users.bcotton.extraGroups = ["lp"];
+  users.users.tomcotton.extraGroups = ["lp"];
 
   clubcotton.zfs_mirrored_root = {
     enable = true;
