@@ -4,6 +4,7 @@
 {
   config,
   pkgs,
+  lib,
   unstablePkgs,
   ...
 }: {
@@ -299,7 +300,7 @@
     enable = true;
     instances = {
       bcotton = {
-        settings = {
+        settings = lib.mkForce {
           Out = "/var/lib/paperless/consume/bcotton";
           UserUMask = "0022";
           Grp = "lp";
@@ -310,7 +311,7 @@
         };
       };
       tomcotton = {
-        settings = {
+        settings = lib.mkForce {
           Out = "/var/lib/paperless/consume/tomcotton";
           UserUMask = "0022";
           Grp = "lp";
