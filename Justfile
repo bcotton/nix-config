@@ -24,7 +24,7 @@ switch target_host=hostname: (build target_host)
 # Build the NixOS configuration without switching to it
 [linux]
 build target_host=hostname flags="":
-  nix fmt
+  nix fmt .
   nixos-rebuild build --flake .#{{target_host}} {{flags}}
 
 # Build the NixOS config with the --show-trace flag set
@@ -41,7 +41,7 @@ update:
   nix flake update
 
 fmt:
-  nix fmt
+  nix fmt .
 
   # Run nixinate for a specific host
 nixinate hostname:
