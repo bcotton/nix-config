@@ -6,6 +6,7 @@
   pkgs,
   lib,
   unstablePkgs,
+  inputs,
   ...
 }: {
   imports = [
@@ -14,7 +15,13 @@
     ../../../modules/node-exporter
     ../../../modules/samba
     ../../../users/cheryl.nix
+    # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/printing/cups-pdf.nix"
   ];
+
+  # Use unstable cups-pdf module to avoid evaluation issues
+  # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
+  disabledModules = ["services/printing/cups-pdf.nix"];
 
   services.clubcotton = {
     atuin.enable = true;
@@ -299,26 +306,38 @@
   services.printing.cups-pdf = {
     enable = true;
     instances = {
+      # Disable the default pdf instance
+      pdf.enable = false;
+
       bcotton = {
-        settings = lib.mkForce {
+        enable = true;
+        installPrinter = true;
+        settings = {
           Out = "/var/lib/paperless/consume/bcotton";
-          UserUMask = "0022";
-          Grp = "lp";
-          UserPrefix = "PDF";
+          AnonDirName = "/var/lib/paperless/consume/bcotton"; # Anonymous users go to same directory
+          UserUMask = "0000"; # More permissive - creates files with 666 permissions
+          Grp = "paperless"; # Set group to paperless so paperless service can access
+          UserPrefix = "";
           TitlePref = "TRUE";
-          Label = 1;
-          GSCall = "${pkgs.ghostscript}/bin/gs -q -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -dSAFER -sDEVICE=pdfwrite -sOutputFile=\"%s\" -dAutoRotatePages=/PageByPage -dAutoFilterColorImages=false -dColorImageFilter=/FlateEncode -dPDFSETTINGS=/prepress -c save pop -f \"%s\"";
+          Label = "1";
+          Anonuser = "bcotton"; # Allow anonymous access, treat as bcotton user
+          GhostScript = "${pkgs.ghostscript}/bin/gs";
         };
       };
+
       tomcotton = {
-        settings = lib.mkForce {
+        enable = true;
+        installPrinter = true;
+        settings = {
           Out = "/var/lib/paperless/consume/tomcotton";
-          UserUMask = "0022";
-          Grp = "lp";
-          UserPrefix = "PDF";
+          AnonDirName = "/var/lib/paperless/consume/tomcotton"; # Anonymous users go to same directory
+          UserUMask = "0000";
+          Grp = "paperless";
+          UserPrefix = "";
           TitlePref = "TRUE";
-          Label = 1;
-          GSCall = "${pkgs.ghostscript}/bin/gs -q -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -dSAFER -sDEVICE=pdfwrite -sOutputFile=\"%s\" -dAutoRotatePages=/PageByPage -dAutoFilterColorImages=false -dColorImageFilter=/FlateEncode -dPDFSETTINGS=/prepress -c save pop -f \"%s\"";
+          Label = "1";
+          Anonuser = "tomcotton"; # Allow anonymous access, treat as tomcotton user
+          GhostScript = "${pkgs.ghostscript}/bin/gs";
         };
       };
     };
@@ -334,6 +353,8 @@
   # Ensure users are in the lp group so cups can write files they can read
   users.users.bcotton.extraGroups = ["lp"];
   users.users.tomcotton.extraGroups = ["lp"];
+  # Add cups user to paperless group for better file access
+  users.users.cups.extraGroups = ["paperless"];
 
   clubcotton.zfs_mirrored_root = {
     enable = true;

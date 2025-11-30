@@ -59,8 +59,12 @@ in {
   config = mkIf cfg.enable {
     systemd.tmpfiles.rules = [
       "d '${cfg.mediaDir}' 0750 ${cfg.user} ${cfg.user} - -"
-      "d '${cfg.configDir}' 0750 ${cfg.user} ${cfg.user} - -"
+      "d '${cfg.configDir}' 0755 ${cfg.user} ${cfg.user} - -" # Changed to 755 so cups can traverse
       "d '${cfg.consumptionDir}' 0777 ${cfg.user} ${cfg.user} - -"
+      # Additional consume directory for cups-pdf integration
+      "d '${cfg.configDir}/consume' 0777 ${cfg.user} ${cfg.user} - -"
+      "d '${cfg.configDir}/consume/bcotton' 0777 ${cfg.user} ${cfg.user} - -"
+      "d '${cfg.configDir}/consume/tomcotton' 0777 ${cfg.user} ${cfg.user} - -"
     ];
 
     services.paperless = {
