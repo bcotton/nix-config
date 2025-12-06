@@ -110,6 +110,7 @@ function setprompt() {
 
     # Create filler of dashes to pad to terminal width
     filler="${grey}${(l:$(( $COLUMNS - $i_width ))::-:)}${reset}"
+    # Inset filler between kube_ps1 and the info line
     infoline[4]=( "${infoline[4]} ${filler} " )
 
     # Assemble final prompt

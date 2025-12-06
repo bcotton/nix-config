@@ -170,7 +170,7 @@ in {
       bind -N "last-session (via sesh) " L run-shell "sesh last"
 
       bind -n "M-k" run-shell "sesh connect \"$(
-          ~/go/bin/sesh list --icons | fzf-tmux -p 80%,70% --no-border \
+          sesh list --icons | fzf-tmux -p 80%,70% --no-border \
             --reverse \
             --ansi \
             --list-border \
@@ -186,7 +186,7 @@ in {
             --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
             --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
             --preview-window 'right:70%' \
-            --preview '~/go/bin/sesh preview {}' \
+            --preview 'sesh preview {}' \
       )\""
 
       # set-option -g status-position top
@@ -423,7 +423,7 @@ in {
         eval "$(zoxide init zsh)"
       fi
 
-      eval "$(sesh init zsh)"
+      eval "$(sesh completion zsh)"
 
       bindkey -e
       bindkey '^[[A' up-history
@@ -481,7 +481,6 @@ in {
       }
 
       if [[ "$TERM_PROGRAM" != "vscode" ]]; then
-        RPROMPT=$RED'[%~]'$DEFAULT
         DISABLE_AUTO_UPDATE="true"
         DISABLE_UPDATE_PROMPT="true"
       fi
@@ -529,7 +528,7 @@ in {
     llm
     # nodejs_22
     opentofu
-    # unstablePkgs.sesh
+    unstablePkgs.sesh
     unstablePkgs.uv
     tldr
     #  unstablePkgs.spotdl

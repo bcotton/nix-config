@@ -75,6 +75,7 @@ in {
         fzf-tmux-url
         tmux-fzf-head
         tmux-thumbs
+        extrakto
         {
           plugin = tmux-window-name;
         }

@@ -21,6 +21,7 @@ in {
       # Node and friends
       nodejs_22
       yarn-berry
+      webpack-cli
       pnpm_10
     ];
 
@@ -64,105 +65,133 @@ in {
         #
       ];
       brews = [
-        # home.nix
-        # home.packages
-        # "argocd"
-        # "doctl"
-        # "helm"
-        # "flyctl"
-        #"azure-cli"
-        "npm"
+        "azure-cli"
+        "bash"
+        "borders"
+        "colordiff"
+        "duf"
+        "etcd"
+        "fswatch"
+        "fzf"
+        "gh"
+        "git-absorb"
+        "git-delta"
+        "glances"
+        "glow"
+        "go"
+        "golangci-lint"
+        "gron"
+        "helm"
+        "hwatch"
+        "jd"
+        "jnv"
+        "jq"
+        "jsonnet"
+        "jsonnet-bundler"
+        "k9s"
+        "kube-fzf"
+        "kubectx"
+        "kubernetes-cli"
+        "kustomize"
+        "lastpass-cli"
+        "lazydocker"
+        "lazygit"
+        "mage"
+        "mas"
+        "minikube"
+        "mkdocs"
+        "mods"
         "node"
+        "node_exporter"
+        "npm"
+        "oh-my-posh"
+        "prometheus"
+        "reattach-to-user-namespace"
+        "ripgrep"
+        "shellcheck"
+        "skhd"
+        "stern"
         "tailscale"
+        "tanka"
+        "telnet"
+        "terminal-notifier"
+        "terraform"
+        "the_silver_searcher"
+        "thefuck"
+        "tilt"
+        "tmux"
+        "tree"
+        "trufflehog"
+        "watch"
+        "wget"
+        "yarn"
+        "yq"
+        "zizmor"
       ];
       casks = [
-        #"alfred" # you are on alfred4 not 5
-        #      "autodesk-fusion360"
-        #      "audacity"
-        "1password-cli"
         "1password"
+        "1password-cli"
+        "aerospace"
         "alfred"
         "amethyst"
         "balenaetcher"
+        "barrier"
         "bartender"
-        #      "bambu-studio"
-        #"canon-eos-utility" #old version and v3 not in repo
+        "calibre"
+        "companion"
         "discord"
-        "docker"
+        "docker-desktop"
         "dropbox"
         "element"
-        #      "firefox"
+        "flirc"
+        "gcloud-cli"
+        "ghostty"
         "google-chrome"
-        "google-cloud-sdk"
+        "gcloud-cli"
         "istat-menus"
         "iterm2"
-        #"lingon-x"
+        "karabiner-elements"
         "little-snitch"
-        #      "logitech-options"
         "macwhisper"
         "monitorcontrol"
         "mqtt-explorer"
-        #      "nextcloud"
-        #      "notion"
-        #      "obs"
         "netnewswire"
+        "obs"
         "obsidian"
         "omnidisksweeper"
+        "onyx"
         "openscad"
+        "openttd"
         "orbstack"
-        #      "plexamp"
         "prusaslicer"
         "rectangle"
+        "shortcat"
         "signal"
         "slack"
         "spotify"
-        "telegram"
         "swinsian"
-        #      "steam"
-        #      "thunderbird"
-        #      "viscosity"
+        "telegram"
         "visual-studio-code"
         "vlc"
-        "wireshark"
+        "wezterm"
+        "wireshark-app"
+        "xquartz"
         "zoom"
-        #      "yubico-yubikey-manager"
-
-        # rogue amoeba
-        # "audio-hijack"
-        # "farrago"
-        # "loopback"
-        # "soundsource"
       ];
       masApps = {
-        #   "Amphetamine" = 937984704;
-        # "Bitwarden" = 1352778147;
-        #   "Creator's Best Friend" = 1524172135;
-        #   "Disk Speed Test" = 425264550;
-        #   "iA Writer" = 775737590;
-        #   "Microsoft Remote Desktop" = 1295203466;
-        #   "Reeder" = 1529448980;
-        #   "Resize Master" = 1025306797;
-        #   # "Steam Link" = 123;
+        "Amphetamine" = 937984704;
+        "Blackmagic Disk Speed Test" = 425264550;
+        "CleanMyMac" = 1339170533;
+        "GarageBand" = 682658836;
+        "iMovie" = 408981434;
+        "Keynote" = 409183694;
+        "MultiVNC" = 6738012997;
+        "Numbers" = 409203825;
+        "Pages" = 409201541;
         "Tailscale" = 1475387142;
-        # "BookPlayer" = 1138219998;
-
-        #   "Telegram" = 747648890;
-        #   "The Unarchiver" = 425424353;
-        #   "Todoist" = 585829637;
-        #   "UTM" = 1538878817;
-        #   "Wireguard" = 1451685025;
-
-        #   # these apps with uk apple id
-        #   #"Final Cut Pro" = 424389933;
-        #   #"Logic Pro" = 634148309;
-        #   #"MainStage" = 634159523;
-        #   #"Garageband" = 682658836;
-        #   #"ShutterCount" = 720123827;
-        #   #"Teleprompter" = 1533078079;
-
-        #   "Keynote" = 409183694;
-        #   "Numbers" = 409203825;
-        #   "Pages" = 409201541;
+        "WiFi Explorer Lite" = 1408727408;
+        "Windows App" = 1295203466;
+        "Xcode" = 497799835;
       };
     };
 
