@@ -16,6 +16,7 @@ NC='\033[0m' # No Color
 # Command line options
 VERBOSE=false
 JSON_OUTPUT=false
+DEBUG=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -27,10 +28,15 @@ while [[ $# -gt 0 ]]; do
             JSON_OUTPUT=true
             shift
             ;;
+        --debug|-d)
+            DEBUG=true
+            shift
+            ;;
         --help|-h)
-            echo "Usage: $0 [--verbose] [--json]"
+            echo "Usage: $0 [--verbose] [--json] [--debug]"
             echo "  --verbose, -v    Show detailed SMART attributes"
             echo "  --json, -j       Output in JSON format"
+            echo "  --debug, -d      Show debug information and raw SMART output"
             exit 0
             ;;
         *)
@@ -73,11 +79,23 @@ get_smart_attributes() {
         return
     fi
     
+    if [[ "$DEBUG" == "true" ]]; then
+        echo "=== DEBUG: SMART data for $device ===" >&2
+        grep -E "(Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable|Temperature_Celsius)" "$temp_file" >&2
+        echo "=== END DEBUG ===" >&2
+    fi
+    
+    # Use the raw value (column 10) which matches what Prometheus smartctl exporter uses
     local reallocated=$(grep "Reallocated_Sector_Ct" "$temp_file" | awk '{print $10}' || echo "0")
     local pending=$(grep "Current_Pending_Sector" "$temp_file" | awk '{print $10}' || echo "0")
     local uncorrectable=$(grep "Offline_Uncorrectable" "$temp_file" | awk '{print $10}' || echo "0")
     local temperature=$(grep "Temperature_Celsius" "$temp_file" | awk '{print $10}' || echo "0")
     local health=$(smartctl -H "$device" 2>/dev/null | grep "SMART overall-health" | awk '{print $6}' || echo "UNKNOWN")
+    
+    if [[ "$DEBUG" == "true" ]]; then
+        echo "=== DEBUG: Parsed values for $device ===" >&2
+        echo "Reallocated: $reallocated, Pending: $pending, Uncorrectable: $uncorrectable, Temp: $temperature, Health: $health" >&2
+    fi
     
     echo "${reallocated:-0}:${pending:-0}:${uncorrectable:-0}:${temperature:-0}:${health:-UNKNOWN}"
     rm -f "$temp_file"
