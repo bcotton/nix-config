@@ -7,24 +7,9 @@
   # Enhanced ZFS monitoring configuration
   # This module provides additional monitoring capabilities for ZFS systems
   
-  # Enable systemd exporter to monitor sanoid/syncoid services
-  services.prometheus.exporters.systemd = lib.mkIf (
-    config.clubcotton.zfs_single_root.enable
-    or false
-    || config.clubcotton.zfs_mirrored_root.enable or false
-    || config.clubcotton.zfs_raidz1.enable or false
-  ) {
-    enable = true;
-    # Monitor ZFS-related systemd services
-    unitWhitelist = [
-      "sanoid.service"
-      "sanoid.timer"
-      "syncoid-.*.service"
-      "syncoid-.*.timer"
-      "zfs-scrub-.*.service"
-      "zfs-scrub-.*.timer"
-    ];
-  };
+  # Systemd metrics are collected via node exporter systemd collector
+  # The node exporter is already configured with systemd collector enabled
+  # in modules/node-exporter/default.nix, so no additional configuration needed
 
   # Create a custom ZFS health check script
   systemd.services.zfs-health-check = lib.mkIf (

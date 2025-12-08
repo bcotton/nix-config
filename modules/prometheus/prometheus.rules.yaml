@@ -164,6 +164,14 @@ groups:
     annotations:
       description: 'Sanoid service has not run in over 2 hours on {{ $labels.instance }}'
 
+  - alert: SyncoidServiceNotRunRecently
+    expr: (time() - node_systemd_unit_start_time_seconds{name=~"syncoid-.*\\.service"}) > 86400
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Syncoid service {{ $labels.name }} has not run in over 24 hours on {{ $labels.instance }}'
+
   # ZFS Scrub Monitoring
   - alert: ZfsScrubOverdue
     expr: (time() - zfs_pool_last_scrub_timestamp) > 2592000  # 30 days
