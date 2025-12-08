@@ -426,5 +426,27 @@ in {
     };
   };
 
+  # Enhanced monitoring for nas-01 specific disks
+  services.prometheus.exporters.smartctl = {
+    devices = [
+      # rpool (mirrored root) disks
+      "/dev/disk/by-id/ata-WD_Blue_SA510_2.5_1000GB_24293W800136"
+      "/dev/disk/by-id/ata-SPCC_Solid_State_Disk_AAAA0000000000006990"
+      # ssdpool (RAIDZ1) NVMe drives
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903171J"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903188X"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903194N"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X905916M"
+      # mediapool (RAIDZ1) drives
+      "/dev/disk/by-id/wwn-0x5000c500cbac2c8c"
+      "/dev/disk/by-id/wwn-0x5000c500cbadaef8"
+      "/dev/disk/by-id/wwn-0x5000c500f73da9f5"
+      # backuppool (RAIDZ1) drives
+      "/dev/disk/by-id/wwn-0x5000c500cb986994"
+      "/dev/disk/by-id/wwn-0x5000c500cb5e1c80"
+      "/dev/disk/by-id/wwn-0x5000c500f6f25ea9"
+    ];
+  };
+
   system.stateVersion = "24.11"; # Did you read the comment?
 }

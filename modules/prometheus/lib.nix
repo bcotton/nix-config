@@ -14,6 +14,7 @@
     "node"
     "zfs"
     "postgres"
+    "smartctl"
   ];
 
   # Find all enabled exporters for a given host

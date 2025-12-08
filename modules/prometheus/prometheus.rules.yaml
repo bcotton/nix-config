@@ -1,4 +1,26 @@
 groups:
+# Recording rules for ZFS capacity planning and performance metrics
+- name: zfs_recording_rules
+  interval: 300s  # 5 minutes
+  rules:
+    - record: zfs:pool_capacity_percent
+      expr: (zfs_pool_allocated_bytes / (zfs_pool_allocated_bytes + zfs_pool_free_bytes)) * 100
+    
+    - record: zfs:pool_growth_rate_daily
+      expr: rate(zfs_pool_allocated_bytes[24h])
+    
+    - record: zfs:pool_days_until_full
+      expr: zfs_pool_free_bytes / (rate(zfs_pool_allocated_bytes[7d]) * 86400)
+    
+    - record: zfs:dataset_growth_rate_hourly
+      expr: rate(zfs_dataset_used_bytes[1h])
+    
+    - record: zfs:arc_hit_ratio
+      expr: zfs_arc_hits / (zfs_arc_hits + zfs_arc_misses)
+    
+    - record: zfs:arc_memory_utilization
+      expr: zfs_arc_size / zfs_arc_c_max
+
 - name: alerts
   rules:
   - alert: HostDown
@@ -116,6 +138,164 @@ groups:
       severity: warning
     annotations:
       description: 'ZFS pool {{ $labels.pool }} on {{ $labels.instance }} has {{ printf "%.0f" $value }} bytes of leaked data'
+
+  # Enhanced ZFS Monitoring - Sanoid/Syncoid Service Monitoring
+  - alert: SanoidServiceFailed
+    expr: node_systemd_unit_state{name="sanoid.service",state="failed"} == 1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Sanoid snapshot service failed on {{ $labels.instance }}'
+
+  - alert: SyncoidReplicationFailed  
+    expr: node_systemd_unit_state{name=~"syncoid-.*\\.service",state="failed"} == 1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Syncoid replication {{ $labels.name }} failed on {{ $labels.instance }}'
+
+  - alert: SanoidServiceNotRunRecently
+    expr: (time() - node_systemd_unit_start_time_seconds{name="sanoid.service"}) > 7200
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Sanoid service has not run in over 2 hours on {{ $labels.instance }}'
+
+  # ZFS Scrub Monitoring
+  - alert: ZfsScrubOverdue
+    expr: (time() - zfs_pool_last_scrub_timestamp) > 2592000  # 30 days
+    for: 1h
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS pool {{ $labels.pool }} on {{ $labels.instance }} has not been scrubbed in over 30 days'
+
+  - alert: ZfsScrubErrors
+    expr: zfs_pool_scrub_errors > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: 'ZFS scrub found {{ $value }} errors in pool {{ $labels.pool }} on {{ $labels.instance }}'
+
+  - alert: ZfsScrubInProgress
+    expr: zfs_pool_scrub_state == 1
+    for: 24h  # Alert if scrub takes more than 24 hours
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS scrub has been running for over 24 hours on pool {{ $labels.pool }} on {{ $labels.instance }}'
+
+  # Dataset-Level Monitoring
+  - alert: ZfsDatasetQuotaExceeded
+    expr: (zfs_dataset_used_bytes / zfs_dataset_quota_bytes) > 0.9
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS dataset {{ $labels.dataset }} is at {{ printf "%.1f" $value }}% of quota on {{ $labels.instance }}'
+
+  - alert: ZfsDatasetRapidGrowth
+    expr: rate(zfs_dataset_used_bytes[1h]) > 1073741824  # 1GB/hour
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS dataset {{ $labels.dataset }} growing rapidly at {{ printf "%.2f" $value }} bytes/hour on {{ $labels.instance }}'
+
+  - alert: ZfsDatasetHighUsage
+    expr: (zfs_dataset_used_bytes / zfs_dataset_available_bytes) > 0.85
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS dataset {{ $labels.dataset }} is {{ printf "%.1f" $value }}% full on {{ $labels.instance }}'
+
+  # ZFS ARC (Adaptive Replacement Cache) Monitoring
+  - alert: ZfsArcLowHitRatio
+    expr: (zfs_arc_hits / (zfs_arc_hits + zfs_arc_misses)) < 0.8
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS ARC hit ratio is low ({{ printf "%.2f" $value }}) on {{ $labels.instance }}'
+
+  - alert: ZfsArcMemoryPressure
+    expr: (zfs_arc_size / zfs_arc_c_max) > 0.95
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS ARC memory usage is high ({{ printf "%.1f" $value }}%) on {{ $labels.instance }}'
+
+  - alert: ZfsArcMetadataLimit
+    expr: (zfs_arc_meta_used / zfs_arc_meta_limit) > 0.9
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS ARC metadata usage is high ({{ printf "%.1f" $value }}%) on {{ $labels.instance }}'
+
+  # SMART Disk Health Monitoring
+  - alert: SmartDeviceFailurePredicted
+    expr: smartctl_device_smart_healthy == 0
+    for: 0m  # Immediate alert
+    labels:
+      severity: critical
+    annotations:
+      description: 'SMART predicts failure for device {{ $labels.device }} on {{ $labels.instance }}'
+
+  - alert: SmartDeviceHighTemperature
+    expr: smartctl_device_temperature > 60
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Device {{ $labels.device }} temperature is high ({{ $value }}°C) on {{ $labels.instance }}'
+
+  - alert: SmartDeviceReallocatedSectors
+    expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} reallocated sectors on {{ $labels.instance }}'
+
+  - alert: SmartDevicePendingSectors
+    expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }}'
+
+  # ZFS Pool I/O Error Monitoring
+  - alert: ZfsPoolReadErrors
+    expr: rate(zfs_pool_read_errors[5m]) > 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS pool {{ $labels.pool }} experiencing read errors on {{ $labels.instance }}'
+
+  - alert: ZfsPoolWriteErrors
+    expr: rate(zfs_pool_write_errors[5m]) > 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      description: 'ZFS pool {{ $labels.pool }} experiencing write errors on {{ $labels.instance }}'
+
+  - alert: ZfsPoolChecksumErrors
+    expr: rate(zfs_pool_checksum_errors[5m]) > 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      description: 'ZFS pool {{ $labels.pool }} experiencing checksum errors on {{ $labels.instance }}'
 
   - alert: BleSensorOffline
     expr: homeassistant_sensor_unit_seconds{domain="sensor",entity="sensor.main_ble_sensor_age",instance="homeassistant:8123"} > 5000
