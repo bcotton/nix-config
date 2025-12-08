@@ -467,10 +467,11 @@ zfs clone <dataset>@<snapshot> <dataset>_recovery
   - `>5 sectors`: Plan immediate replacement (weeks, not months)
   - `>50 sectors`: Replace immediately - high failure risk
 
-**Current Pending Sector (`Current_Pending_Sector`)**
-- **What it means**: Sectors waiting to be remapped (unstable sectors)
-- **Why important**: Indicates active media degradation
-- **Actions**: Run extended SMART test to force reallocation attempt
+**Current Pending Sector (`Current_Pending_Sector`) - MOST URGENT**
+- **What it means**: Sectors with read errors waiting for reallocation attempt
+- **Why critical**: Data may be unreadable RIGHT NOW, active instability
+- **Immediate danger**: ZFS pool errors, data corruption, cascading failures
+- **Actions**: IMMEDIATE - Force reallocation via SMART test or ZFS scrub
 
 **Offline Uncorrectable (`Offline_Uncorrectable`)**
 - **What it means**: Sectors that couldn't be read during offline scan
@@ -498,6 +499,63 @@ smartctl -l selftest /dev/sdX
 # View error log
 smartctl -l error /dev/sdX
 ```
+
+#### Emergency Pending Sector Response
+
+**When you receive a pending sector alert:**
+
+1. **Immediate Assessment** (within 1 hour):
+```bash
+# Check which drive and how many sectors
+smartctl -A /dev/sdX | grep -E "(Current_Pending_Sector|Reallocated_Sector_Ct|Offline_Uncorrectable)"
+
+# Check ZFS pool status for any errors
+zpool status -v
+
+# Check recent ZFS events
+zpool events | tail -20
+```
+
+2. **Force Reallocation Attempt** (within 4 hours):
+```bash
+# Method 1: ZFS scrub (safest for active pools)
+zfs scrub <affected_pool>
+
+# Method 2: Extended SMART test
+smartctl -t long /dev/sdX
+
+# Method 3: Targeted read test (if you can identify affected areas)
+dd if=/dev/sdX of=/dev/null bs=4096 count=1000000 skip=<sector_number>
+```
+
+3. **Monitor Results** (after 24 hours):
+```bash
+# Check if pending sectors were successfully reallocated
+smartctl -A /dev/sdX | grep -E "(Current_Pending_Sector|Reallocated_Sector_Ct)"
+
+# Possible outcomes:
+# GOOD: Pending=0, Reallocated increased (successful reallocation)
+# BAD: Pending unchanged, Uncorrectable increased (failed reallocation)
+# UGLY: Pending increased (more sectors becoming unstable)
+```
+
+4. **Decision Matrix**:
+- **Pending sectors cleared**: Monitor closely, plan replacement within 3 months
+- **Pending sectors persist >24h**: Replace drive immediately (reallocation failing)
+- **Uncorrectable sectors appeared**: Replace drive immediately (data loss risk)
+- **More pending sectors appeared**: Replace drive immediately (cascading failure)
+
+#### Why Pending Sectors Are More Dangerous Than Reallocated
+
+| Scenario | Pending Sectors | Reallocated Sectors |
+|----------|----------------|-------------------|
+| **Data Status** | **May be unreadable** | Successfully moved to spare area |
+| **ZFS Impact** | **Pool errors possible** | No immediate impact |
+| **Urgency** | **Hours to days** | Weeks to months |
+| **Risk Level** | **High - active failure** | Medium - stable condition |
+| **Action Required** | **Immediate intervention** | Monitoring and planning |
+
+**Key Point**: Pending sectors represent **active, ongoing failure** while reallocated sectors represent **completed, successful recovery**. Always treat pending sectors as urgent.
 
 #### Disk Replacement Procedure for ZFS
 

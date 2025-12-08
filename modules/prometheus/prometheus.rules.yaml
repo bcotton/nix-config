@@ -289,14 +289,30 @@ groups:
     annotations:
       description: 'Device {{ $labels.device }} has {{ $value }} reallocated sectors on {{ $labels.instance }} - PLAN IMMEDIATE REPLACEMENT'
 
-  # Pending Sectors - Sectors waiting to be reallocated
-  - alert: SmartDevicePendingSectors
-    expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 0
-    for: 5m
+  # Pending Sectors - Sectors waiting to be reallocated (URGENT)
+  - alert: SmartDevicePendingSectorsLow
+    expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 0 and smartctl_device_attribute{attribute_name="Current_Pending_Sector"} <= 5
+    for: 2m  # Shorter wait time - this is urgent
     labels:
       severity: warning
     annotations:
-      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }} - Run extended SMART test'
+      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }} - IMMEDIATE ACTION: Run extended SMART test or ZFS scrub to force reallocation'
+
+  - alert: SmartDevicePendingSectorsHigh
+    expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 5
+    for: 0m  # Immediate alert
+    labels:
+      severity: critical
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }} - CRITICAL: Active media failure, plan immediate replacement'
+
+  - alert: SmartDevicePendingSectorsPersistent
+    expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 0
+    for: 24h  # If pending sectors persist for 24 hours
+    labels:
+      severity: critical
+    annotations:
+      description: 'Device {{ $labels.device }} has persistent pending sectors ({{ $value }}) for >24h on {{ $labels.instance }} - Reallocation failing, replace drive immediately'
 
   # Uncorrectable Sectors - Data loss has occurred
   - alert: SmartDeviceUncorrectableSectors
