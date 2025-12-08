@@ -7,8 +7,13 @@
   lib,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -79,7 +84,7 @@
   services.rpcbind.enable = true;
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   services.clubcotton.pinchflat = {
     mediaDir = "/media/youtube/pinchflat";
@@ -258,7 +263,7 @@
     };
   };
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
@@ -279,7 +284,7 @@
     };
   };
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
   networking.hostId = "007f0200";
 
   # CUPS PDF service for paperless consumption

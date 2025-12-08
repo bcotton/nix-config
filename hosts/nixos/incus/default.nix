@@ -4,8 +4,13 @@
 {
   modulesPath,
   lib,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     ./disk-config.nix
     ./hardware-configuration.nix

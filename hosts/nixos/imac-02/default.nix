@@ -7,8 +7,13 @@
   lib,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -66,9 +71,9 @@
   };
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
@@ -77,9 +82,9 @@
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   environment.systemPackages = with pkgs; [
     firefox

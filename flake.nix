@@ -89,7 +89,7 @@
       nixos-generators.nixosGenerate
       {
         format = "lxc";
-        specialArgs = {inherit self system inputs localPackages;};
+        specialArgs = {inherit self system inputs localPackages hostName;};
         modules =
           [
             # adds unstable to be available in top-level evals (like in common-packages)
@@ -134,7 +134,7 @@
       nixpkgs.lib.nixosSystem
       {
         inherit system;
-        specialArgs = {inherit self system inputs localPackages;};
+        specialArgs = {inherit self system inputs localPackages hostName;};
         modules =
           [
             # adds unstable to be available in top-level evals (like in common-packages)
@@ -211,7 +211,7 @@
       nixpkgs.lib.nixosSystem
       {
         inherit system;
-        specialArgs = {inherit self system inputs;};
+        specialArgs = {inherit self system inputs hostName;};
         modules =
           [
             # adds unstable to be available in top-level evals (like in common-packages)
@@ -239,6 +239,7 @@
       nix-darwin.lib.darwinSystem
       {
         inherit system inputs;
+        specialArgs = {inherit hostName;};
 
         modules = [
           # adds unstable to be available in top-level evals (like in common-packages)

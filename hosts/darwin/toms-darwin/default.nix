@@ -5,6 +5,7 @@
   lib,
   inputs,
   config,
+  hostName,
   ...
 }:
 with lib; let
