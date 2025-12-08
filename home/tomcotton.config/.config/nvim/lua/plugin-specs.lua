@@ -113,13 +113,13 @@ local plugin_specs = {
     },
   },
 
-  {
-    'akinsho/toggleterm.nvim',
-    version = "*",
-    config = function()
-      require("config.toggleterm")
-    end,
-  },
+  -- {
+  --   'akinsho/toggleterm.nvim',
+  --   version = "*",
+  --   config = function()
+  --     require("config.toggleterm")
+  --   end,
+  -- },
 
   -- scrolloff_percentage: controls how close the cursor can be to the top or bottom
   --                       of the screen before scrolling begins

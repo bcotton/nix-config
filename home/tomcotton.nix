@@ -259,62 +259,64 @@ in {
 
   programs.vscode = {
     enable = true;
-    mutableExtensionsDir = false;
-    extensions = with pkgs.vscode-extensions; [
-      asvetliakov.vscode-neovim
-      # ms-vscode.cpptools
-      bbenoist.nix
-      ms-vscode.cpptools-extension-pack
-      xaver.clang-format
-      twxs.cmake
-      ms-vscode.cmake-tools
-      james-yu.latex-workshop
-      ms-dotnettools.csharp
-      ms-dotnettools.csdevkit
-      saoudrizwan.claude-dev
-      ms-dotnettools.vscode-dotnet-runtime
-      mechatroner.rainbow-csv
-      ms-python.vscode-pylance
-      ms-python.python
-      ms-python.debugpy
-      antyos.openscad
-      ms-vscode.makefile-tools
-      valentjn.vscode-ltex
-      vadimcn.vscode-lldb
-      justusadam.language-haskell
-      sainnhe.gruvbox-material
-      # jdinhlife.gruvbox
-      ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
-      {
-        name = "chuck";
-        publisher = "forrcaho";
-        version = "1.0.1";
-        sha256 = "sha256-gqcN7eam0YnBNQ2z7tA7Fo7PbXnJV0lX9TqcEbnMDL8=";
-      }
-      {
-        name = "vscode-tidalcycles";
-        publisher = "tidalcycles";
-        version = "2.0.2";
-        sha256 = "sha256-TfRLJZcMpoBJuXitbRmacbglJABZrMGtSNXAbjSfLaQ=";
-      }
-      {
-        name = "cpptools";
-        publisher = "ms-vscode";
-        version = "1.27.7";
-        sha256 = "sha256-/usZ8oaelNF2jdYWSKLEcFVPAxMk8T/7u3xR4t4NCjM=";
-      }
-      {
-        name = "fzf-quick-open";
-        publisher = "rlivings39";
-        version = "0.5.1";
-        sha256 = "sha256-xGcBl3mmyy+Zsn9OncDDbJViMxEgvsRjkzy89NPJpS8=";
-      }
-    ];
+    # mutableExtensionsDir = true;
+    # extensions = with pkgs.vscode-extensions; [
+    #   asvetliakov.vscode-neovim
+    #   # ms-vscode.cpptools
+    #   bbenoist.nix
+    #   ms-vscode.cpptools-extension-pack
+    #   xaver.clang-format
+    #   twxs.cmake
+    #   ms-vscode.cmake-tools
+    #   james-yu.latex-workshop
+    #   ms-dotnettools.csharp
+    #   ms-dotnettools.csdevkit
+    #   saoudrizwan.claude-dev
+    #   ms-dotnettools.vscode-dotnet-runtime
+    #   mechatroner.rainbow-csv
+    #   ms-python.vscode-pylance
+    #   ms-python.python
+    #   ms-python.debugpy
+    #   antyos.openscad
+    #   ms-vscode.makefile-tools
+    #   valentjn.vscode-ltex
+    #   vadimcn.vscode-lldb
+    #   justusadam.language-haskell
+    #   sainnhe.gruvbox-material
+    #   mkhl.direnv
+    #   # jdinhlife.gruvbox
+    #   ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+    #   {
+    #     name = "chuck";
+    #     publisher = "forrcaho";
+    #     version = "1.0.1";
+    #     sha256 = "sha256-gqcN7eam0YnBNQ2z7tA7Fo7PbXnJV0lX9TqcEbnMDL8=";
+    #   }
+    #   {
+    #     name = "vscode-tidalcycles";
+    #     publisher = "tidalcycles";
+    #     version = "2.0.2";
+    #     sha256 = "sha256-TfRLJZcMpoBJuXitbRmacbglJABZrMGtSNXAbjSfLaQ=";
+    #   }
+    #   {
+    #     name = "cpptools";
+    #     publisher = "ms-vscode";
+    #     version = "1.27.7";
+    #     sha256 = "sha256-/usZ8oaelNF2jdYWSKLEcFVPAxMk8T/7u3xR4t4NCjM=";
+    #   }
+    #   {
+    #     name = "fzf-quick-open";
+    #     publisher = "rlivings39";
+    #     version = "0.5.1";
+    #     sha256 = "sha256-xGcBl3mmyy+Zsn9OncDDbJViMxEgvsRjkzy89NPJpS8=";
+    #   }
+    # ];
     profiles.default = {
       userSettings = {
         # This property will be used to generate settings.json:
         # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
         "editor.formatOnSave" = true;
+        "editor.fontSize" = 14;
         "files.autoSave" = "onFocusChange";
         # "extensions.autoCheckUpdates" = false;
         "extensions.autoUpdate" = false;
@@ -339,18 +341,22 @@ in {
         };
         "tidalcycles.bootTidalPath" = "/Users/tomcotton/tidal-cycles/BootFiles/BootTidal.hs";
         "workbench.colorTheme" = "Gruvbox Material Dark";
-        "gruvboxMaterial.darkContrast" = "hard";
+        "gruvboxMaterial.darkContrast" = "medium";
         "gruvboxMaterial.highContrast" = true;
         # "gruvboxMaterial.darkPalette" = "original";
         # "gruvboxMaterial.darkWorkbench" = "original";
       };
       keybindings = [
         # See https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
-        # {
-        #     key = "shift+cmd+j";
-        #     command = "workbench.action.focusActiveEditorGroup";
-        #     when = "terminalFocus";
-        # }
+        {
+            key = "ctrl+t";
+            command = "workbench.action.terminal.focus";
+        }
+        {
+            key = "ctrl+t";
+            command = "workbench.action.focusActiveEditorGroup";
+            when = "terminalFocus";
+        }
         # {
         #   key = "ctrl+alt+shift+cmd+[";
         #   command = "workbench.action.previousEditor";
