@@ -7,8 +7,13 @@
   lib,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -74,7 +79,7 @@
     bridges."br0".interfaces = ["enp2s0"];
     interfaces."br0".useDHCP = true;
   };
-  services.tailscale.enable = true;
+  services.tailscale.enable = variables.tailscaleEnable;
 
   services.clubcotton.code-server = {
     tailnetHostname = "nix-01-vscode";
@@ -88,9 +93,9 @@
   };
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
@@ -99,9 +104,9 @@
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   virtualisation.libvirtd.enable = true;
 

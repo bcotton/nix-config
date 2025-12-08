@@ -4,8 +4,12 @@
   unstablePkgs,
   lib,
   inputs,
+  hostName,
   ...
 }: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
   config = {

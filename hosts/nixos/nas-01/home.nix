@@ -4,5 +4,5 @@
   lib,
   ...
 }: {
-  programs.beets-cli.enable = true;
+  programs.beets-cli.enable = false;
 }

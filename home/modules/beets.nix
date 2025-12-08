@@ -31,8 +31,8 @@ in {
         ];
 
         import = {
-          move = false;
-          copy = true;
+          move = true;
+          copy = false;
         };
 
         spotify = {

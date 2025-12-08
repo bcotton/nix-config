@@ -9,8 +9,13 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -23,15 +28,15 @@
     filebrowser.enable = false;
     tailscale.enable = true;
   };
-  # services.clubcotton.services.tailscale.enable = true;
+  # services.clubcotton.services.tailscale.enable = variables.tailscaleEnable;
 
   clubcotton.zfs_single_root.enable = true;
 
   virtualisation.podman.enable = true;
   virtualisation.libvirtd.enable = true;
 
-  programs.zsh.enable = true;
-  services.openssh.enable = true; # Enable the OpenSSH daemon.
+  programs.zsh.enable = variables.zshEnable;
+  services.openssh.enable = variables.opensshEnable; # Enable the OpenSSH daemon.
 
   services.clubcotton.freshrss = {
     port = 8104;
@@ -94,7 +99,7 @@
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -103,7 +108,7 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you

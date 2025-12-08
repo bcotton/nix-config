@@ -6,8 +6,13 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -55,8 +60,8 @@
 
   networking = {
     hostId = "038f8559";
-    useDHCP = false;
-    hostName = "nix-02";
+    useDHCP = variables.useDHCP;
+    hostName = hostName;
     defaultGateway = "192.168.5.1";
     nameservers = ["192.168.5.220"];
     interfaces.enp3s0.ipv4.addresses = [
@@ -74,13 +79,13 @@
     bridges."br0".interfaces = ["enp2s0"];
     interfaces."br0".useDHCP = true;
   };
-  services.tailscale.enable = true;
+  services.tailscale.enable = variables.tailscaleEnable;
 
   virtualisation.libvirtd.enable = true;
 
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
@@ -88,8 +93,8 @@
     ];
   };
 
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
   # TODO
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
   system.stateVersion = "23.11"; # Did you read the comment?
 }

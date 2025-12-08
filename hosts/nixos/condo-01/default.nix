@@ -9,8 +9,13 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -25,8 +30,8 @@
   virtualisation.podman.enable = true;
   virtualisation.libvirtd.enable = true;
 
-  programs.zsh.enable = true;
-  services.openssh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
+  services.openssh.enable = variables.opensshEnable;
 
   services.clubcotton.tailscale = {
     useRoutingFeatures = "server";
@@ -73,7 +78,7 @@
     #  }
     #];
   };
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   services.pipewire = {
     enable = true;
@@ -124,7 +129,7 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   system.stateVersion = "24.11"; # Did you read the comment?
 }

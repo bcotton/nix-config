@@ -4,25 +4,30 @@
 {
   modulesPath,
   lib,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   imports = [
     # Include the default incus configuration.
     # "${modulesPath}/virtualisation/incus-virtual-machine.nix"
     ./hardware-configuration.nix
   ];
 
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
     ];
   };
-  services.openssh.enable = true;
-  networking.firewall.enable = false;
+  services.openssh.enable = variables.opensshEnable;
+  networking.firewall.enable = variables.firewallEnable;
 
   networking.hostId = "420cbfd4";
   # boot.loader.systemd-boot.enable = true;
