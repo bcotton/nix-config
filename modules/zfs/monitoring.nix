@@ -110,4 +110,14 @@
     enabledCollectors = [ "textfile" ];
     extraFlags = [ "--collector.textfile.directory=/var/lib/prometheus-node-exporter-text-files" ];
   };
+
+  # Install ZFS disk health check script
+  environment.systemPackages = lib.mkIf (
+    config.clubcotton.zfs_single_root.enable
+    or false
+    || config.clubcotton.zfs_mirrored_root.enable or false
+    || config.clubcotton.zfs_raidz1.enable or false
+  ) [
+    (pkgs.writeShellScriptBin "check-zfs-disk-health" (builtins.readFile ./check-disk-health.sh))
+  ];
 }

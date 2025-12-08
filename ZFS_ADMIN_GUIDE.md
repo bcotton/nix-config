@@ -506,7 +506,10 @@ smartctl -l error /dev/sdX
 
 1. **Immediate Assessment** (within 1 hour):
 ```bash
-# Check which drive and how many sectors
+# Use the automated disk health check script (recommended)
+check-zfs-disk-health
+
+# Or manual check for specific drive
 smartctl -A /dev/sdX | grep -E "(Current_Pending_Sector|Reallocated_Sector_Ct|Offline_Uncorrectable)"
 
 # Check ZFS pool status for any errors
@@ -556,6 +559,58 @@ smartctl -A /dev/sdX | grep -E "(Current_Pending_Sector|Reallocated_Sector_Ct)"
 | **Action Required** | **Immediate intervention** | Monitoring and planning |
 
 **Key Point**: Pending sectors represent **active, ongoing failure** while reallocated sectors represent **completed, successful recovery**. Always treat pending sectors as urgent.
+
+#### Automated Disk Health Check Script
+
+A comprehensive disk health check script is automatically installed on all ZFS hosts:
+
+```bash
+# Basic health check with drive-to-pool mapping
+check-zfs-disk-health
+
+# Verbose output showing all SMART attributes
+check-zfs-disk-health --verbose
+
+# JSON output for automation/scripting
+check-zfs-disk-health --json
+```
+
+**Script Features**:
+- **Drive-to-pool mapping**: Shows which ZFS pool each drive belongs to
+- **Severity assessment**: Categorizes issues as OK/WARNING/CRITICAL
+- **Actionable recommendations**: Tells you exactly which pool to scrub
+- **SMART attribute analysis**: Checks all critical attributes automatically
+- **Color-coded output**: Easy visual identification of issues
+- **JSON support**: For integration with monitoring systems
+
+**Example Output**:
+```
+=== ZFS Disk Health Check ===
+
+[WARNING] ata-WD_Blue_SA510_2.5_1000GB_24293W800136
+  Pool: rpool (ONLINE)
+  Serial: WD-WX12345678
+  SMART Health: PASSED
+  Reallocated Sectors: 3
+  Pending Sectors: 0
+  Action: MONITOR: Plan replacement within 3-6 months
+
+[CRITICAL] wwn-0x5000c500cbac2c8c
+  Pool: mediapool (ONLINE)
+  Serial: ZA123456
+  SMART Health: PASSED
+  Reallocated Sectors: 0
+  Pending Sectors: 2
+  Action: URGENT: Run 'zfs scrub mediapool' within 4 hours
+
+✅ All other drives healthy!
+
+Pool Status Summary:
+  rpool: ONLINE (12% full)
+  ssdpool: ONLINE (1% full)
+  mediapool: ONLINE (67% full)
+  backuppool: ONLINE (14% full)
+```
 
 #### Disk Replacement Procedure for ZFS
 
