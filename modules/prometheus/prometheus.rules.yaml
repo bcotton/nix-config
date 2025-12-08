@@ -254,7 +254,7 @@ groups:
     labels:
       severity: critical
     annotations:
-      description: 'SMART predicts failure for device {{ $labels.device }} on {{ $labels.instance }}'
+      description: 'SMART predicts failure for device {{ $labels.device }} on {{ $labels.instance }} - REPLACE IMMEDIATELY'
 
   - alert: SmartDeviceHighTemperature
     expr: smartctl_device_temperature > 60
@@ -262,23 +262,86 @@ groups:
     labels:
       severity: warning
     annotations:
-      description: 'Device {{ $labels.device }} temperature is high ({{ $value }}°C) on {{ $labels.instance }}'
+      description: 'Device {{ $labels.device }} temperature is high ({{ $value }}°C) on {{ $labels.instance }} - Check cooling'
 
-  - alert: SmartDeviceReallocatedSectors
-    expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct"} > 0
+  - alert: SmartDeviceCriticalTemperature
+    expr: smartctl_device_temperature > 70
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Device {{ $labels.device }} temperature is critical ({{ $value }}°C) on {{ $labels.instance }} - IMMEDIATE ACTION REQUIRED'
+
+  # Reallocated Sectors - Progressive Severity
+  - alert: SmartDeviceReallocatedSectorsLow
+    expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct"} > 0 and smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct"} <= 5
     for: 5m
     labels:
       severity: warning
     annotations:
-      description: 'Device {{ $labels.device }} has {{ $value }} reallocated sectors on {{ $labels.instance }}'
+      description: 'Device {{ $labels.device }} has {{ $value }} reallocated sectors on {{ $labels.instance }} - Monitor closely, consider replacement planning'
 
+  - alert: SmartDeviceReallocatedSectorsHigh
+    expr: smartctl_device_attribute{attribute_name="Reallocated_Sector_Ct"} > 5
+    for: 0m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} reallocated sectors on {{ $labels.instance }} - PLAN IMMEDIATE REPLACEMENT'
+
+  # Pending Sectors - Sectors waiting to be reallocated
   - alert: SmartDevicePendingSectors
     expr: smartctl_device_attribute{attribute_name="Current_Pending_Sector"} > 0
     for: 5m
     labels:
       severity: warning
     annotations:
-      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }}'
+      description: 'Device {{ $labels.device }} has {{ $value }} pending sectors on {{ $labels.instance }} - Run extended SMART test'
+
+  # Uncorrectable Sectors - Data loss has occurred
+  - alert: SmartDeviceUncorrectableSectors
+    expr: smartctl_device_attribute{attribute_name="Offline_Uncorrectable"} > 0
+    for: 0m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} uncorrectable sectors on {{ $labels.instance }} - DATA LOSS POSSIBLE, REPLACE IMMEDIATELY'
+
+  # Spin Retry Count - Mechanical drive health
+  - alert: SmartDeviceSpinRetryCount
+    expr: smartctl_device_attribute{attribute_name="Spin_Retry_Count"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Device {{ $labels.device }} has {{ $value }} spin retry events on {{ $labels.instance }} - Mechanical issues detected'
+
+  # Raw Read Error Rate - Media degradation
+  - alert: SmartDeviceRawReadErrorRate
+    expr: smartctl_device_attribute{attribute_name="Raw_Read_Error_Rate"} > 1000000
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Device {{ $labels.device }} has high raw read error rate ({{ $value }}) on {{ $labels.instance }} - Media degradation'
+
+  # SSD Specific - Wear Leveling Count
+  - alert: SmartSsdWearLevelingLow
+    expr: smartctl_device_attribute{attribute_name="Wear_Leveling_Count"} < 10 and smartctl_device_attribute{attribute_name="Wear_Leveling_Count"} > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'SSD {{ $labels.device }} wear leveling count is low ({{ $value }}) on {{ $labels.instance }} - Plan replacement'
+
+  # SSD Specific - Program/Erase Cycles
+  - alert: SmartSsdProgramFailCount
+    expr: smartctl_device_attribute{attribute_name="Program_Fail_Cnt_Total"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'SSD {{ $labels.device }} has {{ $value }} program failures on {{ $labels.instance }} - Monitor closely'
 
   # ZFS Pool I/O Error Monitoring
   - alert: ZfsPoolReadErrors

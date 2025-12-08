@@ -455,6 +455,132 @@ zfs rollback <dataset>@<snapshot>
 zfs clone <dataset>@<snapshot> <dataset>_recovery
 ```
 
+### SMART Monitoring and Disk Health Management
+
+#### Critical SMART Attributes to Monitor
+
+**Reallocated Sector Count (`Reallocated_Sector_Ct`)**
+- **What it means**: Number of bad sectors that have been remapped to spare sectors
+- **Why critical**: Strong predictor of imminent drive failure
+- **Action thresholds**:
+  - `1-5 sectors`: Monitor closely, plan replacement within 3-6 months
+  - `>5 sectors`: Plan immediate replacement (weeks, not months)
+  - `>50 sectors`: Replace immediately - high failure risk
+
+**Current Pending Sector (`Current_Pending_Sector`)**
+- **What it means**: Sectors waiting to be remapped (unstable sectors)
+- **Why important**: Indicates active media degradation
+- **Actions**: Run extended SMART test to force reallocation attempt
+
+**Offline Uncorrectable (`Offline_Uncorrectable`)**
+- **What it means**: Sectors that couldn't be read during offline scan
+- **Why critical**: Indicates potential data loss
+- **Actions**: Immediate replacement required
+
+#### SMART Monitoring Commands
+
+```bash
+# Check overall SMART health
+smartctl -H /dev/sdX
+
+# View all SMART attributes
+smartctl -A /dev/sdX
+
+# Run short self-test (2 minutes)
+smartctl -t short /dev/sdX
+
+# Run extended self-test (hours)
+smartctl -t long /dev/sdX
+
+# Check test results
+smartctl -l selftest /dev/sdX
+
+# View error log
+smartctl -l error /dev/sdX
+```
+
+#### Disk Replacement Procedure for ZFS
+
+**For RAIDZ pools (current setup)**:
+```bash
+# 1. Identify failing disk in pool
+zpool status <poolname>
+
+# 2. Take disk offline (if not already failed)
+zpool offline <poolname> <failing_disk>
+
+# 3. Physically replace disk
+
+# 4. Replace in ZFS pool
+zpool replace <poolname> <old_disk_id> <new_disk_id>
+
+# 5. Monitor resilver progress
+zpool status <poolname>
+
+# 6. Verify pool health after resilver
+zpool scrub <poolname>
+```
+
+**For Mirror pools (rpool)**:
+```bash
+# 1. Detach failing disk
+zpool detach <poolname> <failing_disk>
+
+# 2. Replace disk physically
+
+# 3. Attach new disk to mirror
+zpool attach <poolname> <remaining_disk> <new_disk>
+
+# 4. Monitor resilver
+zpool status <poolname>
+```
+
+#### Proactive Disk Health Management
+
+**Monthly Tasks**:
+- Review SMART attribute trends
+- Run extended SMART tests on all drives
+- Check for any new reallocated sectors
+- Monitor drive temperatures
+
+**Quarterly Tasks**:
+- Analyze SMART logs for patterns
+- Update disk replacement timeline based on health trends
+- Test disk replacement procedures in lab environment
+
+**Annual Tasks**:
+- Replace drives approaching manufacturer warranty expiration
+- Evaluate drive failure patterns for procurement decisions
+- Update monitoring thresholds based on experience
+
+#### Drive Replacement Planning Matrix
+
+| SMART Condition | Action Timeline | Risk Level |
+|----------------|----------------|------------|
+| All attributes normal | Monitor quarterly | Low |
+| 1-5 reallocated sectors | Plan replacement 3-6 months | Medium |
+| >5 reallocated sectors | Replace within 4 weeks | High |
+| Pending sectors present | Run tests, replace if persistent | Medium-High |
+| Uncorrectable sectors | Replace immediately | Critical |
+| SMART health = FAIL | Replace immediately | Critical |
+| Temperature >65°C sustained | Improve cooling, monitor | Medium |
+| Temperature >70°C | Replace immediately | Critical |
+
+#### Cost-Benefit Analysis for Replacement
+
+**Replacement Costs** (per drive):
+- Consumer drives (4TB): $80-120
+- NAS drives (4TB): $120-180  
+- Enterprise drives (4TB): $200-300
+
+**Failure Costs**:
+- Pool degradation during resilver: Performance impact
+- Data recovery services: $500-2000+ per drive
+- Downtime costs: Service interruption
+- Multiple drive failure: Potential total data loss
+
+**Recommendation**: Replace drives proactively when SMART indicates degradation. The cost of a $150 drive is minimal compared to potential data loss or recovery costs.
+
 ## Security Considerations
 
 ### Access Control
