@@ -2,20 +2,20 @@
 
 local plugin_specs = {
   -- auto-completion engine
-  { "hrsh7th/cmp-nvim-lsp", lazy = true },
-  { "hrsh7th/cmp-path", lazy = true },
-  { "hrsh7th/cmp-buffer", lazy = true },
-  { "hrsh7th/cmp-omni", lazy = true },
-  { "hrsh7th/cmp-cmdline", lazy = true },
+  -- { "hrsh7th/cmp-nvim-lsp", lazy = true },
+  -- { "hrsh7th/cmp-path", lazy = true },
+  -- { "hrsh7th/cmp-buffer", lazy = true },
+  -- { "hrsh7th/cmp-omni", lazy = true },
+  -- { "hrsh7th/cmp-cmdline", lazy = true },
   -- { "quangnguyen30192/cmp-nvim-ultisnips", lazy = true },
-  {
-    "hrsh7th/nvim-cmp",
-    name = "nvim-cmp",
-    event = "VeryLazy",
-    config = function()
-      require("config.nvim-cmp")
-    end,
-  },
+  -- {
+  --   "hrsh7th/nvim-cmp",
+  --   name = "nvim-cmp",
+  --   event = "VeryLazy",
+  --   config = function()
+  --     require("config.nvim-cmp")
+  --   end,
+  -- },
   -- {
   --   "neovim/nvim-lspconfig",
   --   config = function()
@@ -31,45 +31,45 @@ local plugin_specs = {
   -- },
 
   -- LSPs https://www.jakmaz.com/blog/nvim-lsp
-  { -- Mason: installs and manages external tools like LSP servers
-    'mason-org/mason.nvim',
-    opts = {},
-  },
-  { -- Mason-LSPConfig: tells Mason which servers to install and links them to lspconfig
-    "mason-org/mason-lspconfig.nvim",
-    opts = {
-      ensure_installed = {
-        "lua_ls",
-        "pyright",
-        "ts_ls",
-        "rust_analyzer",
-        "clangd"
-      },
-    },
-  },
-  { -- nvim-lspconfig: connects Neovim to installed LSP servers
-    "neovim/nvim-lspconfig",
-    config = function()
-      require("lspconfig") -- sets up lspconfigs
-    end
-  },
-  {
-    "nvim-treesitter/nvim-treesitter",
-    lazy = true,
-    build = ":TSUpdate",
-    config = function()
-      require("config.treesitter")
-    end,
-  },
+  -- { -- Mason: installs and manages external tools like LSP servers
+  --   'mason-org/mason.nvim',
+  --   opts = {},
+  -- },
+  -- { -- Mason-LSPConfig: tells Mason which servers to install and links them to lspconfig
+  --   "mason-org/mason-lspconfig.nvim",
+  --   opts = {
+  --     ensure_installed = {
+  --       "lua_ls",
+  --       "pyright",
+  --       "ts_ls",
+  --       "rust_analyzer",
+  --       "clangd"
+  --     },
+  --   },
+  -- },
+  -- { -- nvim-lspconfig: connects Neovim to installed LSP servers
+  --   "neovim/nvim-lspconfig",
+  --   config = function()
+  --     require("lspconfig") -- sets up lspconfigs
+  --   end
+  -- },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter",
+  --   lazy = true,
+  --   build = ":TSUpdate",
+  --   config = function()
+  --     require("config.treesitter")
+  --   end,
+  -- },
 
-  {
-    "nvim-treesitter/nvim-treesitter-textobjects",
-    event = "VeryLazy",
-    branch = "master",
-    config = function()
-      require("config.treesitter-textobjects")
-    end,
-  },
+  -- {
+  --   "nvim-treesitter/nvim-treesitter-textobjects",
+  --   event = "VeryLazy",
+  --   branch = "master",
+  --   config = function()
+  --     require("config.treesitter-textobjects")
+  --   end,
+  -- },
   { "machakann/vim-swap", event = "VeryLazy" },
 
   -- {
@@ -136,12 +136,12 @@ local plugin_specs = {
     },
   },
 
-  {
-    "MeanderingProgrammer/render-markdown.nvim",
-    main = "render-markdown",
-    opts = {},
-    ft = { "markdown" },
-  },
+  -- {
+  --   "MeanderingProgrammer/render-markdown.nvim",
+  --   main = "render-markdown",
+  --   opts = {},
+  --   ft = { "markdown" },
+  -- },
   -- A list of colorscheme plugin you may want to try. Find what suits you.
   -- { "navarasu/onedark.nvim", lazy = true },
   -- { "sainnhe/edge", lazy = true },
@@ -209,7 +209,7 @@ local plugin_specs = {
   -- fancy start screen
   {
     "nvimdev/dashboard-nvim",
-    cond = firenvim_not_active,
+    -- cond = firenvim_not_active,
     config = function()
       require("config.dashboard-nvim")
     end,
@@ -218,13 +218,13 @@ local plugin_specs = {
   { "itchyny/vim-highlighturl", event = "BufReadPost" },
 
   -- notification plugin
-  {
-    "rcarriga/nvim-notify",
-    event = "VeryLazy",
-    config = function()
-      require("config.nvim-notify")
-    end,
-  },
+  -- {
+  --   "rcarriga/nvim-notify",
+  --   event = "VeryLazy",
+  --   config = function()
+  --     require("config.nvim-notify")
+  --   end,
+  -- },
 
   { "nvim-lua/plenary.nvim", lazy = true },
 
@@ -239,11 +239,11 @@ local plugin_specs = {
   -- },
 
   -- Automatic insertion and deletion of a pair of characters
-  {
-    "windwp/nvim-autopairs",
-    event = "InsertEnter",
-    config = true,
-  },
+  -- {
+  --   "windwp/nvim-autopairs",
+  --   event = "InsertEnter",
+  --   config = true,
+  -- },
 
   -- Comment plugin
   {
@@ -281,12 +281,12 @@ local plugin_specs = {
     end,
   },
 
-  {
-    "mhinz/vim-signify",
-    config = function()
-      require("config.signify")
-    end,
-  },
+  -- {
+  --   "mhinz/vim-signify",
+  --   config = function()
+  --     require("config.signify")
+  --   end,
+  -- },
 
   -- Better git log display
   { "rbong/vim-flog", cmd = { "Flog" } },

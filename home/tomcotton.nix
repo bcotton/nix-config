@@ -261,7 +261,7 @@ in {
     enable = true;
     mutableExtensionsDir = false;
     extensions = with pkgs.vscode-extensions; [
-      # asvetliakov.vscode-neovim
+      asvetliakov.vscode-neovim
       # ms-vscode.cpptools
       bbenoist.nix
       ms-vscode.cpptools-extension-pack
@@ -312,6 +312,9 @@ in {
         "files.autoSave" = "onFocusChange";
         # "extensions.autoCheckUpdates" = false;
         "extensions.autoUpdate" = false;
+        "extentions.experimental.affinity" = {
+          "asvetliakov.vscode-neovim" = 1;
+        };
         "files.trimFinalNewlines" = true;
         "files.trimTrailingWhitespace" = true;
         "editor.lineNumbers" = "relative";
@@ -337,19 +340,19 @@ in {
       };
       keybindings = [
         # See https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
-        {
-            key = "shift+cmd+j";
-            command = "workbench.action.focusActiveEditorGroup";
-            when = "terminalFocus";
-        }
-        {
-          key = "ctrl+alt+shift+cmd+[";
-          command = "workbench.action.previousEditor";
-        }
-        {
-          key = "ctrl+alt+shift+cmd+]";
-          command = "workbench.action.nextEditor";
-        }
+        # {
+        #     key = "shift+cmd+j";
+        #     command = "workbench.action.focusActiveEditorGroup";
+        #     when = "terminalFocus";
+        # }
+        # {
+        #   key = "ctrl+alt+shift+cmd+[";
+        #   command = "workbench.action.previousEditor";
+        # }
+        # {
+        #   key = "ctrl+alt+shift+cmd+]";
+        #   command = "workbench.action.nextEditor";
+        # }
       ];
     };
   };
