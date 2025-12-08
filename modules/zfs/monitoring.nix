@@ -111,13 +111,18 @@
     extraFlags = [ "--collector.textfile.directory=/var/lib/prometheus-node-exporter-text-files" ];
   };
 
-  # Install ZFS disk health check script
+  # Install ZFS disk health check script and required tools
   environment.systemPackages = lib.mkIf (
     config.clubcotton.zfs_single_root.enable
     or false
     || config.clubcotton.zfs_mirrored_root.enable or false
     || config.clubcotton.zfs_raidz1.enable or false
   ) [
-    (pkgs.writeShellScriptBin "check-zfs-disk-health" (builtins.readFile ./check-disk-health.sh))
+    pkgs.smartmontools  # Required for SMART monitoring
+    pkgs.jq            # Required for JSON output formatting
+    (pkgs.writeShellScriptBin "check-zfs-disk-health" ''
+      export PATH="${lib.makeBinPath [pkgs.smartmontools pkgs.zfs pkgs.jq pkgs.coreutils pkgs.gawk pkgs.gnugrep pkgs.findutils]}:$PATH"
+      ${builtins.readFile ./check-disk-health.sh}
+    '')
   ];
 }

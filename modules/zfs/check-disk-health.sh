@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ZFS Disk Health Check Script
 # Maps drives to ZFS pools and checks for SMART issues
@@ -257,9 +257,20 @@ EOF
     fi
 }
 
-# Check if running as root or with sudo
-if [[ $EUID -ne 0 ]] && ! command -v smartctl &> /dev/null; then
-    echo "Error: This script requires root privileges or smartctl in PATH"
+# Check if required commands are available
+if ! command -v smartctl &> /dev/null; then
+    echo "Error: smartctl not found. Please ensure smartmontools is installed."
+    exit 1
+fi
+
+if ! command -v zpool &> /dev/null; then
+    echo "Error: zpool not found. This script requires ZFS to be installed."
+    exit 1
+fi
+
+# Check if running as root (required for SMART access)
+if [[ $EUID -ne 0 ]]; then
+    echo "Error: This script requires root privileges to access SMART data"
     echo "Run with: sudo $0"
     exit 1
 fi
