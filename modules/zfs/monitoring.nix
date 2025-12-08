@@ -65,10 +65,12 @@
           '
         } > "$TEXTFILE_DIR/zfs_health.prom.tmp"
         
+        # Set proper permissions for node-exporter to read
+        chmod 644 "$TEXTFILE_DIR/zfs_health.prom.tmp"
         mv "$TEXTFILE_DIR/zfs_health.prom.tmp" "$TEXTFILE_DIR/zfs_health.prom"
       '';
-      User = "prometheus";
-      Group = "prometheus";
+      User = "root";
+      Group = "root";
     };
   };
 
@@ -88,13 +90,14 @@
   };
 
   # Ensure textfile directory exists and has correct permissions
+  # Root writes files, node-exporter reads them
   systemd.tmpfiles.rules = lib.mkIf (
     config.clubcotton.zfs_single_root.enable
     or false
     || config.clubcotton.zfs_mirrored_root.enable or false
     || config.clubcotton.zfs_raidz1.enable or false
   ) [
-    "d /var/lib/prometheus-node-exporter-text-files 0755 prometheus prometheus - -"
+    "d /var/lib/prometheus-node-exporter-text-files 0755 root node-exporter - -"
   ];
 
   # Configure node_exporter to collect textfile metrics
