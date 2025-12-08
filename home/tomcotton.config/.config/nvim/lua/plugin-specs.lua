@@ -123,12 +123,12 @@ local plugin_specs = {
 
   -- scrolloff_percentage: controls how close the cursor can be to the top or bottom
   --                       of the screen before scrolling begins
-  {
-    "tonymajestro/smart-scrolloff.nvim",
-    opts = {
-      scrolloff_percentage = 0.25
-    },
-  },
+  -- {
+  --   "tonymajestro/smart-scrolloff.nvim",
+  --   opts = {
+  --     scrolloff_percentage = 0.25
+  --   },
+  -- },
   {
     "karb94/neoscroll.nvim",
     opts = {

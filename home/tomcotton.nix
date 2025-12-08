@@ -303,6 +303,12 @@ in {
         version = "1.27.7";
         sha256 = "sha256-/usZ8oaelNF2jdYWSKLEcFVPAxMk8T/7u3xR4t4NCjM=";
       }
+      {
+        name = "fzf-quick-open";
+        publisher = "rlivings39";
+        version = "0.5.1";
+        sha256 = "sha256-xGcBl3mmyy+Zsn9OncDDbJViMxEgvsRjkzy89NPJpS8=";
+      }
     ];
     profiles.default = {
       userSettings = {
@@ -312,7 +318,7 @@ in {
         "files.autoSave" = "onFocusChange";
         # "extensions.autoCheckUpdates" = false;
         "extensions.autoUpdate" = false;
-        "extentions.experimental.affinity" = {
+        "extensions.experimental.affinity" = {
           "asvetliakov.vscode-neovim" = 1;
         };
         "files.trimFinalNewlines" = true;
