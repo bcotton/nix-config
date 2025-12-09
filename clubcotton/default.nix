@@ -46,8 +46,10 @@
 
   # Global configuration for all tsnsrv services to force login
   config.systemd.services = lib.mkIf (config.services.tsnsrv.enable or false) (
-    lib.mapAttrs' (name: _: lib.nameValuePair "tsnsrv-${name}" {
-      environment.TSNET_FORCE_LOGIN = "1";
-    }) config.services.tsnsrv.services
+    lib.mapAttrs' (name: _:
+      lib.nameValuePair "tsnsrv-${name}" {
+        environment.TSNET_FORCE_LOGIN = "1";
+      })
+    config.services.tsnsrv.services
   );
 }

@@ -182,4 +182,10 @@
     owner = "wallabag";
     group = "wallabag";
   };
+
+  age.secrets."syncoid-ssh-key" = lib.mkIf config.services.clubcotton.syncoid.enable {
+    file = ./syncoid-ssh-key.age;
+    owner = "syncoid";
+    group = "syncoid";
+  };
 }

@@ -38,7 +38,7 @@ in {
     // {
       beets-stable = customBeets;
     };
-  
+
   # Expose beets-unstable at the top level to use the custom version
   beets-unstable = customBeets;
 }
