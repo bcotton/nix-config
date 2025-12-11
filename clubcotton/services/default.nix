@@ -7,6 +7,7 @@
     ./arr
     ./atuin
     ./bonob
+    ./borgmatic
     ./calibre
     ./calibre-web
     ./filebrowser

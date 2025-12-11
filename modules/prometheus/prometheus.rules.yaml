@@ -23,6 +23,14 @@ groups:
 
 - name: alerts
   rules:
+  - alert: BorgmaticMissingBackup
+    expr: time() - borg_last_backup_timestamp{job="borgmatic"} > 90000
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Borg missing backup"
+      description: "The instance {{ $labels.instance }} has not created a backup of the repo {{ $labels.repository }} in the last {{ $value }} seconds"
   - alert: HostDown
     expr: up{job="node"} == 0
     for: 15m

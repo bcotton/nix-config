@@ -83,6 +83,16 @@ in {
     scrapeConfigs =
       [
         {
+          job_name = "borgmatic";
+          scrape_interval = "5m";  # Check every 5 minutes - backups run daily
+          scrape_timeout = "30s";  # Reasonable timeout for borgmatic to gather stats
+          static_configs = [
+            {
+              targets = ["nas-01:9996"];
+            }
+          ];
+        }
+        {
           job_name = "unpoller";
           static_configs = [
             {

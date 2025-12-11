@@ -183,9 +183,16 @@
     group = "wallabag";
   };
 
-  age.secrets."syncoid-ssh-key" = lib.mkIf config.services.clubcotton.syncoid.enable {
+  age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable) {
     file = ./syncoid-ssh-key.age;
-    owner = "syncoid";
-    group = "syncoid";
+    owner = if config.services.clubcotton.borgmatic.enable then "root" else "syncoid";
+    group = if config.services.clubcotton.borgmatic.enable then "root" else "syncoid";
+    mode = "0400";
+  };
+
+  age.secrets."borg-passphrase" = lib.mkIf config.services.clubcotton.borgmatic.enable {
+    file = ./borg-passphrase.age;
+    owner = "root";
+    group = "root";
   };
 }
