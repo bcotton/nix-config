@@ -7,7 +7,7 @@
     enable = true;
     settings.server.http_port = 3000;
     settings.server.http_addr = "0.0.0.0";
-    
+
     declarativePlugins = with pkgs.grafanaPlugins; [
       grafana-piechart-panel
       grafana-clock-panel
@@ -25,7 +25,7 @@
 
     provision = {
       enable = true;
-      
+
       datasources.settings.datasources = [
         {
           name = "Prometheus";

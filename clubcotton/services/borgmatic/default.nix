@@ -276,14 +276,16 @@ in {
     };
 
     zfs = {
-      enable = lib.mkEnableOption "ZFS snapshot support" // {
-        description = ''
-          Enable ZFS filesystem snapshot support. Borgmatic will automatically
-          discover and snapshot ZFS datasets based on your source_directories.
-          You can also set the user property org.torsion.borgmatic:backup=auto
-          on datasets you want backed up.
-        '';
-      };
+      enable =
+        lib.mkEnableOption "ZFS snapshot support"
+        // {
+          description = ''
+            Enable ZFS filesystem snapshot support. Borgmatic will automatically
+            discover and snapshot ZFS datasets based on your source_directories.
+            You can also set the user property org.torsion.borgmatic:backup=auto
+            on datasets you want backed up.
+          '';
+        };
 
       datasets = lib.mkOption {
         type = types.listOf types.str;
@@ -387,7 +389,8 @@ in {
           one_file_system = cfg.oneFileSystem;
           archive_name_format = cfg.archiveNameFormat;
 
-          encryption_passcommand = mkIf (cfg.encryption.passphraseFile != null)
+          encryption_passcommand =
+            mkIf (cfg.encryption.passphraseFile != null)
             "${pkgs.coreutils}/bin/cat ${cfg.encryption.passphraseFile}";
 
           ssh_command = mkIf (cfg.sshCommand != null) cfg.sshCommand;
@@ -434,46 +437,53 @@ in {
       description = "Set ZFS user properties for borgmatic backup";
       before = ["borgmatic.service"];
       wantedBy = ["borgmatic.service"];
-      
+
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
       };
-      
+
       script = let
-        zfsCmd = if cfg.zfs.zfsCommand != null then cfg.zfs.zfsCommand else "${pkgs.zfs}/bin/zfs";
-        setPropertyCommands = map (dataset: 
-          "${zfsCmd} set org.torsion.borgmatic:backup=auto ${dataset}"
-        ) cfg.zfs.datasets;
-      in lib.concatStringsSep "\n" setPropertyCommands;
-      
-      path = [ pkgs.zfs ];
+        zfsCmd =
+          if cfg.zfs.zfsCommand != null
+          then cfg.zfs.zfsCommand
+          else "${pkgs.zfs}/bin/zfs";
+        setPropertyCommands =
+          map (
+            dataset: "${zfsCmd} set org.torsion.borgmatic:backup=auto ${dataset}"
+          )
+          cfg.zfs.datasets;
+      in
+        lib.concatStringsSep "\n" setPropertyCommands;
+
+      path = [pkgs.zfs];
     };
 
     # Clear the LoadCredentialEncrypted directive from upstream service
     # since we're using agenix secrets instead
     systemd.services.borgmatic = {
-      serviceConfig = {
-        LoadCredentialEncrypted = lib.mkForce "";
-        # Override ExecStart to add verbosity flag
-        ExecStart = lib.mkForce (
-          let
-            verbosityFlag = if cfg.verbosity != 0 then
-              "--verbosity ${toString cfg.verbosity}"
-            else
-              "";
-          in
-          "${pkgs.systemd}/bin/systemd-inhibit --who=\"borgmatic\" --what=\"sleep:shutdown\" --why=\"Prevent interrupting scheduled backup\" ${pkgs.borgmatic}/bin/borgmatic ${verbosityFlag} --syslog-verbosity 1"
-        );
-      } // lib.optionalAttrs cfg.zfs.enable {
-        # Disable security restrictions that prevent ZFS access
-        # See: https://torsion.org/borgmatic/reference/configuration/data-sources/zfs/#systemd-settings
-        PrivateDevices = lib.mkForce false;
-        # May need to adjust capabilities for ZFS operations
-        CapabilityBoundingSet = lib.mkForce "CAP_DAC_READ_SEARCH CAP_NET_RAW CAP_SYS_ADMIN";
-      };
+      serviceConfig =
+        {
+          LoadCredentialEncrypted = lib.mkForce "";
+          # Override ExecStart to add verbosity flag
+          ExecStart = lib.mkForce (
+            let
+              verbosityFlag =
+                if cfg.verbosity != 0
+                then "--verbosity ${toString cfg.verbosity}"
+                else "";
+            in "${pkgs.systemd}/bin/systemd-inhibit --who=\"borgmatic\" --what=\"sleep:shutdown\" --why=\"Prevent interrupting scheduled backup\" ${pkgs.borgmatic}/bin/borgmatic ${verbosityFlag} --syslog-verbosity 1"
+          );
+        }
+        // lib.optionalAttrs cfg.zfs.enable {
+          # Disable security restrictions that prevent ZFS access
+          # See: https://torsion.org/borgmatic/reference/configuration/data-sources/zfs/#systemd-settings
+          PrivateDevices = lib.mkForce false;
+          # May need to adjust capabilities for ZFS operations
+          CapabilityBoundingSet = lib.mkForce "CAP_DAC_READ_SEARCH CAP_NET_RAW CAP_SYS_ADMIN";
+        };
     };
-    
+
     systemd.services.borgmatic.path = lib.mkIf cfg.zfs.enable [
       pkgs.zfs
       pkgs.util-linux

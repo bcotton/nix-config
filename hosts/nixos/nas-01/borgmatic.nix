@@ -18,6 +18,7 @@
       "/media/photos"
       "/media/documents"
       "/media/tomcotton/data"
+      "/media/tomcotton/audio-library/SFX_Library/My_Exports"
     ];
 
     # Snapshot ZFS datasets before backup
@@ -29,6 +30,7 @@
         "mediapool/local/photos"
         "mediapool/local/documents"
         "mediapool/local/tomcotton/data"
+        "mediapool/local/tomcotton/audio-library"
       ];
     };
 
