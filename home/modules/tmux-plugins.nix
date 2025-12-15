@@ -57,6 +57,19 @@
       };
     };
 
+  tmux-powerkit =
+    pkgs.tmuxPlugins.mkTmuxPlugin
+    {
+      pluginName = "tmux-powerkit";
+      version = "head";
+      src = pkgs.fetchFromGitHub {
+        owner = "fabioluciano";
+        repo = "tmux-powerkit";
+        rev = "9d5bfdaabf2a03e05d8ae11f1065f694d15df0d5";
+        sha256 = "sha256-QhCUQDmt+Ur6KakrycJ4uvnIZzTHGkG/f01vslFxR5w=";
+      };
+    };
+
   cfg = config.programs.tmux-plugins;
 in {
   options.programs.tmux-plugins = {
@@ -65,7 +78,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     _module.args = {
-      inherit tmux-window-name tmux-fzf-head tmux-nested tmux-fuzzback;
+      inherit tmux-window-name tmux-fzf-head tmux-nested tmux-fuzzback tmux-powerkit;
     };
 
     programs.tmux = {
@@ -79,11 +92,22 @@ in {
         {
           plugin = tmux-window-name;
         }
+        {
+          plugin = tmux-powerkit;
+        }
       ];
       extraConfig = lib.mkAfter ''
+        # tmux-powerkit configuration
+        set -g @powerkit_theme 'tokyo-night'
+        set -g @powerkit_theme_variant 'night'
+        set -g @powerkit_plugins 'datetime,battery,cpu,memory,git,kubernetes'
+        set -g @powerkit_session_icon 'auto'
+        set -g @powerkit_transparent 'true'
+        
         bind-key "C-f" run-shell -b "${tmux-fzf-head}/share/tmux-plugins/tmux-fzf/scripts/session.sh switch"
         run-shell ${tmux-nested}/share/tmux-plugins/tmux-nested/nested.tmux
         run-shell ${tmux-fuzzback}/share/tmux-plugins/tmux-fuzzback/fuzzback.tmux
+        run-shell ${tmux-powerkit}/share/tmux-plugins/tmux-powerkit/tmux-powerkit.tmux
       '';
     };
 

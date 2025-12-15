@@ -205,7 +205,8 @@ in {
       # - %H:%M: Shows time in 24-hour format
       # - #h: Displays hostname
       # - Second #[...]: Configures styling for session name
-      set-option -g status-right "#[bg=colour237,fg=colour239 nobold, nounderscore, noitalics]#[bg=colour239,fg=colour246] %Y-%m-%d  %H:%M #[bg=colour239,fg=colour248,nobold,noitalics,nounderscore]#[bg=colour248,fg=colour237] #h "
+
+      # set-option -g status-right "#[bg=colour237,fg=colour239 nobold, nounderscore, noitalics]#[bg=colour239,fg=colour246] %Y-%m-%d  %H:%M #[bg=colour239,fg=colour248,nobold,noitalics,nounderscore]#[bg=colour248,fg=colour237] #h "
 
       # Per session kubeconfig
       set-hook -g session-created 'run-shell "~/.config/tmux/cp-kubeconfig start #{hook_session_name}"'
