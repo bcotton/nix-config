@@ -218,29 +218,29 @@ groups:
       description: 'ZFS scrub has been running for over 24 hours on pool {{ $labels.pool }} on {{ $labels.instance }}'
 
   # Dataset-Level Monitoring
-  - alert: ZfsDatasetQuotaExceeded
-    expr: (zfs_dataset_used_bytes / zfs_dataset_quota_bytes) > 0.9
-    for: 10m
-    labels:
-      severity: warning
-    annotations:
-      description: 'ZFS dataset {{ $labels.dataset }} is at {{ printf "%.1f" $value }}% of quota on {{ $labels.instance }}'
+  # - alert: ZfsDatasetQuotaExceeded
+  #   expr: (zfs_dataset_used_bytes / zfs_dataset_quota_bytes) > 0.9
+  #   for: 10m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: 'ZFS dataset {{ $labels.dataset }} is at {{ printf "%.1f" $value }}% of quota on {{ $labels.instance }}'
 
-  - alert: ZfsDatasetRapidGrowth
-    expr: rate(zfs_dataset_used_bytes[1h]) > 1073741824  # 1GB/hour
-    for: 30m
-    labels:
-      severity: warning
-    annotations:
-      description: 'ZFS dataset {{ $labels.dataset }} growing rapidly at {{ printf "%.2f" $value }} bytes/hour on {{ $labels.instance }}'
+  # - alert: ZfsDatasetRapidGrowth
+  #   expr: rate(zfs_dataset_used_bytes[1h]) > 1073741824  # 1GB/hour
+  #   for: 30m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: 'ZFS dataset {{ $labels.dataset }} growing rapidly at {{ printf "%.2f" $value }} bytes/hour on {{ $labels.instance }}'
 
-  - alert: ZfsDatasetHighUsage
-    expr: (zfs_dataset_used_bytes / zfs_dataset_available_bytes) > 0.85
-    for: 15m
-    labels:
-      severity: warning
-    annotations:
-      description: 'ZFS dataset {{ $labels.dataset }} is {{ printf "%.1f" $value }}% full on {{ $labels.instance }}'
+  # - alert: ZfsDatasetHighUsage
+  #   expr: (zfs_dataset_used_bytes / zfs_dataset_available_bytes) > 0.85
+  #   for: 15m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: 'ZFS dataset {{ $labels.dataset }} is {{ printf "%.1f" $value }}% full on {{ $labels.instance }}'
 
   # ZFS ARC (Adaptive Replacement Cache) Monitoring
   - alert: ZfsArcLowHitRatio
@@ -353,13 +353,13 @@ groups:
       description: 'Device {{ $labels.device }} has {{ $value }} spin retry events on {{ $labels.instance }} - Mechanical issues detected'
 
   # Raw Read Error Rate - Media degradation (using raw values)
-  - alert: SmartDeviceRawReadErrorRate
-    expr: smartctl_device_attribute{attribute_name="Raw_Read_Error_Rate",attribute_value_type="raw"} > 1000000
-    for: 15m
-    labels:
-      severity: warning
-    annotations:
-      description: 'Device {{ $labels.device }} has high raw read error rate ({{ $value }}) on {{ $labels.instance }} - Media degradation'
+  # - alert: SmartDeviceRawReadErrorRate
+  #   expr: smartctl_device_attribute{attribute_name="Raw_Read_Error_Rate",attribute_value_type="raw"} > 1000000
+  #   for: 15m
+  #   labels:
+  #     severity: warning
+  #   annotations:
+  #     description: 'Device {{ $labels.device }} has high raw read error rate ({{ $value }}) on {{ $labels.instance }} - Media degradation'
 
   # SSD Specific - Wear Leveling Count (using raw values)
   - alert: SmartSsdWearLevelingLow

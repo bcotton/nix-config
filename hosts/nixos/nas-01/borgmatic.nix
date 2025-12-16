@@ -26,8 +26,7 @@
       enable = true;
       datasets = [
         "rpool/local/lib"
-        "backuppool/local/postgres"
-        "mediapool/local/photos"
+        "backuppool/local/postgresql"
         "mediapool/local/documents"
         "mediapool/local/tomcotton/data"
         "mediapool/local/tomcotton/audio-library"

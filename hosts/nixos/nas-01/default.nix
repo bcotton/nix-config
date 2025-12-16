@@ -190,6 +190,11 @@ in {
     environmentFile = config.age.secrets.open-webui.path;
   };
 
+  services.clubcotton.navidrome = {
+    musicFolder = "/media/music/curated";
+    musicFolderRoot = "/media/music";
+  };
+
   services.clubcotton.webdav = {
     users = {
       obsidian-sync = {
@@ -284,6 +289,13 @@ in {
       ];
     };
   };
+
+  # SSH client configuration (keepalive settings)
+  programs.ssh.extraConfig = ''
+    Host *
+      ServerAliveCountMax 60
+      ServerAliveInterval 60
+  '';
 
   networking.firewall.enable = variables.firewallEnable;
   networking.hostId = "007f0200";

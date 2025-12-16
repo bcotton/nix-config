@@ -594,7 +594,7 @@ borgmatic config generate
 
 ```bash
 # Run with maximum verbosity
-sudo borgmatic create -vv
+sudo borgmatic create -v 2
 
 # View borgmatic logs
 journalctl -u borgmatic -n 100

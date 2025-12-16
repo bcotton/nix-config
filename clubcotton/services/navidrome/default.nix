@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  unstablePkgs,
   ...
 }:
 with lib; let
@@ -17,6 +18,16 @@ in {
       type = lib.types.str;
       default = "/var/lib/${service}";
     };
+    musicFolder = lib.mkOption {
+      type = lib.types.str;
+      default = "/media/music/curated";
+      description = "The music folder path for navidrome.";
+    };
+    musicFolderRoot = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Root directory for music folders. When set, this path will be added to BindReadOnlyPaths to support multi-library feature.";
+    };
     tailnetHostname = mkOption {
       type = types.nullOr types.str;
       default = "${service}";
@@ -26,13 +37,13 @@ in {
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
-
+      package = unstablePkgs.${service};
       user = clubcotton.user;
       group = clubcotton.group;
 
       settings = {
         # LogLevel = "DEBUG";
-        MusicFolder = "/media/music";
+        MusicFolder = cfg.musicFolder;
         Address = "0.0.0.0";
         DefaultDownsamplingFormat = "mp3";
         # EnableTranscodingConfig = true;
@@ -42,6 +53,9 @@ in {
     };
     systemd.services.navidrome.serviceConfig = {
       EnvironmentFile = config.age.secrets.navidrome.path;
+      BindReadOnlyPaths = lib.mkIf (cfg.musicFolderRoot != null) [
+        cfg.musicFolderRoot
+      ];
     };
     services.tsnsrv = {
       enable = true;

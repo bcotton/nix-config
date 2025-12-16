@@ -428,6 +428,16 @@ in {
               umount_command = cfg.zfs.umountCommand;
             });
         }
+        # Enable Borg debug mode when verbosity is 2
+        (mkIf (cfg.verbosity >= 2) {
+          extra_borg_options = {
+            check = "--debug";
+            compact = "--debug";
+            create = "--debug";
+            init = "--debug";
+            prune = "--debug";
+          };
+        })
         cfg.extraConfig
       ];
     };
@@ -479,8 +489,24 @@ in {
           # Disable security restrictions that prevent ZFS access
           # See: https://torsion.org/borgmatic/reference/configuration/data-sources/zfs/#systemd-settings
           PrivateDevices = lib.mkForce false;
-          # May need to adjust capabilities for ZFS operations
-          CapabilityBoundingSet = lib.mkForce "CAP_DAC_READ_SEARCH CAP_NET_RAW CAP_SYS_ADMIN";
+          PrivateTmp = lib.mkForce false;
+          # ZFS mount operations require full system access
+          ProtectSystem = lib.mkForce false;
+          ProtectHome = lib.mkForce false;
+          # May need to adjust capabilities for ZFS operations (mount/umount need these)
+          CapabilityBoundingSet = lib.mkForce "CAP_DAC_READ_SEARCH CAP_NET_RAW CAP_SYS_ADMIN CAP_SYS_RESOURCE CAP_FOWNER CAP_CHOWN CAP_DAC_OVERRIDE";
+          # Ensure we can access /dev/zfs
+          DevicePolicy = lib.mkForce "auto";
+          # Remove system call filter to allow mount/umount syscalls
+          SystemCallFilter = lib.mkForce "";
+          SystemCallArchitectures = lib.mkForce "";
+          # Allow namespace operations (might be needed for mount)
+          RestrictNamespaces = lib.mkForce false;
+          # Disable these restrictions that can interfere with mounting
+          ProtectKernelTunables = lib.mkForce false;
+          ProtectControlGroups = lib.mkForce false;
+          # NoNewPrivileges can prevent mount operations
+          NoNewPrivileges = lib.mkForce false;
         };
     };
 
