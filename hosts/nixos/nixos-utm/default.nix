@@ -27,7 +27,7 @@ in {
   # boot.loader.grub.device = "/dev/disk/by-label/nixos"; # or "nodev" for efi only
 
   networking = {
-    hostName = "nixos";
+    hostName = "nixos-utm";
   };
 
   services.tailscale.enable = variables.tailscaleEnable;
