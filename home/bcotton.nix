@@ -17,11 +17,23 @@ in {
     ./modules/atuin.nix
     ./modules/tmux-plugins.nix
     ./modules/beets.nix
+    ./modules/hyprland
     # ./modules/sesh.nix
   ];
 
   programs.beets-cli.enable = true;
   programs.tmux-plugins.enable = true;
+
+  # Hyprland configuration (only active on hosts with hyprland enabled)
+  programs.hyprland-config = {
+    enable = true;
+    terminal = "ghostty";
+    # Customize as needed:
+    # browser = "firefox";
+    # modifier = "SUPER";
+    # gapsIn = 5;
+    # gapsOut = 10;
+  };
 
   # programs.sesh-config = {
   #   enable = true;
