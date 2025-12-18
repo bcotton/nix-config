@@ -12,6 +12,7 @@
     ./calibre-web
     ./filebrowser
     ./freshrss
+    ./hyprland
     ./jellyfin
     ./kavita
     ./navidrome
