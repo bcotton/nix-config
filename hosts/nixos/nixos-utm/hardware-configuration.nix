@@ -10,7 +10,8 @@
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "virtio_pci" "usbhid" "usb_storage" "sr_mod" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ ];
+  # virtio_gpu is needed for Hyprland/Wayland in UTM/QEMU VMs
+  boot.kernelModules = [ "virtio_gpu" ];
   boot.extraModulePackages = [ ];
 
   # fileSystems."/" =

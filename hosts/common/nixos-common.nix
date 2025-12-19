@@ -27,10 +27,10 @@ in {
   environment.systemPackages = with pkgs; [
     inputs.isd.packages."${system}".default
     alsa-utils
-    intel-gpu-tools
+    # intel-gpu-tools
     libva-utils
     file
-    intel-media-driver
+    # intel-media-driveupr
     jellyfin-ffmpeg
     hddtemp
     nil

@@ -27,7 +27,9 @@ in {
   # Hyprland configuration (only active on hosts with hyprland enabled)
   programs.hyprland-config = {
     enable = true;
-    terminal = "ghostty";
+    # Use foot for VMs (CPU-rendered), ghostty for native machines (GPU-accelerated)
+    # terminal = "ghostty";
+    terminal = "foot";
     # Customize as needed:
     # browser = "firefox";
     # modifier = "SUPER";

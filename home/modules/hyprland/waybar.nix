@@ -63,6 +63,7 @@ in {
             "memory"
             "battery"
             "tray"
+            "custom/power"
           ];
 
           "hyprland/workspaces" = {
@@ -130,6 +131,14 @@ in {
           "tray" = {
             icon-size = 18;
             spacing = 10;
+          };
+
+          "custom/power" = {
+            format = "⏻";
+            tooltip = true;
+            tooltip-format = "Power Menu\nLeft-click: Logout\nRight-click: Shutdown";
+            on-click = "hyprctl dispatch exit";
+            on-click-right = "systemctl poweroff";
           };
         }
       ];
@@ -255,6 +264,19 @@ in {
           margin: 4px 2px;
           background-color: #${colors.surface0};
           border-radius: 6px;
+        }
+
+        #custom-power {
+          padding: 0 12px;
+          margin: 4px 8px 4px 2px;
+          background-color: #${colors.red};
+          color: #${colors.base};
+          border-radius: 6px;
+          font-size: 14px;
+        }
+
+        #custom-power:hover {
+          background-color: #${colors.maroon};
         }
 
         tooltip {

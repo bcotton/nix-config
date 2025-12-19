@@ -32,6 +32,28 @@ in {
 
   services.tailscale.enable = variables.tailscaleEnable;
 
+  services.clubcotton = {
+    tailscale.enable = true;
+    hyprland.enable = true;
+  };
+
+  # Graphics support for UTM/QEMU VM
+  hardware.graphics = {
+    enable = true;
+    # Enable 32-bit support if needed for some apps
+    enable32Bit = false;  # Not available on aarch64
+  };
+
+  # Environment variables for Hyprland/wlroots in VM
+  # These help with virtio-gpu compatibility
+  environment.sessionVariables = {
+    # Allow software rendering fallback if GPU acceleration fails
+    WLR_RENDERER_ALLOW_SOFTWARE = "1";
+    # Disable hardware cursors (often problematic in VMs)
+    WLR_NO_HARDWARE_CURSORS = "1";
+    # Needed for some virtio-gpu setups
+    LIBGL_ALWAYS_SOFTWARE = "0";  # Try hardware first, fallback handled by WLR_RENDERER_ALLOW_SOFTWARE
+  };
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

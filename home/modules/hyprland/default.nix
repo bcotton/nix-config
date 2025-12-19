@@ -36,8 +36,8 @@ in {
 
     terminal = mkOption {
       type = types.str;
-      default = "ghostty";
-      description = "Default terminal emulator command";
+      default = "foot";
+      description = "Default terminal emulator command (use 'foot' for VMs, 'ghostty' for native)";
     };
 
     browser = mkOption {
@@ -115,8 +115,9 @@ in {
   config = mkIf cfg.enable {
     # Essential user packages for Hyprland session
     home.packages = with pkgs; [
-      # Terminal
-      ghostty
+      # Terminal - include foot as fallback for VMs where GPU-accelerated
+      # terminals like ghostty may not work
+      foot
 
       # Clipboard
       wl-clipboard
@@ -255,7 +256,8 @@ in {
             "wl-paste --type image --watch cliphist store"
             # Polkit agent for authentication dialogs
             "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1"
-            "ghostty"
+            # Start the configured terminal
+            "${cfg.terminal}"
           ];
 
           # ============= KEYBINDINGS =============
