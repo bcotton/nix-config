@@ -37,43 +37,26 @@ in {
     hyprland.enable = true;
   };
 
-  # Graphics support for UTM/QEMU VM
+  # Graphics support for VirtualBox VM
   hardware.graphics = {
     enable = true;
-    # Enable 32-bit support if needed for some apps
-    enable32Bit = false;  # Not available on aarch64
+    enable32Bit = lib.mkDefault true;
   };
 
+  # VirtualBox Guest Additions - enables clipboard sharing, shared folders, 
+  # display auto-resize, and better integration
+  virtualisation.virtualbox.guest.enable = true;
+  virtualisation.virtualbox.guest.draganddrop = true;
+  virtualisation.virtualbox.guest.clipboard = true;
+
   # Environment variables for Hyprland/wlroots in VM
-  # These help with virtio-gpu compatibility
+  # These help with VirtualBox GPU compatibility
   environment.sessionVariables = {
     # Allow software rendering fallback if GPU acceleration fails
     WLR_RENDERER_ALLOW_SOFTWARE = "1";
     # Disable hardware cursors (often problematic in VMs)
     WLR_NO_HARDWARE_CURSORS = "1";
-    # Needed for some virtio-gpu setups
-    LIBGL_ALWAYS_SOFTWARE = "0";  # Try hardware first, fallback handled by WLR_RENDERER_ALLOW_SOFTWARE
   };
-
-  # ========== UTM/QEMU Guest Extensions ==========
-  # SPICE agent - enables clipboard sharing and dynamic display resizing
-  # Note: Auto-resize disabled for Hyprland compatibility
-  services.spice-vdagentd.enable = true;
-  
-  # Disable auto-display configuration to avoid conflicts with Hyprland
-  systemd.services.spice-vdagentd.serviceConfig = {
-    ExecStart = lib.mkForce [
-      ""  # Clear the default
-      "${pkgs.spice-vdagent}/bin/spice-vdagentd -X"  # -x disables guest display config
-    ];
-  };
-
-  # SPICE WebDAV - enables file sharing between host and guest
-  # Access shared folders via dav://localhost:9843 or mount with davfs2
-  services.spice-webdavd.enable = true;
-
-  # QEMU guest agent - allows host to communicate with guest (shutdown, freeze, etc.)
-  services.qemuGuest.enable = true;
 
   environment.systemPackages = with pkgs; [
     firefox
