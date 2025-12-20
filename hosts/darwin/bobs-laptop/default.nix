@@ -183,19 +183,19 @@ in {
         "zoom"
       ];
       masApps = {
-        "Amphetamine" = 937984704;
-        "Blackmagic Disk Speed Test" = 425264550;
-        "CleanMyMac" = 1339170533;
-        "GarageBand" = 682658836;
-        "iMovie" = 408981434;
-        "Keynote" = 409183694;
-        "MultiVNC" = 6738012997;
-        "Numbers" = 409203825;
-        "Pages" = 409201541;
-        "Tailscale" = 1475387142;
-        "WiFi Explorer Lite" = 1408727408;
-        "Windows App" = 1295203466;
-        "Xcode" = 497799835;
+        # "Amphetamine" = 937984704;
+        # "Blackmagic Disk Speed Test" = 425264550;
+        # "CleanMyMac" = 1339170533;
+        # "GarageBand" = 682658836;
+        # "iMovie" = 408981434;
+        # "Keynote" = 409183694;
+        # "MultiVNC" = 6738012997;
+        # "Numbers" = 409203825;
+        # "Pages" = 409201541;
+        # "Tailscale" = 1475387142;
+        # "WiFi Explorer Lite" = 1408727408;
+        # "Windows App" = 1295203466;
+        # "Xcode" = 497799835;
       };
     };
 
@@ -245,7 +245,7 @@ in {
         static-only = false;
         show-recents = false;
         show-process-indicators = true;
-        orientation = "right";
+        orientation = "bottom";
         tilesize = 36;
         minimize-to-application = true;
         mineffect = "scale";
