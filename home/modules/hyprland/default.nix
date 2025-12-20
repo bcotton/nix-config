@@ -16,6 +16,7 @@ in {
   imports = [
     ./rofi.nix
     ./waybar.nix
+    ./keybindings-menu.nix
   ];
 
   options.programs.hyprland-config = {
@@ -32,6 +33,12 @@ in {
       type = types.bool;
       default = true;
       description = "Enable Waybar status bar";
+    };
+
+    enableKeybindingsMenu = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Enable keybindings menu (shows all shortcuts in rofi)";
     };
 
     terminal = mkOption {
@@ -113,6 +120,14 @@ in {
   };
 
   config = mkIf cfg.enable {
+    # Reload Hyprland config after home-manager activation
+    # Only runs if Hyprland is currently active (HYPRLAND_INSTANCE_SIGNATURE is set)
+    home.activation.reloadHyprland = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      if [ -n "''${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+        ${pkgs.hyprland}/bin/hyprctl reload || true
+      fi
+    '';
+
     # Essential user packages for Hyprland session
     home.packages = with pkgs; [
       # Terminal - include foot as fallback for VMs where GPU-accelerated
@@ -347,6 +362,9 @@ in {
 
             # ===== Reload Config =====
             "${cfg.modifier} SHIFT, R, Reload Hyprland config, exec, hyprctl reload"
+
+            # ===== Help =====
+            "SUPER, K, Show keybindings, exec, hypr-keybindings-menu"
 
             # ===== Clipboard =====
             "${cfg.modifier}, V, Clipboard history, exec, cliphist list | ${pkgs.fuzzel}/bin/fuzzel -d | cliphist decode | wl-copy"

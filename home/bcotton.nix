@@ -27,13 +27,18 @@ in {
   # Hyprland configuration (only active on hosts with hyprland enabled)
   programs.hyprland-config = {
     enable = true;
+    modifier = "ALT";
     # Use foot for VMs (CPU-rendered), ghostty for native machines (GPU-accelerated)
     # terminal = "ghostty";
     terminal = "foot";
+    # Set resolution for UTM VM - Virtual-1 is the QEMU monitor
+    monitors = [
+      "Virtual-1,1920x1440@60,0x0,1"
+    ];
     # Customize as needed:
-    # browser = "firefox";
+    browser = "firefox";
     # modifier = "SUPER";
-    # gapsIn = 5;
+    gapsIn = 5;
     # gapsOut = 10;
   };
 
