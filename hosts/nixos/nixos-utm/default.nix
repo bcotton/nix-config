@@ -17,7 +17,6 @@ in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./disk-config.nix
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -27,10 +26,40 @@ in {
   # boot.loader.grub.device = "/dev/disk/by-label/nixos"; # or "nodev" for efi only
 
   networking = {
-    hostName = "nixos";
+    hostName = "nixos-utm";
   };
 
   services.tailscale.enable = variables.tailscaleEnable;
+
+  services.clubcotton = {
+    tailscale.enable = true;
+    hyprland.enable = true;
+  };
+
+  # Graphics support for VirtualBox VM
+  hardware.graphics = {
+    enable = true;
+  };
+
+  # VirtualBox Guest Additions - enables clipboard sharing, shared folders,
+  # display auto-resize, and better integration
+  # virtualisation.virtualbox.guest.enable = true;
+  # virtualisation.virtualbox.guest.draganddrop = true;
+  #;virtualisation.virtualbox.guest.clipboard = true;
+
+  # Environment variables for Hyprland/wlroots in VM
+  # These help with VirtualBox GPU compatibility
+  environment.sessionVariables = {
+    # Allow software rendering fallback if GPU acceleration fails
+    WLR_RENDERER_ALLOW_SOFTWARE = "1";
+    # Disable hardware cursors (often problematic in VMs)
+    WLR_NO_HARDWARE_CURSORS = "1";
+  };
+
+  environment.systemPackages = with pkgs; [
+    firefox
+    code-cursor
+  ];
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

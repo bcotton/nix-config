@@ -104,7 +104,7 @@ in {
         set -g @powerkit_session_icon 'auto'
         set -g @powerkit_transparent 'true'
         set -g @powerkit_options_key 'P'
-        
+
         bind-key "C-f" run-shell -b "${tmux-fzf-head}/share/tmux-plugins/tmux-fzf/scripts/session.sh switch"
         run-shell ${tmux-nested}/share/tmux-plugins/tmux-nested/nested.tmux
         run-shell ${tmux-fuzzback}/share/tmux-plugins/tmux-fuzzback/fuzzback.tmux

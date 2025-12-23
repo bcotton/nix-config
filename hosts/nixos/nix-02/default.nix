@@ -26,6 +26,7 @@ in {
     # vnc.enable = true;
     tailscale.enable = true;
     nut-client.enable = true;
+    hyprland.enable = true;
   };
 
   virtualisation.containers.enable = true;

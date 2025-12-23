@@ -224,6 +224,9 @@
               };
             }
 
+            # Allow unfree packages (not inherited from nixos-common.nix in minimal config)
+            {nixpkgs.config.allowUnfree = true;}
+
             disko.nixosModules.disko
             ./modules/zfs
             ./hosts/nixos/${hostName} # ip address, host specific stuff
@@ -314,6 +317,7 @@
     };
 
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
+    formatter.aarch64-linux = nixpkgs.legacyPackages.aarch64-linux.alejandra;
     formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.alejandra;
     formatter.x86_64-darwin = nixpkgs.legacyPackages.x86_64-darwin.alejandra;
 
@@ -338,7 +342,7 @@
       dns-01 = nixosSystem "x86_64-linux" "dns-01" ["bcotton"];
       octoprint = nixosSystem "x86_64-linux" "octoprint" ["bcotton" "tomcotton"];
       frigate-host = nixosSystem "x86_64-linux" "frigate-host" ["bcotton"];
-      # nixos = nixosSystem "x86_64-linux" "nixos" ["bcotton" "tomcotton"];
+      nixos-utm = nixosSystem "aarch64-linux" "nixos-utm" ["bcotton"];
       # k3s-01 = nixosSystem "x86_64-linux" "k3s-01" ["bcotton"];
       # k3s-02 = nixosSystem "x86_64-linux" "k3s-02" ["bcotton"];
       # k3s-03 = nixosSystem "x86_64-linux" "k3s-03" ["bcotton"];

@@ -17,11 +17,30 @@ in {
     ./modules/atuin.nix
     ./modules/tmux-plugins.nix
     ./modules/beets.nix
+    ./modules/hyprland
     # ./modules/sesh.nix
   ];
 
   programs.beets-cli.enable = true;
   programs.tmux-plugins.enable = true;
+
+  # Hyprland configuration (only active on hosts with hyprland enabled)
+  programs.hyprland-config = {
+    enable = true;
+    modifier = "ALT";
+    # Use foot for VMs (CPU-rendered), ghostty for native machines (GPU-accelerated)
+    # terminal = "ghostty";
+    terminal = "foot";
+    # Set resolution for UTM VM - Virtual-1 is the QEMU monitor
+    monitors = [
+      "Virtual-1,1920x1440@60,0x0,1"
+    ];
+    # Customize as needed:
+    browser = "firefox";
+    # modifier = "SUPER";
+    gapsIn = 5;
+    # gapsOut = 10;
+  };
 
   # programs.sesh-config = {
   #   enable = true;
