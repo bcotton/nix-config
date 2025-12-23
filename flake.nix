@@ -224,6 +224,9 @@
               };
             }
 
+            # Allow unfree packages (not inherited from nixos-common.nix in minimal config)
+            {nixpkgs.config.allowUnfree = true;}
+
             disko.nixosModules.disko
             ./modules/zfs
             ./hosts/nixos/${hostName} # ip address, host specific stuff
@@ -314,6 +317,7 @@
     };
 
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
+    formatter.aarch64-linux = nixpkgs.legacyPackages.aarch64-linux.alejandra;
     formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.alejandra;
     formatter.x86_64-darwin = nixpkgs.legacyPackages.x86_64-darwin.alejandra;
 

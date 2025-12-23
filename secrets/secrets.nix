@@ -19,7 +19,7 @@ let
   octoprint = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKtxU4yWKvKtZUV82nISi21UCnZ8D2ua8mPMkhk1flNH root@octoprint";
   frigate-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL7E24JIWthIHIyTnqjdmJPeGUw8UreinxDNfVq9N2AP root@frigate-host";
   toms-laptop-01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDTtjWF4ZxB9xIcJeOPpGE7swaikFG52fSJQmIz4sQuE root@toms-laptop-01";
-  nixos-utm = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAJ+RcbtuYFKez+YbzDkNOXow6GYp+VT+KvhtW8cqrHy root@nixos-utm";
+  nixos-utm = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtSuZJ1o7vdfKiooH8AlKnUkyBx6eBqQl+XZ3SdkRyQ root@nixos";
 
   systems = [admin condo-01 natalya-01 dns-01 imac-01 imac-02 nix-01 nix-02 nix-03 nas-01 octoprint frigate-host toms-laptop-01 nixos-utm];
 in {

@@ -85,4 +85,3 @@ in {
     # Note: The keybinding itself is added in default.nix to keep all bindings together
   };
 }
-

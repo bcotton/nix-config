@@ -17,7 +17,6 @@ in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./disk-config.nix
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -40,14 +39,13 @@ in {
   # Graphics support for VirtualBox VM
   hardware.graphics = {
     enable = true;
-    enable32Bit = lib.mkDefault true;
   };
 
-  # VirtualBox Guest Additions - enables clipboard sharing, shared folders, 
+  # VirtualBox Guest Additions - enables clipboard sharing, shared folders,
   # display auto-resize, and better integration
-  virtualisation.virtualbox.guest.enable = true;
-  virtualisation.virtualbox.guest.draganddrop = true;
-  virtualisation.virtualbox.guest.clipboard = true;
+  # virtualisation.virtualbox.guest.enable = true;
+  # virtualisation.virtualbox.guest.draganddrop = true;
+  #;virtualisation.virtualbox.guest.clipboard = true;
 
   # Environment variables for Hyprland/wlroots in VM
   # These help with VirtualBox GPU compatibility
@@ -62,7 +60,6 @@ in {
     firefox
     code-cursor
   ];
-
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
