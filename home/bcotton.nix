@@ -3,6 +3,7 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName ? "unknown",
   ...
 }: let
   nixVsCodeServer = fetchTarball {
@@ -12,34 +13,40 @@
 in {
   home.stateVersion = "23.05";
 
-  imports = [
-    "${nixVsCodeServer}/modules/vscode-server/home.nix"
-    ./modules/atuin.nix
-    ./modules/tmux-plugins.nix
-    ./modules/beets.nix
-    ./modules/hyprland
-    # ./modules/sesh.nix
-  ];
+  imports = let
+    # Create the path to the host-specific config file
+    # We use string interpolation here because hostName is available as a function argument
+    hostConfigFile = "bcotton-hosts/${hostName}.nix";
+    hostConfigPath = ./. + "/${hostConfigFile}";
+  in
+    [
+      "${nixVsCodeServer}/modules/vscode-server/home.nix"
+      ./modules/atuin.nix
+      ./modules/tmux-plugins.nix
+      ./modules/beets.nix
+      ./modules/hyprland
+      # ./modules/sesh.nix
+    ]
+    ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
 
   programs.beets-cli.enable = true;
   programs.tmux-plugins.enable = true;
 
-  # Hyprland configuration (only active on hosts with hyprland enabled)
+  # Hyprland configuration - these are default settings
+  # Host-specific overrides can be placed in bcotton-hosts/<hostname>.nix
+  # See bcotton-hosts/README.md for details on per-host configuration
+  # Using lib.mkDefault allows host-specific configs to override these values
   programs.hyprland-config = {
-    enable = true;
-    modifier = "ALT";
-    # Use foot for VMs (CPU-rendered), ghostty for native machines (GPU-accelerated)
-    # terminal = "ghostty";
-    terminal = "foot";
-    # Set resolution for UTM VM - Virtual-1 is the QEMU monitor
-    monitors = [
-      "Virtual-1,1920x1440@60,0x0,1"
+    enable = lib.mkDefault false;
+    modifier = lib.mkDefault "SUPER";
+    terminal = lib.mkDefault "ghostty";
+    browser = lib.mkDefault "firefox";
+    # Default monitor auto-configuration
+    monitors = lib.mkDefault [
+      ",preferred,auto,auto"
     ];
-    # Customize as needed:
-    browser = "firefox";
-    # modifier = "SUPER";
-    gapsIn = 5;
-    # gapsOut = 10;
+    gapsIn = lib.mkDefault 5;
+    gapsOut = lib.mkDefault 10;
   };
 
   # programs.sesh-config = {
@@ -545,9 +552,10 @@ in {
     kubernetes-helm
     kubectx
     kubectl
-    llm
+    unstablePkgs.llm
     # nodejs_22
     opentofu
+    procs
     unstablePkgs.sesh
     unstablePkgs.uv
     tldr

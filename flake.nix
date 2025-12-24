@@ -117,7 +117,7 @@
                   };
                 })
                 usernames);
-              home-manager.extraSpecialArgs = {inherit unstablePkgs;};
+              home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
             }
             ./hosts/common/common-packages.nix
             ./hosts/common/nixos-common.nix
@@ -188,7 +188,7 @@
                   };
                 })
                 usernames);
-              home-manager.extraSpecialArgs = {inherit unstablePkgs;};
+              home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
             }
             ./hosts/common/common-packages.nix
             ./hosts/common/nixos-common.nix
@@ -263,7 +263,7 @@
             home-manager.users.${username} = {
               imports = [./home/${username}.nix];
             };
-            home-manager.extraSpecialArgs = {inherit unstablePkgs;};
+            home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
           }
           ./hosts/common/common-packages.nix
           ./hosts/common/darwin-common.nix
