@@ -99,7 +99,7 @@
                 unstablePkgs = unstablePkgs;
                 system = system;
                 inputs = inputs;
-                localPackages = localPackages;
+                localPackages = localPackages system;
               };
             }
             ./overlays.nix
@@ -118,7 +118,10 @@
                   };
                 })
                 usernames);
-              home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
+              home-manager.extraSpecialArgs = {
+                inherit unstablePkgs hostName;
+                localPackages = localPackages system;
+              };
             }
             ./hosts/common/common-packages.nix
             ./hosts/common/nixos-common.nix
@@ -144,7 +147,7 @@
                 unstablePkgs = unstablePkgs;
                 system = system;
                 inputs = inputs;
-                localPackages = localPackages;
+                localPackages = localPackages system;
               };
             }
             # Nixinate configuration with conditional host setting. There is a potentation that
@@ -189,7 +192,10 @@
                   };
                 })
                 usernames);
-              home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
+              home-manager.extraSpecialArgs = {
+                inherit unstablePkgs hostName;
+                localPackages = localPackages system;
+              };
             }
             ./hosts/common/common-packages.nix
             ./hosts/common/nixos-common.nix
