@@ -25,12 +25,14 @@ in {
       ./modules/tmux-plugins.nix
       ./modules/beets.nix
       ./modules/hyprland
+      ./modules/gwtmux.nix
       # ./modules/sesh.nix
     ]
     ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
 
   programs.beets-cli.enable = true;
   programs.tmux-plugins.enable = true;
+  programs.gwtmux.enable = true;
 
   # Hyprland configuration - these are default settings
   # Host-specific overrides can be placed in bcotton-hosts/<hostname>.nix
@@ -107,6 +109,7 @@ in {
         la = "config --get-regexp alias";
         lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit";
         lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
+        clone-gwt = "!sh $HOME/.config/git-worktrees/git-clone-bare-for-worktrees.sh";
       };
       url = {
         "ssh://git@github.com/" = {
@@ -304,6 +307,10 @@ in {
     };
     configFile."nix/registry.json" = {
       source = ./bcotton.config/nix/registry.json;
+    };
+    configFile."git-worktrees/git-clone-bare-for-worktrees.sh" = {
+      executable = true;
+      source = ./bcotton.config/git-worktrees/git-clone-bare-for-worktrees.sh;
     };
   };
 
@@ -547,6 +554,7 @@ in {
       ppkgs.libtmux
     ]))
     # unstablePkgs.aider-chat
+    bottom
     devenv
     fx
     kubernetes-helm

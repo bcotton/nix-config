@@ -59,6 +59,7 @@
       };
     in {
       primp = pkgs.callPackage ./pkgs/primp {};
+      gwtmux = pkgs.callPackage ./pkgs/gwtmux {};
     };
     inputs = {inherit agenix disko ghostty nixinate nixos-shell nix-darwin home-manager tsnsrv nixpkgs nixpkgs-unstable isd;};
 
@@ -242,7 +243,7 @@
       nix-darwin.lib.darwinSystem
       {
         inherit system inputs;
-        specialArgs = {inherit hostName;};
+        specialArgs = {inherit hostName localPackages;};
 
         modules = [
           # adds unstable to be available in top-level evals (like in common-packages)
@@ -250,6 +251,7 @@
             _module.args = {
               unstablePkgs = genUnstablePkgs system;
               system = system;
+              localPackages = localPackages system;
             };
           }
 
@@ -263,7 +265,10 @@
             home-manager.users.${username} = {
               imports = [./home/${username}.nix];
             };
-            home-manager.extraSpecialArgs = {inherit unstablePkgs hostName;};
+            home-manager.extraSpecialArgs = {
+              inherit unstablePkgs hostName;
+              localPackages = localPackages system;
+            };
           }
           ./hosts/common/common-packages.nix
           ./hosts/common/darwin-common.nix
@@ -314,6 +319,7 @@
       };
     in {
       primp = pkgs.python3Packages.callPackage ./pkgs/primp {};
+      gwtmux = pkgs.callPackage ./pkgs/gwtmux {};
     };
 
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
