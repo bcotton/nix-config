@@ -50,6 +50,7 @@
       imports = [
         ./flake-modules/formatter.nix
         ./flake-modules/packages.nix
+        ./flake-modules/overlays.nix
         ./flake-modules/checks.nix
         ./flake-modules/hosts.nix
       ];
