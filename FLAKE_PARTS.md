@@ -1,5 +1,38 @@
 # Nix-Parts Migration Plan
 
+## Migration Progress
+
+**Status: Phases 0-3 Complete ✅**
+
+- ✅ **Phase 0: Pre-Migration Validation** - Complete (2025-12-25)
+  - Fixed all flake check issues (webdav, kavita, immich, open-webui)
+  - Resolved nixinate flake check blocking issue
+  - Created baseline documentation and tag
+
+- ✅ **Phase 1: Preparation and Setup** - Complete (2025-12-25)
+  - Added flake-parts input
+  - Updated flake.lock
+
+- ✅ **Phase 2: Core Flake-Parts Structure** - Complete (2025-12-25)
+  - Converted main flake.nix (390 lines → 57 lines, 85% reduction)
+  - Created modular structure: formatter.nix, packages.nix, checks.nix, hosts.nix
+  - All functionality preserved
+
+- ✅ **Phase 3: Module-by-Module Migration** - Complete (2025-12-25)
+  - Added overlays.nix module with flake exports
+  - Enhanced packages.nix with legacyPackages support
+  - Packages now available on all 4 systems (not just x86_64-linux)
+
+- 🔄 **Phase 4: Refactor System Builders** - In Progress
+- ⏳ **Phase 5: Handle Special Cases** - Pending
+- ⏳ **Phase 6: Directory Restructuring** - Optional
+- ⏳ **Phase 7: Testing Strategy** - Pending
+- ⏳ **Phase 8: Cleanup** - Pending
+
+**Current Commit:** bfd79cc - Phase 3 complete
+
+---
+
 ## Overview
 
 This document outlines a comprehensive plan to refactor this repository from a traditional Nix flakes structure to use [flake-parts](https://flake.parts/) (nix-parts). This migration will improve modularity, reduce code duplication, and provide better organization for the multi-host, multi-platform configuration.

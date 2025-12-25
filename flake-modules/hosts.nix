@@ -25,14 +25,6 @@
         config.allowUnfree = true;
       };
 
-    # Local packages function
-    localPackages = system: let
-      pkgs = genPkgs system;
-    in {
-      primp = pkgs.python3Packages.callPackage ../pkgs/primp {};
-      gwtmux = pkgs.callPackage ../pkgs/gwtmux {};
-    };
-
     # NixOS system builder
     nixosSystem = system: hostName: usernames: let
       pkgs = genPkgs system;
@@ -49,7 +41,7 @@
             ({config, ...}: {
               _module.args = {
                 inherit unstablePkgs;
-                localPackages = localPackages system;
+                localPackages = self.legacyPackages.${system}.localPackages;
               };
             })
 
@@ -102,7 +94,7 @@
               );
               home-manager.extraSpecialArgs = {
                 inherit unstablePkgs hostName;
-                localPackages = localPackages system;
+                localPackages = self.legacyPackages.${system}.localPackages;
               };
             }
 
@@ -129,7 +121,7 @@
             ({config, ...}: {
               _module.args = {
                 inherit unstablePkgs;
-                localPackages = localPackages system;
+                localPackages = self.legacyPackages.${system}.localPackages;
               };
             })
             ({config, ...}: {
@@ -165,7 +157,7 @@
               );
               home-manager.extraSpecialArgs = {
                 inherit unstablePkgs hostName;
-                localPackages = localPackages system;
+                localPackages = self.legacyPackages.${system}.localPackages;
               };
             }
           ]
@@ -186,7 +178,7 @@
           ({config, ...}: {
             _module.args = {
               inherit unstablePkgs;
-              localPackages = localPackages system;
+              localPackages = self.legacyPackages.${system}.localPackages;
             };
           })
           ../overlays.nix
@@ -199,7 +191,7 @@
             home-manager.users.${username}.imports = [../home/${username}.nix];
             home-manager.extraSpecialArgs = {
               inherit unstablePkgs hostName;
-              localPackages = localPackages system;
+              localPackages = self.legacyPackages.${system}.localPackages;
             };
           }
           ../hosts/common/common-packages.nix
