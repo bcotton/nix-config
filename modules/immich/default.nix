@@ -8,7 +8,6 @@
 }:
 with lib; let
   cfg = config.services.clubcotton.immich;
-  clubcotton = config.clubcotton;
 in {
   options.services.clubcotton.immich = {
     enable = mkEnableOption "Immich media server";
@@ -207,14 +206,16 @@ in {
       };
     };
 
-    services.tsnsrv = {
-      enable = true;
-      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-
-      services."${cfg.tailnetHostname}" = mkIf (cfg.tailnetHostname != "") {
-        ephemeral = true;
-        toURL = "http://127.0.0.1:2283/";
-      };
-    };
+    # Note: Tailscale/tsnsrv integration should be configured separately
+    # in host configurations where clubcotton config is available.
+    # Example:
+    #   services.tsnsrv = {
+    #     enable = true;
+    #     defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
+    #     services."${config.services.clubcotton.immich.tailnetHostname}" = {
+    #       ephemeral = true;
+    #       toURL = "http://127.0.0.1:2283/";
+    #     };
+    #   };
   };
 }

@@ -1,0 +1,278 @@
+evaluating flake...
+checking flake output 'checks'...
+checking derivation checks.x86_64-linux.postgresql...
+derivation evaluated to /nix/store/5flaa3isjhnm665ja6j79mzzdv2jhnn6-vm-test-run-postgresql.drv
+checking derivation checks.x86_64-linux.webdav...
+error:
+       … while checking flake output 'checks'
+         at /nix/store/jk0a4bzpjn7z1jis1iyh9zipj8rjqay4-source/flake.nix:285:5:
+          284|   in {
+          285|     checks.x86_64-linux = let
+             |     ^
+          286|       system = "x86_64-linux";
+
+       … while checking the derivation 'checks.x86_64-linux.webdav'
+         at /nix/store/jk0a4bzpjn7z1jis1iyh9zipj8rjqay4-source/flake.nix:293:7:
+          292|       postgresql = nixpkgs.legacyPackages.${system}.nixosTest (import ./modules/postgresql/test.nix {inherit nixpkgs;});
+          293|       webdav = nixpkgs.legacyPackages.${system}.nixosTest (import ./clubcotton/services/webdav/test.nix {inherit nixpkgs;});
+             |       ^
+          294|       kavita = nixpkgs.legacyPackages.${system}.nixosTest (import ./clubcotton/services/kavita/test.nix {inherit nixpkgs;});
+
+       … while evaluating the attribute 'drvPath'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/customisation.nix:418:7:
+          417|     // {
+          418|       drvPath =
+             |       ^
+          419|         assert condition;
+
+       … while calling the 'derivationStrict' builtin
+         at <nix/derivation-internal.nix>:37:12:
+           36|
+           37|   strict = derivationStrict drvAttrs;
+             |            ^
+           38|
+
+       … while evaluating derivation 'vm-test-run-webdav'
+         whose name attribute is located at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/pkgs/stdenv/generic/make-derivation.nix:480:13
+
+       … while evaluating attribute 'buildCommand' of derivation 'vm-test-run-webdav'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/nixos/lib/testing/run.nix:58:9:
+           57|
+           58|         buildCommand = ''
+             |         ^
+           59|           mkdir -p $out
+
+       … while calling the 'getAttr' builtin
+         at <nix/derivation-internal.nix>:50:17:
+           49|     value = commonAttrs // {
+           50|       outPath = builtins.getAttr outputName strict;
+             |                 ^
+           51|       drvPath = strict.drvPath;
+
+       … while calling the 'derivationStrict' builtin
+         at <nix/derivation-internal.nix>:37:12:
+           36|
+           37|   strict = derivationStrict drvAttrs;
+             |            ^
+           38|
+
+       … while evaluating derivation 'nixos-test-driver-webdav'
+         whose name attribute is located at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/pkgs/stdenv/generic/make-derivation.nix:480:13
+
+       … while evaluating attribute 'buildCommand' of derivation 'nixos-test-driver-webdav'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/pkgs/build-support/trivial-builders/default.nix:80:17:
+           79|         enableParallelBuilding = true;
+           80|         inherit buildCommand name;
+             |                 ^
+           81|         passAsFile = [ "buildCommand" ] ++ (derivationArgs.passAsFile or [ ]);
+
+       … while calling the 'toString' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/nixos/lib/testing/driver.nix:65:38:
+           64|
+           65|         vmStartScripts=($(for i in ${toString vms}; do echo $i/bin/run-*-vm; done))
+             |                                      ^
+           66|
+
+       … while evaluating the first argument passed to builtins.toString
+
+       … while calling the 'getAttr' builtin
+         at <nix/derivation-internal.nix>:50:17:
+           49|     value = commonAttrs // {
+           50|       outPath = builtins.getAttr outputName strict;
+             |                 ^
+           51|       drvPath = strict.drvPath;
+
+       … while calling the 'derivationStrict' builtin
+         at <nix/derivation-internal.nix>:37:12:
+           36|
+           37|   strict = derivationStrict drvAttrs;
+             |            ^
+           38|
+
+       … while evaluating derivation 'nixos-vm'
+         whose name attribute is located at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/pkgs/stdenv/generic/make-derivation.nix:480:13
+
+       … while evaluating attribute 'buildCommand' of derivation 'nixos-vm'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/pkgs/build-support/trivial-builders/default.nix:80:17:
+           79|         enableParallelBuilding = true;
+           80|         inherit buildCommand name;
+             |                 ^
+           81|         passAsFile = [ "buildCommand" ] ++ (derivationArgs.passAsFile or [ ]);
+
+       … from call site
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/nixos/modules/virtualisation/qemu-vm.nix:1389:19:
+         1388|           mkdir -p $out/bin
+         1389|           ln -s ${config.system.build.toplevel} $out/system
+             |                   ^
+         1390|           ln -s ${hostPkgs.writeScript "run-nixos-vm" startVM} $out/bin/run-${config.system.name}-vm
+
+       … while calling anonymous lambda
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/attrsets.nix:1566:14:
+         1565|         zipAttrsWith (
+         1566|           n: values:
+             |              ^
+         1567|           let
+
+       … while calling the 'head' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/attrsets.nix:1571:13:
+         1570|           if length values == 1 || pred here (elemAt values 1) (head values) then
+         1571|             head values
+             |             ^
+         1572|           else
+
+       … while calling anonymous lambda
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/attrsets.nix:1182:17:
+         1181|         mapAttrs (
+         1182|           name: value:
+             |                 ^
+         1183|           if isAttrs value && cond value then recurse (path ++ [ name ]) value else f (path ++ [ name ]) value
+
+       … from call site
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/attrsets.nix:1183:85:
+         1182|           name: value:
+         1183|           if isAttrs value && cond value then recurse (path ++ [ name ]) value else f (path ++ [ name ]) value
+             |                                                                                     ^
+         1184|         );
+
+       … while calling anonymous lambda
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:273:71:
+          272|           # For definitions that have an associated option
+          273|           declaredConfig = mapAttrsRecursiveCond (v: !isOption v) (_: v: v.value) options;
+             |                                                                       ^
+          274|
+
+       … while evaluating the attribute 'value'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1083:7:
+         1082|     // {
+         1083|       value = addErrorContext "while evaluating the option `${showOption loc}':" value;
+             |       ^
+         1084|       inherit (res.defsFinal') highestPrio;
+
+       … while evaluating the option `nodes.machine.system.build.toplevel':
+
+       … while evaluating the attribute 'mergedValue'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1130:5:
+         1129|     # Type-check the remaining definitions, and merge them. Or throw if no definitions.
+         1130|     mergedValue =
+             |     ^
+         1131|       if isDefined then
+
+       … while evaluating a branch condition
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1131:7:
+         1130|     mergedValue =
+         1131|       if isDefined then
+             |       ^
+         1132|         if all (def: type.check def.value) defsFinal then
+
+       … while evaluating the attribute 'values'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1124:9:
+         1123|       {
+         1124|         values = defs''';
+             |         ^
+         1125|         inherit (defs'') highestPrio;
+
+       … while evaluating a branch condition
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1118:11:
+         1117|           # Avoid sorting if we don't have to.
+         1118|           if any (def: def.value._type or "" == "order") defs''.values then
+             |           ^
+         1119|             sortProperties defs''.values
+
+       … while calling the 'any' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1118:14:
+         1117|           # Avoid sorting if we don't have to.
+         1118|           if any (def: def.value._type or "" == "order") defs''.values then
+             |              ^
+         1119|             sortProperties defs''.values
+
+       … while evaluating the attribute 'values'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1251:7:
+         1250|     {
+         1251|       values = concatMap (def: if getPrio def == highestPrio then [ (strip def) ] else [ ]) defs;
+             |       ^
+         1252|       inherit highestPrio;
+
+       … while calling the 'concatMap' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1251:16:
+         1250|     {
+         1251|       values = concatMap (def: if getPrio def == highestPrio then [ (strip def) ] else [ ]) defs;
+             |                ^
+         1252|       inherit highestPrio;
+
+       … while calling the 'concatMap' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1098:17:
+         1097|         # Process mkMerge and mkIf properties.
+         1098|         defs' = concatMap (
+             |                 ^
+         1099|           m:
+
+       … while calling anonymous lambda
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1099:11:
+         1098|         defs' = concatMap (
+         1099|           m:
+             |           ^
+         1100|           map (
+
+       … while calling the 'map' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1100:11:
+         1099|           m:
+         1100|           map (
+             |           ^
+         1101|             value:
+
+       … while evaluating definitions from `/nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/nixos/modules/system/activation/top-level.nix':
+
+       … from call site
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1109:80:
+         1108|               }
+         1109|           ) (addErrorContext "while evaluating definitions from `${m.file}':" (dischargeProperties m.value))
+             |                                                                                ^
+         1110|         ) defs;
+
+       … while calling 'dischargeProperties'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1202:5:
+         1201|   dischargeProperties =
+         1202|     def:
+             |     ^
+         1203|     if def._type or "" == "merge" then
+
+       … while evaluating a branch condition
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:1203:5:
+         1202|     def:
+         1203|     if def._type or "" == "merge" then
+             |     ^
+         1204|       concatMap dischargeProperties def.contents
+
+       … while evaluating the attribute 'value'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/modules.nix:770:21:
+          769|             inherit (module) file;
+          770|             inherit value;
+             |                     ^
+          771|           }) module.config
+
+       … from call site
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/nixos/modules/system/activation/top-level.nix:80:26:
+           79|   # Handle assertions and warnings
+           80|   baseSystemAssertWarn = lib.asserts.checkAssertWarn config.assertions config.warnings baseSystem;
+             |                          ^
+           81|
+
+       … while calling 'checkAssertWarn'
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/asserts.nix:193:27:
+          192|   checkAssertWarn =
+          193|     assertions: warnings: val:
+             |                           ^
+          194|     let
+
+       … while calling the 'throw' builtin
+         at /nix/store/zb9wscd33psnx104xs09qf5y0pn6ijah-source/lib/asserts.nix:198:7:
+          197|     if failedAssertions != [ ] then
+          198|       throw "\nFailed assertions:\n${concatStringsSep "\n" (map (x: "- ${x}") failedAssertions)}"
+             |       ^
+          199|     else
+
+       error:
+       Failed assertions:
+       - The following users have a primary group that is undefined: webdav
+       Hint: Add this to your NixOS configuration:
+         users.groups.share = {};

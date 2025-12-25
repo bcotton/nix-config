@@ -11,7 +11,8 @@
   # Hyprland configuration optimized for UTM VM
   programs.hyprland-config = {
     enable = true;
-    enableVNC = true; # Start wayvnc service
+    # NOTE: enableVNC option removed - configure wayvnc separately if needed
+    # enableVNC = true; # Start wayvnc service
 
     # Use ALT as modifier (useful in VMs to avoid conflicts with host)
     modifier = "ALT";

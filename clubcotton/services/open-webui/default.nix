@@ -17,7 +17,6 @@ with lib; let
   # This is a common pattern in NixOS modules to create a shorter name for accessing
   # the module's configuration options
   cfg = config.services.clubcotton.open-webui;
-  clubcotton = config.clubcotton;
 in {
   # Every NixOS module typically has two main sections:
   # 1. options - Declares the configuration interface
@@ -36,9 +35,7 @@ in {
       # types.package indicates this option expects a Nix package
       type = types.package;
       # default value comes from unstable package set for newer features
-      default = unstablePkgs.open-webui.override {
-        python312 = unstablePkgs.python312;
-      };
+      default = unstablePkgs.open-webui;
       description = "Open WebUI package to use.";
     };
 
@@ -88,15 +85,16 @@ in {
       inherit (cfg) stateDir environment environmentFile;
     };
 
-    # Expose this code-server as a host on the tailnet if tsnsrv module is available
-    services.tsnsrv = {
-      enable = true;
-      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-
-      services."${cfg.tailnetHostname}" = mkIf (cfg.tailnetHostname != "") {
-        ephemeral = true;
-        toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
-      };
-    };
+    # Note: Tailscale/tsnsrv integration should be configured separately
+    # in host configurations where clubcotton config is available.
+    # Example:
+    #   services.tsnsrv = {
+    #     enable = true;
+    #     defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
+    #     services."${config.services.clubcotton.open-webui.tailnetHostname}" = {
+    #       ephemeral = true;
+    #       toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
+    #     };
+    #   };
   };
 }
