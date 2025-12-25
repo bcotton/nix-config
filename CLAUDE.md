@@ -89,6 +89,20 @@ The repository manages a comprehensive media server stack including:
 - Monitoring (Prometheus, Grafana)
 - Infrastructure services (PostgreSQL, networking, storage)
 
+### Package Overlays
+
+Custom package overlays are defined in `overlays/` directory and composed in `overlays.nix`. Overlays allow overriding package versions or build options:
+
+- `claude-code.nix` - Pins claude-code version for consistent updates
+- `delta.nix` - Adds themes.gitconfig to delta package
+- `jellyfin.nix` - Enables VPL (Video Processing Library) for hardware acceleration
+- `beets.nix`, `qmk.nix`, `yq.nix` - Other tool-specific overrides
+
+To update a package version in an overlay:
+1. Edit the version number in the overlay file
+2. Update the source hash (use `nix-prefetch-url` or set to `lib.fakeHash` and build to get correct hash)
+3. Update `npmDepsHash` if applicable (for npm packages)
+
 ### Secrets Management
 
 Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix` and encrypted files stored in `secrets/` directory.

@@ -555,6 +555,7 @@ in {
     ]))
     # unstablePkgs.aider-chat
     bottom
+    claude-code
     devenv
     fx
     kubernetes-helm
