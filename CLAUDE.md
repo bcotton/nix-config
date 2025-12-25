@@ -38,9 +38,12 @@ just gc [generations]        # Garbage collect (default: 5d)
 
 ### Remote Deployment
 
+**Note:** Nixinate apps are incompatible with the flake schema. See REMOTE_DEPLOYMENT.md for deployment alternatives.
+
 ```bash
-just nixinate hostname       # Deploy to specific host via nixinate
-just nix-all                 # Deploy to all configured hosts
+# Recommended: Use nixos-rebuild with SSH
+nixos-rebuild switch --flake .#hostname --target-host root@hostname.lan
+
 just build-all               # Build all configurations locally
 just build-host hostname     # Build specific host configuration
 ```
@@ -54,9 +57,28 @@ nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 
 ## Architecture
 
+### Flake-Parts Structure
+
+This flake uses [flake-parts](https://flake.parts/) for modular flake organization:
+
+- **Main flake.nix** (57 lines) - Minimal, imports flake-parts modules
+- **flake-modules/** - Modular flake outputs:
+  - `formatter.nix` - Alejandra formatter for all systems (via perSystem)
+  - `packages.nix` - Custom packages (primp, gwtmux) available on all systems
+  - `overlays.nix` - Overlay exports for external consumption
+  - `checks.nix` - NixOS tests (x86_64-linux only)
+  - `hosts.nix` - System builders and all host configurations
+
+**Benefits:**
+- 85% reduction in main flake.nix (390 → 57 lines)
+- Automatic per-system handling via `perSystem`
+- Clean separation of concerns
+- Packages available on all 4 systems (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin)
+
 ### Directory Structure
 
-- `flake.nix` - Main flake configuration defining all systems and modules
+- `flake.nix` - Main flake configuration using flake-parts.lib.mkFlake
+- `flake-modules/` - Flake-parts modules defining outputs
 - `hosts/` - Host-specific configurations
   - `common/` - Shared configurations (packages, darwin/nixos common)
   - `darwin/` - macOS host configurations
@@ -72,10 +94,12 @@ nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 
 ### Key System Functions
 
-The flake defines three main system builders:
+System builders are defined in `flake-modules/hosts.nix`:
 - `darwinSystem` - macOS configurations with nix-darwin and Home Manager
 - `nixosSystem` - Full NixOS configurations with all modules
 - `nixosMinimalSystem` - Minimal NixOS for specialized hosts
+
+All builders use `self.legacyPackages.${system}.localPackages` for custom packages.
 
 ### Service Architecture
 
@@ -91,8 +115,18 @@ The repository manages a comprehensive media server stack including:
 
 ### Package Overlays
 
-Custom package overlays are defined in `overlays/` directory and composed in `overlays.nix`. Overlays allow overriding package versions or build options:
+Two overlay files serve different purposes:
 
+1. **flake-modules/overlays.nix** - Exports overlays as flake outputs for external consumption
+   - `overlays.yq` - yq package overlay
+   - `overlays.claude-code` - claude-code version pinning
+   - `overlays.default` - Combined core overlays
+
+2. **overlays.nix** - NixOS/Darwin module that conditionally applies overlays based on config
+   - Core overlays: yq, beets, qmk, claude-code (always applied)
+   - Conditional overlays: jellyfin, zfs smart-disk-monitoring, ctlptl, delta
+
+Custom overlays are defined in `overlays/` directory:
 - `claude-code.nix` - Pins claude-code version for consistent updates
 - `delta.nix` - Adds themes.gitconfig to delta package
 - `jellyfin.nix` - Enables VPL (Video Processing Library) for hardware acceleration
