@@ -33,6 +33,11 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    workmux = {
+      url = "github:bcotton/workmux/5eb43da";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = inputs @ {
@@ -50,6 +55,7 @@
     vscode-server,
     disko,
     isd,
+    workmux,
     ...
   }: let
     localPackages = system: let
@@ -57,15 +63,10 @@
         inherit system;
         config.allowUnfree = true;
       };
-      unstablePkgs = import nixpkgs-unstable {
-        inherit system;
-        config.allowUnfree = true;
-      };
     in {
       primp = pkgs.callPackage ./pkgs/primp {};
       gwtmux = pkgs.callPackage ./pkgs/gwtmux {};
-      # TODO: Onc rustc 1.88 is released (25.11?) then change this back to pkgs...
-      workmux = unstablePkgs.callPackage ./pkgs/workmux {};
+      workmux = workmux.packages.${system}.default;
     };
     inputs = {inherit agenix disko ghostty nixinate nixos-shell nix-darwin home-manager tsnsrv nixpkgs nixpkgs-unstable isd;};
 
@@ -275,11 +276,15 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.users.${username} = {
-              imports = [./home/${username}.nix];
+              imports = [
+                ./home/${username}.nix
+                workmux.homeManagerModules.default
+              ];
             };
             home-manager.extraSpecialArgs = {
               inherit unstablePkgs hostName;
               localPackages = localPackages system;
+              workmuxPackage = workmux.packages.${system}.default;
             };
           }
           ./hosts/common/common-packages.nix

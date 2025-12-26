@@ -25,8 +25,8 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "A bash function for managing tmux and git worktrees";
     longDescription = ''
-      Git worktree + tmux integration. Create and manage git worktrees 
-      in dedicated tmux windows. Supports creating worktrees from branches 
+      Git worktree + tmux integration. Create and manage git worktrees
+      in dedicated tmux windows. Supports creating worktrees from branches
       or PR numbers, cleanup operations, and renaming workflows.
     '';
     homepage = "https://github.com/snapwich/gwtmux";
@@ -35,4 +35,3 @@ stdenv.mkDerivation rec {
     maintainers = [];
   };
 }
-
