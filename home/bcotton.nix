@@ -26,6 +26,7 @@ in {
       ./modules/beets.nix
       ./modules/hyprland
       ./modules/gwtmux.nix
+      ./modules/workmux.nix
       # ./modules/sesh.nix
     ]
     ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
@@ -71,6 +72,18 @@ in {
   #     }
   #   ];
   # };
+
+
+  programs.workmux = {
+    enable = true;
+    agent = "claude";
+    panes = [
+      { command = "nvim ."; focus = true; }
+      { split = "horizontal"; }
+    ];
+    # postCreate = ["npm install"];
+  };
+
 
   programs.atuin-config = {
     enable-daemon = true;

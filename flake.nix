@@ -57,9 +57,15 @@
         inherit system;
         config.allowUnfree = true;
       };
+      unstablePkgs = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
     in {
       primp = pkgs.callPackage ./pkgs/primp {};
       gwtmux = pkgs.callPackage ./pkgs/gwtmux {};
+      # TODO: Onc rustc 1.88 is released (25.11?) then change this back to pkgs...
+      workmux = unstablePkgs.callPackage ./pkgs/workmux {};
     };
     inputs = {inherit agenix disko ghostty nixinate nixos-shell nix-darwin home-manager tsnsrv nixpkgs nixpkgs-unstable isd;};
 
