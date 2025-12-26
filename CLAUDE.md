@@ -30,7 +30,7 @@ just trace [target_host]     # Build with --show-trace for debugging
 
 ```bash
 just fmt                     # Format all nix files
-just check                   # Run nix flake check (with nixinate commented out)
+just check                   # Run nix flake check
 just repl                    # Start nix repl with flake loaded
 just update                  # Update all flake inputs
 just gc [generations]        # Garbage collect (default: 5d)
@@ -38,14 +38,20 @@ just gc [generations]        # Garbage collect (default: 5d)
 
 ### Remote Deployment
 
-**Note:** Nixinate apps are incompatible with the flake schema. See REMOTE_DEPLOYMENT.md for deployment alternatives.
+Remote deployment uses nixos-rebuild with SSH. See REMOTE_DEPLOYMENT.md for additional alternatives.
 
 ```bash
-# Recommended: Use nixos-rebuild with SSH
-nixos-rebuild switch --flake .#hostname --target-host root@hostname.lan
-
+just deploy hostname         # Deploy to specific remote host via SSH
+just deploy-all              # Deploy to all NixOS hosts (excludes admin)
 just build-all               # Build all configurations locally
 just build-host hostname     # Build specific host configuration
+```
+
+**Manual deployment:**
+```bash
+nixos-rebuild switch --flake .#hostname \
+  --target-host root@hostname.lan \
+  --build-host localhost
 ```
 
 ### Testing
