@@ -46,7 +46,7 @@ fmt:
 # Deploy to a remote NixOS host via SSH
 deploy hostname:
   @echo "Deploying {{hostname}}..."
-  nixos-rebuild switch --flake .#{{hostname}} \
+  NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#{{hostname}} \
     --target-host root@{{hostname}}.lan \
     --build-host localhost
 

@@ -60,7 +60,10 @@
         )
     with subtest("Required extensions are installed"):
         machine.succeed(
-            "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep vectors"
+            "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx'"
+        )
+        machine.succeed(
+            "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep vector"
         )
         machine.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep unaccent"
@@ -81,6 +84,8 @@
         machine.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'public';\" | grep test-immich"
         )
+        machine.shell_interact()
+
         machine.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'vectors';\" | grep test-immich"
         )
