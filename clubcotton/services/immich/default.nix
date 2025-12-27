@@ -7,10 +7,14 @@
   ...
 }:
 with lib; let
-  cfg = config.services.clubcotton.immich;
+  service = "immich";
+  cfg = config.services.clubcotton.${service};
+  clubcotton = config.clubcotton;
 in {
-  options.services.clubcotton.immich = {
-    enable = mkEnableOption "Immich media server";
+  options.services.clubcotton.${service} = {
+    enable = mkEnableOption {
+      description = "Enable ${service}";
+    };
 
     openFirewall = mkOption {
       type = types.bool;
@@ -41,8 +45,28 @@ in {
 
     tailnetHostname = mkOption {
       type = types.nullOr types.str;
-      default = "immich";
+      default = "${service}";
       description = "The tailnet hostname to expose the server as.";
+    };
+
+    homepage.name = mkOption {
+      type = types.str;
+      default = "Immich";
+    };
+
+    homepage.description = mkOption {
+      type = types.str;
+      default = "Self-hosted photo and video backup solution";
+    };
+
+    homepage.icon = mkOption {
+      type = types.str;
+      default = "immich.svg";
+    };
+
+    homepage.category = mkOption {
+      type = types.str;
+      default = "Media";
     };
 
     serverConfig = {
@@ -206,16 +230,15 @@ in {
       };
     };
 
-    # Note: Tailscale/tsnsrv integration should be configured separately
-    # in host configurations where clubcotton config is available.
-    # Example:
-    #   services.tsnsrv = {
-    #     enable = true;
-    #     defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
-    #     services."${config.services.clubcotton.immich.tailnetHostname}" = {
-    #       ephemeral = true;
-    #       toURL = "http://127.0.0.1:2283/";
-    #     };
-    #   };
+    # Tailscale integration
+    services.tsnsrv = mkIf (cfg.tailnetHostname != null && cfg.tailnetHostname != "") {
+      enable = true;
+      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
+
+      services."${cfg.tailnetHostname}" = {
+        ephemeral = true;
+        toURL = "http://127.0.0.1:${toString cfg.serverConfig.port}/";
+      };
+    };
   };
 }

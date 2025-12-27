@@ -71,7 +71,6 @@
             # Internal modules
             ../clubcotton
             ../secrets
-            ../modules/immich
             ../modules/code-server
             ../modules/postgresql
             ../modules/tailscale

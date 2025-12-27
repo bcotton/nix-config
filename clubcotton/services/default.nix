@@ -13,6 +13,7 @@
     ./filebrowser
     ./freshrss
     ./hyprland
+    ./immich
     ./jellyfin
     ./kavita
     ./navidrome
