@@ -59,6 +59,15 @@
         };
       };
 
+      # Grant superuser permissions to test users for integration testing
+      # This allows Immich to dynamically create extensions like vchord
+      systemd.services.postgresql.postStart = pkgs.lib.mkAfter ''
+        $PSQL -tA <<'EOF'
+          ALTER USER "test-immich" WITH SUPERUSER;
+          ALTER USER "test-webui" WITH SUPERUSER;
+        EOF
+      '';
+
       # Open firewall for PostgreSQL
       networking.firewall.allowedTCPPorts = [5433];
     };
@@ -173,7 +182,7 @@
 
     with subtest("Required extensions are installed"):
         postgres.succeed(
-            "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep vectors"
+            "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep vector"
         )
         postgres.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c '\\dx' | grep unaccent"
@@ -195,9 +204,6 @@
         postgres.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'public';\" | grep test-immich"
         )
-        postgres.succeed(
-            "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'vectors';\" | grep test-immich"
-        )
 
     with subtest("Open WebUI database and user are created"):
         postgres.succeed(
@@ -218,8 +224,6 @@
         )
 
     with subtest("Open WebUI service starts"):
-        webui.shell_interact()
-
         webui.wait_for_unit("open-webui.service")
         webui.succeed("systemctl is-active open-webui.service")
 

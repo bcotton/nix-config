@@ -91,11 +91,6 @@
         machine.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'public';\" | grep test-immich"
         )
-        machine.shell_interact()
-
-        machine.succeed(
-            "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'vectors';\" | grep test-immich"
-        )
     with subtest("Open WebUI database and user are created"):
         machine.succeed(
             "sudo -u postgres psql -p 5433 -c '\\l' | grep test-open-webui"

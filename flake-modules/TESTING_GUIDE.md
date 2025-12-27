@@ -15,7 +15,11 @@ This guide covers testing and debugging for the NixOS configurations and service
 
 ## Overview
 
-This repository uses the NixOS testing framework to validate configurations and services. All tests are defined as flake checks and can be run individually or collectively. Every test in this repository has SSH access enabled by default for interactive debugging.
+This repository uses the NixOS testing framework to validate configurations and services. All tests are defined as flake checks and can be run individually or collectively.
+
+**Standard NixOS tests** (postgresql, webdav, kavita, postgresql-integration) have SSH access enabled by default for interactive debugging on port 2223.
+
+**ZFS/disko tests** use a different test framework that doesn't support SSH port forwarding. For these tests, use `machine.shell_interact()` in the interactive Python REPL for debugging.
 
 ## Available Tests
 
@@ -82,7 +86,9 @@ In the interactive REPL, you can:
 
 ## SSH Access to Test VMs
 
-**All tests now have SSH access enabled by default** on port 2223. This allows you to debug test VMs using familiar SSH tools and workflows.
+**Standard NixOS tests have SSH access enabled by default** on port 2223. This allows you to debug test VMs using familiar SSH tools and workflows.
+
+**Note:** ZFS/disko tests (zfs-single-root, zfs-raidz1, zfs-mirrored-root) use the disko test framework which doesn't support SSH port forwarding. For these tests, use `machine.shell_interact()` in the interactive Python REPL instead.
 
 ### Connecting via SSH
 
@@ -177,7 +183,7 @@ Most tests follow this structure:
 
 ### Disko/ZFS Tests
 
-ZFS tests use the disko test framework with SSH configured in `extraSystemConfig`:
+ZFS tests use the disko test framework which has different configuration options:
 
 ```nix
 {nixpkgs, pkgs, lib, disko}: let
@@ -188,20 +194,9 @@ in makeDiskoTest {
   disko-config = {...};
 
   extraSystemConfig = {
-    # Enable SSH access for interactive debugging
-    services.openssh = {
-      enable = true;
-      settings = {
-        PermitRootLogin = "yes";
-        PermitEmptyPasswords = "yes";
-      };
-    };
-    security.pam.services.sshd.allowNullPassword = true;
-    virtualisation.forwardPorts = [{
-      from = "host";
-      host.port = 2223;
-      guest.port = 22;
-    }];
+    # Disko tests don't support virtualisation.forwardPorts
+    # Use machine.shell_interact() in Python REPL for debugging
+    networking.hostId = "8425e349";
   };
 
   extraTestScript = ''
@@ -209,6 +204,8 @@ in makeDiskoTest {
   '';
 }
 ```
+
+**Note:** The disko test framework doesn't support `virtualisation.forwardPorts` for SSH access. Use the Python REPL's `machine.shell_interact()` method instead for interactive debugging.
 
 ## Writing New Tests
 
@@ -246,26 +243,14 @@ Create a test file in the appropriate location:
 }
 ```
 
-**For disko/ZFS tests**, add SSH to `extraSystemConfig`:
+**For disko/ZFS tests**, note that SSH port forwarding is not supported:
 
 ```nix
 extraSystemConfig = {
   # Your existing config...
-
-  # Enable SSH access for interactive debugging
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "yes";
-      PermitEmptyPasswords = "yes";
-    };
-  };
-  security.pam.services.sshd.allowNullPassword = true;
-  virtualisation.forwardPorts = [{
-    from = "host";
-    host.port = 2223;
-    guest.port = 22;
-  }];
+  # Note: virtualisation.forwardPorts is not available in disko tests
+  # Use machine.shell_interact() in the Python REPL for debugging
+  networking.hostId = "8425e349";
 };
 ```
 
@@ -292,7 +277,8 @@ Add usage comments at the top of your test file:
 ```nix
 # Run: nix build '.#checks.x86_64-linux.my-test'
 # Interactive: nix run '.#checks.x86_64-linux.my-test.driverInteractive'
-# SSH into test VM: ssh -p 2223 root@localhost
+# SSH into test VM: ssh -p 2223 root@localhost  (for standard NixOS tests)
+# Note: SSH not available for disko tests (use machine.shell_interact())
 {nixpkgs}: {
   # ...
 }
