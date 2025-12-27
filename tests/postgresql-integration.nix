@@ -71,7 +71,7 @@
     }: {
       _module.args.unstablePkgs = unstablePkgs;
       imports = [
-        ../modules/immich
+        ../clubcotton
       ];
 
       # Create secrets file

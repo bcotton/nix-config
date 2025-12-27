@@ -65,7 +65,6 @@
 
     # Service modules for full NixOS systems
     serviceModules = [
-      ../modules/immich
       ../modules/code-server
       ../modules/postgresql
       ../modules/tailscale
