@@ -88,13 +88,17 @@
               home-manager.users = builtins.listToAttrs (
                 map (username: {
                   name = username;
-                  value.imports = [../home/${username}.nix];
+                  value.imports = [
+                    ../home/${username}.nix
+                    inputs.workmux.homeManagerModules.default
+                  ];
                 })
                 usernames
               );
               home-manager.extraSpecialArgs = {
                 inherit unstablePkgs hostName;
                 localPackages = self.legacyPackages.${system}.localPackages;
+                workmuxPackage = inputs.workmux.packages.${system}.default;
               };
             }
 
@@ -151,13 +155,17 @@
               home-manager.users = builtins.listToAttrs (
                 map (username: {
                   name = username;
-                  value.imports = [../home/${username}.nix];
+                  value.imports = [
+                    ../home/${username}.nix
+                    inputs.workmux.homeManagerModules.default
+                  ];
                 })
                 usernames
               );
               home-manager.extraSpecialArgs = {
                 inherit unstablePkgs hostName;
                 localPackages = self.legacyPackages.${system}.localPackages;
+                workmuxPackage = inputs.workmux.packages.${system}.default;
               };
             }
           ]
