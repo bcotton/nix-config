@@ -4,6 +4,7 @@
   lib,
   unstablePkgs,
   hostName ? "unknown",
+  workmuxPackage,
   ...
 }: let
   nixVsCodeServer = fetchTarball {
@@ -26,6 +27,7 @@ in {
       ./modules/beets.nix
       ./modules/hyprland
       ./modules/gwtmux.nix
+      # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
     ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
@@ -71,6 +73,20 @@ in {
   #     }
   #   ];
   # };
+
+  programs.workmux = {
+    enable = true;
+    package = workmuxPackage;
+    agent = "claude";
+    panes = [
+      {
+        command = "nvim .";
+        focus = true;
+      }
+      {split = "horizontal";}
+    ];
+    # postCreate = ["npm install"];
+  };
 
   programs.atuin-config = {
     enable-daemon = true;

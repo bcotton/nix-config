@@ -3,10 +3,21 @@ default: switch
 
 hostname := `hostname | cut -d "." -f 1`
 
+# Install git hooks (idempotent)
+install-hooks:
+    #!/usr/bin/env bash
+    set -e
+    current_path=$(git config --local core.hooksPath || echo "")
+    if [ "$current_path" != ".githooks" ]; then
+        echo "📌 Configuring git to use .githooks/"
+        git config --local core.hooksPath .githooks
+        echo "✓ Git hooks installed"
+    fi
+
 ### macos
 # Build the nix-darwin system configuration without switching to it
 [macos]
-build target_host=hostname flags="":
+build target_host=hostname flags="": install-hooks
   @echo "Building nix-darwin config..."
   nix --extra-experimental-features 'nix-command flakes'  build ".#darwinConfigurations.{{target_host}}.system" {{flags}}
 
@@ -23,7 +34,7 @@ switch target_host=hostname: (build target_host)
 ### linux
 # Build the NixOS configuration without switching to it
 [linux]
-build target_host=hostname flags="":
+build target_host=hostname flags="": install-hooks
   nix fmt .
   nixos-rebuild build --flake .#{{target_host}} {{flags}}
 
@@ -40,7 +51,7 @@ switch target_host=hostname:
 update:
   nix flake update
 
-fmt:
+fmt: install-hooks
   nix fmt .
 
 # Deploy to a remote NixOS host via SSH

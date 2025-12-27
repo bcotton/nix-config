@@ -153,6 +153,24 @@
         "type": "github"
       }
     },
+    "flake-utils_3": {
+      "inputs": {
+        "systems": "systems_5"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "ghostty": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -547,7 +565,8 @@
         "nixpkgs": "nixpkgs_7",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "tsnsrv": "tsnsrv",
-        "vscode-server": "vscode-server"
+        "vscode-server": "vscode-server",
+        "workmux": "workmux"
       }
     },
     "systems": {
@@ -596,6 +615,21 @@
       }
     },
     "systems_4": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_5": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
@@ -672,6 +706,28 @@
       "original": {
         "owner": "zeyugao",
         "repo": "nixos-vscode-server",
+        "type": "github"
+      }
+    },
+    "workmux": {
+      "inputs": {
+        "flake-utils": "flake-utils_3",
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1766759316,
+        "narHash": "sha256-H0ZimT9JmJhoK5bux2CQ8ZwXSu5BxIz1OB0LixiZmYo=",
+        "owner": "bcotton",
+        "repo": "workmux",
+        "rev": "5eb43dae8cb858d892f9b7efdbb9d02c9f7b6b6c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "bcotton",
+        "ref": "5eb43da",
+        "repo": "workmux",
         "type": "github"
       }
     },

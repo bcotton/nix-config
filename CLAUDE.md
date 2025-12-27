@@ -154,8 +154,10 @@ Uses `nixinate` for remote deployment with automatic host detection based on Tai
 ## Development Notes
 
 - All configurations support both stable and unstable nixpkgs channels
-- Home Manager is integrated for user-level configurations  
+- Home Manager is integrated for user-level configurations
 - ZFS storage configurations available in `modules/zfs/`
 - PostgreSQL integration testing framework in `tests/`
 - Uses `alejandra` for nix code formatting
 - Justfile provides cross-platform commands that detect current hostname automatically
+- Git hooks in `.githooks/` are automatically installed when running `just` commands
+  - Pre-commit hook runs `just fmt` to ensure all code is formatted before commit

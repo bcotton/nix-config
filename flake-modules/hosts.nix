@@ -188,10 +188,14 @@
             networking.hostName = hostName;
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.${username}.imports = [../home/${username}.nix];
+            home-manager.users.${username}.imports = [
+              ../home/${username}.nix
+              inputs.workmux.homeManagerModules.default
+            ];
             home-manager.extraSpecialArgs = {
               inherit unstablePkgs hostName;
               localPackages = self.legacyPackages.${system}.localPackages;
+              workmuxPackage = inputs.workmux.packages.${system}.default;
             };
           }
           ../hosts/common/common-packages.nix
