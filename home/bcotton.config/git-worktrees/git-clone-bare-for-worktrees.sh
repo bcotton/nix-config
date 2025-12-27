@@ -24,12 +24,21 @@ cd "$name"
 # new-awesome-feature
 # hotfix-bug-12
 # ...
-git clone "$url" default
-# echo "gitdir: ./.bare" > .git
+git clone --bare "$url" .bare
+echo "gitdir: ./.bare" > .git
+
+# do this if not using .bare directory
+#git clone "$url" default
 
 # # Explicitly sets the remote origin fetch so we can fetch remote branches
-# git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 
 # # Gets all branches from origin
-# git fetch origin
+git fetch origin
+
+# Get the default branch name
+default_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+
+(cd .bare && git worktree add ../$default_branch)
+
 
