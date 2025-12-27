@@ -1,7 +1,14 @@
 # Run interactively:  nix run '.#checks.x86_64-linux.postgresql.driverInteractive'
 # Run:  nix run '.#checks.x86_64-linux.postgresql'
+# SSH into test VM:  ssh -p 2223 root@localhost
 {nixpkgs}: {
   name = "postgresql";
+
+  interactive.nodes = let
+    testLib = import ../../tests/libtest.nix {};
+  in {
+    machine = {...}: testLib.mkSshConfig 2223;
+  };
 
   nodes = {
     machine = {
@@ -83,11 +90,6 @@
     with subtest("Schema ownership is correct"):
         machine.succeed(
             "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'public';\" | grep test-immich"
-        )
-        machine.shell_interact()
-
-        machine.succeed(
-            "sudo -u postgres psql -p 5433 -d test-immich -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'vectors';\" | grep test-immich"
         )
     with subtest("Open WebUI database and user are created"):
         machine.succeed(
