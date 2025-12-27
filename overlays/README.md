@@ -7,7 +7,19 @@ This directory contains Nix overlays that modify or pin specific package version
 ### claude-code.nix
 Pins claude-code to a specific version for consistent updates across systems.
 
-**To update to a new version:**
+**To update to a new version (automated):**
+
+```bash
+./scripts/upgrade-claude-code.sh
+```
+
+The script will automatically:
+- Check for the latest version on npm
+- Update the version, source hash, and npmDepsHash
+- Build and verify the update
+- Provide commit instructions
+
+**To update manually:**
 
 1. Check the latest version on npm:
    ```bash
