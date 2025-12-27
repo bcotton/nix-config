@@ -1,3 +1,5 @@
+# Run interactively:  nix run '.#checks.x86_64-linux.zfs-raidz1.driverInteractive'
+# SSH into test VM:  ssh -p 2223 root@localhost
 {
   nixpkgs,
   pkgs ? import nixpkgs {},
@@ -65,6 +67,23 @@ in
     };
     extraSystemConfig = {
       networking.hostId = "8425e349";
+
+      # Enable SSH access for interactive debugging
+      services.openssh = {
+        enable = true;
+        settings = {
+          PermitRootLogin = "yes";
+          PermitEmptyPasswords = "yes";
+        };
+      };
+      security.pam.services.sshd.allowNullPassword = true;
+      virtualisation.forwardPorts = [
+        {
+          from = "host";
+          host.port = 2223;
+          guest.port = 22;
+        }
+      ];
     };
     extraTestScript = ''
       def assert_property(ds, property, expected_value):

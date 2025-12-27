@@ -1,7 +1,14 @@
 # Run interactively:  nix run '.#checks.x86_64-linux.postgresql.driverInteractive'
 # Run:  nix run '.#checks.x86_64-linux.postgresql'
+# SSH into test VM:  ssh -p 2223 root@localhost
 {nixpkgs}: {
   name = "postgresql";
+
+  interactive.nodes = let
+    testLib = import ../../tests/libtest.nix {};
+  in {
+    machine = {...}: testLib.mkSshConfig 2223;
+  };
 
   nodes = {
     machine = {
