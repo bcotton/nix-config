@@ -78,14 +78,20 @@ in {
     enable = true;
     package = workmuxPackage;
     agent = "claude";
+    mainBranch = "main";
+    worktreeDir = "..";
+    windowPrefix = "";
+    mergeStrategy = "merge";
+
     panes = [
       {
-        command = "nvim .";
+        command = "<agent>";
         focus = true;
       }
-      {split = "horizontal";}
+      {
+        split = "horizontal";
+      }
     ];
-    # postCreate = ["npm install"];
   };
 
   programs.atuin-config = {
@@ -345,12 +351,6 @@ in {
       "~/projects"
     ];
 
-    dirHashes = {
-      docs = "$HOME/Documents";
-      proj = "$HOME/projects";
-      dl = "$HOME/Downloads";
-    };
-
     # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra = ''
       #export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
@@ -451,6 +451,7 @@ in {
       tree = "exa -Tl --color=always";
       # watch = "watch --color "; # Note the trailing space for alias expansion https://unix.stackexchange.com/questions/25327/watch-command-alias-expansion
       watch = "viddy ";
+      wm = "workmux";
       # z = "zoxide";
     };
 
