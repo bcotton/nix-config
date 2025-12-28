@@ -61,6 +61,7 @@
     internalModules = [
       ../clubcotton
       ../secrets
+      ../modules/nix-builder/client.nix
     ];
 
     # Service modules for full NixOS systems
@@ -90,6 +91,14 @@
         ++ externalNixOSModules
         ++ internalModules
         ++ [
+          # Enable nix cache client on all NixOS systems
+          {
+            services.nix-builder.client = {
+              enable = true;
+              cacheUrl = "http://nas-01:5000";
+              publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
+            };
+          }
           ../hosts/nixos/${hostName}
           (mkHomeManagerConfig unstablePkgs system hostName usernames)
         ];
@@ -138,9 +147,18 @@
           (mkModuleArgs unstablePkgs system)
           ../overlays.nix
           inputs.home-manager.darwinModules.home-manager
+          ../modules/nix-builder/client.nix
           ../hosts/darwin/${hostName}
           {
             networking.hostName = hostName;
+
+            # Enable nix cache client on all Darwin systems
+            services.nix-builder.client = {
+              enable = true;
+              cacheUrl = "http://nas-01:5000";
+              publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
+            };
+
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.users.${username}.imports = [

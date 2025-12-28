@@ -32,6 +32,7 @@ in {
   "freshrss-database.age".publicKeys = users ++ systems;
   "freshrss-database-raw.age".publicKeys = users ++ systems;
   "grafana-cloud.age".publicKeys = users ++ systems;
+  "harmonia-signing-key.age".publicKeys = users ++ systems;
   "homeassistant-token.age".publicKeys = users ++ systems;
   "immich-database.age".publicKeys = users ++ systems;
   "immich.age".publicKeys = users ++ systems;
@@ -40,6 +41,8 @@ in {
   "mopidy.age".publicKeys = users ++ systems;
   "mqtt.age".publicKeys = users ++ systems;
   "navidrome.age".publicKeys = users ++ systems;
+  "nix-builder-ssh-key.age".publicKeys = users ++ systems;
+  "nix-builder-ssh-pub.age".publicKeys = users ++ systems;
   "nut-client.age".publicKeys = users ++ systems;
   "open-webui-database.age".publicKeys = users ++ systems;
   "open-webui.age".publicKeys = users ++ systems;

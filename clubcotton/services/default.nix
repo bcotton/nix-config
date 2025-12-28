@@ -12,6 +12,7 @@
     ./calibre-web
     ./filebrowser
     ./freshrss
+    ./harmonia
     ./hyprland
     ./immich
     ./jellyfin

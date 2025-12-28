@@ -54,12 +54,22 @@ update:
 fmt: install-hooks
   nix fmt .
 
-# Deploy to a remote NixOS host via SSH
-deploy hostname:
-  @echo "Deploying {{hostname}}..."
-  NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#{{hostname}} \
-    --target-host root@{{hostname}}.lan \
-    --build-host localhost
+# Deploy to one or more remote NixOS hosts via SSH
+# Usage: just deploy nas-01
+#        just deploy nas-01 nix-01 nix-02
+deploy +hostnames:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  for hostname in {{hostnames}}; do
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Deploying $hostname..."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#$hostname \
+      --target-host root@$hostname.lan \
+      --build-host localhost || echo "⚠ Failed to deploy $hostname"
+  done
+  echo ""
+  echo "✓ Deployment complete"
 
 # Deploy to all NixOS hosts (excludes admin)
 deploy-all:

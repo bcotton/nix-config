@@ -18,6 +18,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
+    ../../../modules/nix-builder
     ../../../modules/k3s-agent
     ../../../modules/incus
   ];
@@ -26,6 +27,17 @@ in {
     tailscale.enable = true;
     nut-client.enable = true;
   };
+
+  # Create builder user for remote builds
+  users.users.nix-builder = {
+    isNormalUser = true;
+    description = "Nix remote builder";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDqGI8tMC4OzuZB8mmYnPSQgIgZaDUglqdIqS9U4H5fT nix-builder@nas-01"
+    ];
+  };
+
+  nix.settings.trusted-users = ["nix-builder"];
 
   virtualisation.containers.enable = true;
 

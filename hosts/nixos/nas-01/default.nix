@@ -18,6 +18,7 @@ in {
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
+    ../../../modules/nix-builder
     ../../../modules/samba
     ../../../users/cheryl.nix
     ./borgmatic.nix
@@ -35,6 +36,7 @@ in {
     calibre-web.enable = true;
     filebrowser.enable = true;
     freshrss.enable = true;
+    harmonia.enable = true;
     immich.enable = true;
     jellyfin.enable = true;
     jellyseerr.enable = true;
@@ -63,8 +65,51 @@ in {
     beets-unstable
   ];
 
+  services.clubcotton.harmonia = {
+    bindAddress = "0.0.0.0";
+  };
+
+  # Configure distributed build fleet
+  services.nix-builder.coordinator = {
+    enable = true;
+    enableLocalBuilds = true; # nas-01 builds locally, no SSH to itself
+    builders = [
+      # Note: localhost removed to avoid SSH loop - enableLocalBuilds handles local builds
+      {
+        hostname = "nix-01";
+        systems = ["x86_64-linux"];
+        maxJobs = 4;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-02";
+        systems = ["x86_64-linux"];
+        maxJobs = 4;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-03";
+        systems = ["x86_64-linux"];
+        maxJobs = 4;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+    ];
+  };
+
+  # Create builder user for remote/local builds
+  users.users.nix-builder = {
+    isNormalUser = true;
+    description = "Nix remote builder";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDqGI8tMC4OzuZB8mmYnPSQgIgZaDUglqdIqS9U4H5fT nix-builder@nas-01"
+    ];
+  };
+
   nix.extraOptions = ''
-    trusted-users = root bcotton
+    trusted-users = root bcotton nix-builder
   '';
 
   networking = {
@@ -267,6 +312,10 @@ in {
       ephemeral = true;
       toURL = "http://127.0.0.1:6065";
     };
+    services.nix-cache = {
+      ephemeral = true;
+      toURL = "http://127.0.0.1:${toString config.services.clubcotton.harmonia.port}";
+    };
   };
 
   programs.zsh.enable = variables.zshEnable;
@@ -396,6 +445,16 @@ in {
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903194N"
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X905916M"
       ];
+      # filesystems = {
+      #   "local/nix-cache" = {
+      #     mountpoint = "/ssdpool/local/nix-cache";
+      #     options = {
+      #       compression = "lz4";
+      #       atime = "off";
+      #       quota = "500G";
+      #     };
+      #   };
+      # };
       volumes = {
         "local/incus" = {
           size = "300G";
@@ -423,6 +482,9 @@ in {
 
   services.sanoid = {
     datasets."ssdpool/local/database" = {
+      useTemplate = ["backup"];
+    };
+    datasets."ssdpool/local/nix-cache" = {
       useTemplate = ["backup"];
     };
     datasets."mediapool/local/photos" = {

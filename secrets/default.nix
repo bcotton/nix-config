@@ -201,4 +201,27 @@
     owner = "root";
     group = "root";
   };
+
+  # Harmonia binary cache signing key
+  age.secrets."harmonia-signing-key" = lib.mkIf config.services.clubcotton.harmonia.enable {
+    file = ./harmonia-signing-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  # Nix builder SSH keys
+  age.secrets."nix-builder-ssh-key" = lib.mkIf config.services.nix-builder.coordinator.enable {
+    file = ./nix-builder-ssh-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets."nix-builder-ssh-pub" = lib.mkIf (config.services.nix-builder.coordinator.enable || (config.users.users ? nix-builder)) {
+    file = ./nix-builder-ssh-pub.age;
+    owner = "root";
+    group = "root";
+    mode = "0444";
+  };
 }

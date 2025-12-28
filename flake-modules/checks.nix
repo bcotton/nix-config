@@ -21,6 +21,21 @@
         nixpkgs = inputs.nixpkgs;
       });
 
+      harmonia = pkgs.nixosTest (import ../clubcotton/services/harmonia/test.nix {
+        nixpkgs = inputs.nixpkgs;
+      });
+
+      nix-cache-integration = let
+        unstablePkgs = import inputs.nixpkgs-unstable {
+          inherit system;
+          config.allowUnfree = true;
+        };
+      in
+        pkgs.nixosTest (import ../tests/nix-cache-integration.nix {
+          nixpkgs = inputs.nixpkgs;
+          inherit unstablePkgs inputs;
+        });
+
       postgresql-integration = let
         unstablePkgs = import inputs.nixpkgs-unstable {
           inherit system;
