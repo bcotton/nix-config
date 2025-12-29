@@ -25,6 +25,10 @@
         nixpkgs = inputs.nixpkgs;
       });
 
+      nix-cache-proxy = pkgs.nixosTest (import ../clubcotton/services/nix-cache-proxy/test.nix {
+        nixpkgs = inputs.nixpkgs;
+      });
+
       nix-cache-integration = let
         unstablePkgs = import inputs.nixpkgs-unstable {
           inherit system;

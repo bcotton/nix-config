@@ -18,6 +18,7 @@
     ./jellyfin
     ./kavita
     ./navidrome
+    ./nix-cache-proxy
     ./nut-client
     ./nut-server
     ./open-webui

@@ -43,6 +43,7 @@ in {
     kavita.enable = false;
     lidarr.enable = true;
     navidrome.enable = true;
+    nix-cache-proxy.enable = true;
     nut-client.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
@@ -314,7 +315,7 @@ in {
     };
     services.nix-cache = {
       ephemeral = true;
-      toURL = "http://127.0.0.1:${toString config.services.clubcotton.harmonia.port}";
+      toURL = "http://127.0.0.1:${toString config.services.clubcotton.nix-cache-proxy.port}";
     };
   };
 

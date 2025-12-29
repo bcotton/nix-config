@@ -4,41 +4,89 @@
 
 This repository includes a comprehensive distributed build and binary cache infrastructure:
 
-- **Harmonia Binary Cache** - Fast Rust-based cache server running on `nas-01`
+- **Nginx Caching Proxy** - Intelligently routes requests to local cache or upstream with caching
+- **Harmonia Binary Cache** - Fast Rust-based cache server for locally-built packages on `nas-01`
 - **Distributed Build Fleet** - SSH-based remote builders (nas-01, nix-01, nix-02, nix-03)
 - **Automatic Cache Population** - Post-build hooks sign and cache all builds
+- **Upstream Caching** - nginx caches packages from cache.nixos.org for faster repeat downloads
 - **Tailscale Integration** - Secure access via `nix-cache` hostname
 
 ### Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                     nas-01                          │
-│  ┌──────────────┐        ┌──────────────────┐      │
-│  │   Harmonia   │◄───────┤ Build Coordinator │      │
-│  │ Binary Cache │        │  (SSH Builders)   │      │
-│  │   :5000      │        │                   │      │
-│  └──────┬───────┘        └─────────┬─────────┘      │
-│         │                          │                 │
-│         │ Tailscale               │ SSH             │
-│         │ (nix-cache)             │                 │
-└─────────┼──────────────────────────┼─────────────────┘
-          │                          │
-          │                          ├─────► nix-01 (builder)
-          │                          ├─────► nix-02 (builder)
-          │                          └─────► nix-03 (builder)
-          │
-          └────► All clients (NixOS + Darwin)
+┌──────────────────────────────────────────────────────────┐
+│                        nas-01                            │
+│  ┌────────────────┐                                      │
+│  │ nginx :80      │                                      │
+│  │ Caching Proxy  │                                      │
+│  └────┬───────┬───┘                                      │
+│       │       │                                          │
+│       │       └──────┐                                   │
+│       │              │                                   │
+│  ┌────▼────────┐  ┌──▼──────────────────┐               │
+│  │  Harmonia   │  │   Upstream Cache    │               │
+│  │   :5000     │  │  (cache.nixos.org)  │               │
+│  │ Local Builds│  │   [with caching]    │               │
+│  └─────────────┘  └─────────────────────┘               │
+│                                                          │
+│  ┌──────────────────┐                                   │
+│  │ Build Coordinator├─┐                                 │
+│  │  (SSH Builders)  │ │                                 │
+│  └──────────────────┘ │                                 │
+└────────────────────────┼──────────────────────────────────┘
+                         │
+                         ├─────► nix-01 (builder)
+                         ├─────► nix-02 (builder)
+                         └─────► nix-03 (builder)
+                         │
+                         │ Tailscale (nix-cache)
+                         ▼
+              All clients (NixOS + Darwin)
 ```
+
+### How It Works
+
+1. **Client requests package** → nginx on port 80
+2. **nginx tries Harmonia first** → Fast local cache for packages we've built
+3. **If not local (404)** → nginx proxies to cache.nixos.org and caches the response
+4. **Subsequent requests** → nginx serves from its cache (no upstream hit)
 
 ### Cache Details
 
-- **URL**: `http://nix-cache` (via Tailscale) or `http://nas-01:5000` (direct)
-- **Storage**: `/ssdpool/local/nix-cache` (500GB quota, ZFS with snapshots)
+- **Client URL**: `http://nix-cache` (via Tailscale) or `http://nas-01:80` (direct)
+- **Local Cache Storage**: `/ssdpool/local/nix-cache` (Harmonia - locally built packages)
+- **Upstream Cache Storage**: `/ssdpool/local/nix-cache-proxy` (nginx - cached upstream packages, 100GB quota)
+- **Cache Duration**: Upstream packages cached for 30 days
 - **Public Key**: See `secrets/cache-public-key.txt` or extract with:
   ```bash
   cd secrets/ && cat cache-public-key.txt
   ```
+
+### Benefits of Upstream Caching
+
+The nginx caching proxy provides several key advantages:
+
+1. **Reduced Bandwidth** - Packages from cache.nixos.org are downloaded once and cached locally
+2. **Faster Builds** - Repeat builds of the same packages serve from local SSD instead of internet
+3. **Offline Resilience** - Cached packages remain available even if cache.nixos.org is unreachable
+4. **Single Endpoint** - Clients use one URL (`http://nas-01:80`) for both local and upstream packages
+5. **Transparent Operation** - No client configuration changes needed beyond the single substituter URL
+6. **Automatic Cache Management** - nginx handles cache eviction when space limit is reached
+
+### Monitoring Cache Performance
+
+Check cache hit rates and status:
+
+```bash
+# On nas-01, check nginx cache directory size
+du -sh /ssdpool/local/nix-cache-proxy
+
+# View cache hit/miss in nginx logs
+ssh nas-01 journalctl -u nginx -f | grep X-Cache-Status
+
+# Check what's cached
+ssh nas-01 find /ssdpool/local/nix-cache-proxy -type f | head -20
+```
 
 ---
 
@@ -74,11 +122,11 @@ Edit your host configuration (e.g., `hosts/nixos/hostname/default.nix`):
 Add after your `services.clubcotton` block:
 
 ```nix
-# Enable cache client to use nas-01 cache
+# Enable cache client to use nas-01 cache (via nginx proxy)
 services.nix-builder.client = {
   enable = true;
-  cacheUrl = "http://nas-01:5000"; 
-  publicKey = "nas-01-cache:GCH0WJSbH2MNoaXeyV5Qs+r4jHiGUFFO5c0/Vg0Hx8Y=";  # From secrets/cache-public-key.txt
+  cacheUrl = "http://nas-01:80";
+  publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";  # From flake-modules/hosts.nix
 };
 ```
 
@@ -95,10 +143,12 @@ just deploy hostname
 ```bash
 ssh hostname
 nix show-config | grep substituters
-# Should show: http://nas-01:5000 https://cache.nixos.org
+# Should show: http://nas-01:80 https://cache.nixos.org
 
 # Test cache access
 curl http://nix-cache/nix-cache-info
+# or
+curl http://nas-01:80/nix-cache-info
 ```
 
 ### Darwin/macOS Hosts
@@ -126,11 +176,11 @@ Edit your Darwin host configuration (e.g., `hosts/darwin/hostname/default.nix`):
 #### 2. Enable Cache Client
 
 ```nix
-# Enable cache client
+# Enable cache client (via nginx proxy)
 services.nix-builder.client = {
   enable = true;
-  cacheUrl = "http://nas-01:5000";
-  publicKey = "nas-01-cache:YOUR_PUBLIC_KEY_HERE";
+  cacheUrl = "http://nas-01:80";
+  publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";  # From flake-modules/hosts.nix
 };
 ```
 
@@ -384,8 +434,8 @@ services.nix-builder.client = {
 
   cacheUrl = "http://nix-cache";    # Cache URL
                                     # Can be: "http://nix-cache" (Tailscale)
-                                    #         "http://nas-01:5000" (direct)
-                                    #         "http://192.168.5.300:5000" (IP)
+                                    #         "http://nas-01:80" (direct)
+                                    #         "http://192.168.5.300:80" (IP)
 
   publicKey = "nas-01-cache:...";   # Binary cache signing key
                                     # Get from: secrets/cache-public-key.txt
@@ -464,8 +514,9 @@ services.clubcotton.harmonia = {
 **Solutions:**
 1. Check Tailscale is running: `systemctl status tailscaled`
 2. Verify Tailscale hostname: `tailscale status | grep nix-cache`
-3. Check Harmonia service on nas-01: `ssh nas-01 systemctl status harmonia`
-4. Try direct access: `curl http://nas-01:5000/nix-cache-info`
+3. Check nginx proxy service on nas-01: `ssh nas-01 systemctl status nginx`
+4. Check Harmonia service on nas-01: `ssh nas-01 systemctl status harmonia`
+5. Try direct access: `curl http://nas-01:80/nix-cache-info`
 
 ### Builds Not Using Cache
 

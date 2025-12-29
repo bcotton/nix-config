@@ -95,7 +95,7 @@
           {
             services.nix-builder.client = {
               enable = true;
-              cacheUrl = "http://nas-01:5000";
+              cacheUrl = "http://nas-01:80";
               publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
             };
           }
@@ -155,7 +155,7 @@
             # Enable nix cache client on all Darwin systems
             services.nix-builder.client = {
               enable = true;
-              cacheUrl = "http://nas-01:5000";
+              cacheUrl = "http://nas-01:80";
               publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
             };
 
