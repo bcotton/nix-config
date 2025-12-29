@@ -66,6 +66,9 @@ in {
       "d ${cfg.cachePath} 0755 nginx nginx - -"
     ];
 
+    # Allow nginx to write to cache directory (ProtectSystem=strict blocks by default)
+    systemd.services.nginx.serviceConfig.ReadWritePaths = [cfg.cachePath];
+
     # Configure nginx as caching proxy
     services.nginx = {
       enable = true;
