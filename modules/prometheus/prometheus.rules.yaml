@@ -450,3 +450,49 @@ groups:
       severity: critical
     annotations:
       description: 'Nix cache proxy on {{ $labels.instance }} is nearly full at {{ printf "%.1f" $value }}% capacity - nginx may fail to cache new packages'
+
+  # Nix Build and Cache Infrastructure Monitoring
+  - alert: NixCacheNotAccessible
+    expr: nix_cache_info_accessible == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Nix cache is not accessible"
+      description: "The Nix binary cache has been unreachable for 5 minutes on {{ $labels.instance }}"
+
+  - alert: NixDistributedBuildsNotWorking
+    expr: nix_distributed_build_success == 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Nix distributed builds are not working"
+      description: "Distributed builds have failed on {{ $labels.instance }}"
+
+  - alert: NixCacheNotHitting
+    expr: nix_local_cache_hit == 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Nix cache is not serving hits"
+      description: "The Nix cache is not serving successful cache hits on {{ $labels.instance }}"
+
+  - alert: NixUpstreamCacheProxyDown
+    expr: nix_upstream_cache_accessible == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Nix upstream cache proxy is not accessible"
+      description: "The nginx proxy to cache.nixos.org is not accessible on {{ $labels.instance }}"
+
+  - alert: NixBuildCacheCheckStale
+    expr: (time() - nix_build_cache_check_timestamp) > 1800
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Nix build cache check is stale"
+      description: "The Nix build and cache validation has not run in over 30 minutes on {{ $labels.instance }}"

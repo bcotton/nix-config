@@ -20,6 +20,7 @@ in {
     ../../../modules/node-exporter
     ../../../modules/nix-builder
     ../../../modules/samba
+    ../../../modules/prometheus/nix-build-cache-check.nix
     ../../../users/cheryl.nix
     ./borgmatic.nix
     # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
@@ -522,6 +523,13 @@ in {
       "/dev/disk/by-id/wwn-0x5000c500cb5e1c80"
       "/dev/disk/by-id/wwn-0x5000c500f6f25ea9"
     ];
+  };
+
+  # Nix build and cache infrastructure monitoring
+  services.prometheus.nixBuildCacheCheck = {
+    enable = true;
+    interval = "15m";
+    cacheUrl = "http://nas-01:80";
   };
 
   system.stateVersion = "24.11"; # Did you read the comment?

@@ -12,6 +12,7 @@
 in {
   imports = [
     ./alert-manager.nix
+    ./nix-build-cache-check.nix
   ];
 
   options.services.prometheus = {
