@@ -65,7 +65,7 @@ deploy +hostnames:
     echo "Deploying $hostname..."
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#$hostname \
-      --target-host root@$hostname.lan \
+      --target-host root@$hostname \
       --build-host localhost || echo "⚠ Failed to deploy $hostname"
   done
   echo ""

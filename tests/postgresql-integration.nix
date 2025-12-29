@@ -76,40 +76,54 @@
     immich = {
       config,
       pkgs,
+      lib,
       ...
     }: {
-      _module.args.unstablePkgs = unstablePkgs;
       imports = [
-        ../clubcotton
+        ../clubcotton/services/immich
+        inputs.tsnsrv.nixosModules.default
       ];
 
-      # Create secrets file
-      environment.etc."immich-secrets".text = ''
-        DB_PASSWORD=test-password
-      '';
-
-      # Configure Immich service
-      services.clubcotton.immich = {
-        enable = true;
-        secretsFile = "/etc/immich-secrets";
-        database = {
-          enable = false; # Don't enable local PostgreSQL
-          name = "test-immich";
-          user = "test-immich";
-          host = "postgres"; # Reference PostgreSQL server node
-          port = 5433;
+      # Define minimal clubcotton options for test
+      options.clubcotton = {
+        tailscaleAuthKeyPath = lib.mkOption {
+          type = lib.types.str;
+          default = "/dev/null";
         };
-        serverConfig = {
-          port = 2283;
-          host = "0.0.0.0";
-          mediaLocation = "/var/lib/immich";
-        };
-        redis.enable = true;
-        machineLearning.enable = false; # Disable for testing
       };
 
-      # Open firewall for Immich
-      networking.firewall.allowedTCPPorts = [2283];
+      config = {
+        _module.args.unstablePkgs = unstablePkgs;
+
+        # Create secrets file
+        environment.etc."immich-secrets".text = ''
+          DB_PASSWORD=test-password
+        '';
+
+        # Configure Immich service
+        services.clubcotton.immich = {
+          enable = true;
+          secretsFile = "/etc/immich-secrets";
+          tailnetHostname = ""; # Disable tsnsrv for testing
+          database = {
+            enable = false; # Don't enable local PostgreSQL
+            name = "test-immich";
+            user = "test-immich";
+            host = "postgres"; # Reference PostgreSQL server node
+            port = 5433;
+          };
+          serverConfig = {
+            port = 2283;
+            host = "0.0.0.0";
+            mediaLocation = "/var/lib/immich";
+          };
+          redis.enable = true;
+          machineLearning.enable = false; # Disable for testing
+        };
+
+        # Open firewall for Immich
+        networking.firewall.allowedTCPPorts = [2283];
+      };
     };
   };
 

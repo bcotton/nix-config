@@ -61,13 +61,20 @@ in {
   };
 
   config = mkIf cfg.enable {
-    # Ensure cache directory exists
+    # Ensure cache directory exists using tmpfiles
     systemd.tmpfiles.rules = [
       "d ${cfg.cachePath} 0755 nginx nginx - -"
     ];
 
-    # Allow nginx to write to cache directory (ProtectSystem=strict blocks by default)
-    systemd.services.nginx.serviceConfig.ReadWritePaths = [cfg.cachePath];
+    # Configure nginx service to allow cache directory access
+    # Only add ReadWritePaths for paths outside of already-writable locations like /tmp
+    systemd.services.nginx = {
+      serviceConfig.ReadWritePaths = lib.mkIf (!lib.hasPrefix "/tmp" cfg.cachePath) [cfg.cachePath];
+      # Create cache directory if it doesn't exist
+      preStart = lib.mkBefore ''
+        mkdir -p "${cfg.cachePath}"
+      '';
+    };
 
     # Configure nginx as caching proxy
     services.nginx = {
