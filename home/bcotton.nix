@@ -437,7 +437,7 @@ in {
     shellAliases = {
       # Automatically run `go test` for a package when files change.
       autotest = "watchexec -c clear -o do-nothing --delay-run 100ms --exts go 'pkg=\".\${WATCHEXEC_COMMON_PATH/\$PWD/}/...\"; echo \"running tests for \$pkg\"; go test \"\$pkg\"'";
-      cd = "z";
+      # cd = "z"; # Moved to initContent to be conditional on CLAUDECODE
       batj = "bat -l json";
       batly = "bat -l yaml";
       batmd = "bat -l md";
@@ -472,6 +472,7 @@ in {
 
       if [[ "$CLAUDECODE" != "1" ]]; then
         eval "$(zoxide init zsh)"
+        alias cd="z"
       fi
 
       eval "$(sesh completion zsh)"
