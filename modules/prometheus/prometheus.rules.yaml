@@ -425,3 +425,28 @@ groups:
       severity: critical
     annotations:
       description: 'Main temp is colder than set point by {{ printf "%.0f" $value }}C. Cycle the hot water.'
+
+  # Nix Cache Proxy Disk Space Monitoring (nas-01 only)
+  - alert: NixCacheProxyHighUsage
+    expr: (node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} - node_filesystem_avail_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"}) / node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Nix cache proxy on {{ $labels.instance }} is at {{ printf "%.1f" $value }}% capacity'
+
+  - alert: NixCacheProxyCriticalUsage
+    expr: (node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} - node_filesystem_avail_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"}) / node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} * 100 > 90
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Nix cache proxy on {{ $labels.instance }} is critically full at {{ printf "%.1f" $value }}% capacity'
+
+  - alert: NixCacheProxyFull
+    expr: (node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} - node_filesystem_avail_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"}) / node_filesystem_size_bytes{instance="nas-01",mountpoint="/ssdpool/local/nix-cache-proxy"} * 100 > 95
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      description: 'Nix cache proxy on {{ $labels.instance }} is nearly full at {{ printf "%.1f" $value }}% capacity - nginx may fail to cache new packages'
