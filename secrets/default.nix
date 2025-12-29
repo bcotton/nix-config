@@ -211,14 +211,14 @@
   };
 
   # Nix builder SSH keys
-  age.secrets."nix-builder-ssh-key" = lib.mkIf config.services.nix-builder.coordinator.enable {
+  age.secrets."nix-builder-ssh-key" = lib.mkIf (config.services.nix-builder.coordinator.enable or false) {
     file = ./nix-builder-ssh-key.age;
     owner = "root";
     group = "root";
     mode = "0400";
   };
 
-  age.secrets."nix-builder-ssh-pub" = lib.mkIf (config.services.nix-builder.coordinator.enable || (config.users.users ? nix-builder)) {
+  age.secrets."nix-builder-ssh-pub" = lib.mkIf ((config.services.nix-builder.coordinator.enable or false) || (config.users.users ? nix-builder)) {
     file = ./nix-builder-ssh-pub.age;
     owner = "root";
     group = "root";
