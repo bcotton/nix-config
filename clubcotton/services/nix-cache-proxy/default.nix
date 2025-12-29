@@ -106,8 +106,8 @@ in {
           extraConfig = let
             upstreamHost = builtins.replaceStrings ["https://" "http://"] ["" ""] cfg.upstreamCache;
           in ''
-            # Use Google DNS for resolution
-            resolver 8.8.8.8;
+            # Use Google DNS for resolution (IPv4 only)
+            resolver 8.8.8.8 ipv4=on ipv6=off;
 
             # Set upstream as variable to force runtime DNS resolution
             set $upstream_url "${cfg.upstreamCache}$request_uri";
