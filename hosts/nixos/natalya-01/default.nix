@@ -28,7 +28,16 @@ in {
 
   clubcotton.zfs_single_root.enable = true;
   virtualisation.podman.enable = true;
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   programs.zsh.enable = variables.zshEnable;
   services.openssh.enable = variables.opensshEnable;

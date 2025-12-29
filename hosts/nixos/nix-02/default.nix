@@ -94,7 +94,16 @@ in {
   };
   services.tailscale.enable = variables.tailscaleEnable;
 
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   time.timeZone = variables.timeZone;
 

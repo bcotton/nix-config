@@ -85,7 +85,16 @@ in {
 
   networking.firewall.enable = variables.firewallEnable;
 
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   environment.systemPackages = with pkgs; [
     firefox
