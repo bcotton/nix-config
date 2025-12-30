@@ -17,6 +17,7 @@ with lib; let
   # This is a common pattern in NixOS modules to create a shorter name for accessing
   # the module's configuration options
   cfg = config.services.clubcotton.open-webui;
+  clubcotton = config.clubcotton;
 in {
   # Every NixOS module typically has two main sections:
   # 1. options - Declares the configuration interface
@@ -88,13 +89,13 @@ in {
     # Note: Tailscale/tsnsrv integration should be configured separately
     # in host configurations where clubcotton config is available.
     # Example:
-    #   services.tsnsrv = {
-    #     enable = true;
-    #     defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
-    #     services."${config.services.clubcotton.open-webui.tailnetHostname}" = {
-    #       ephemeral = true;
-    #       toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
-    #     };
-    #   };
+    services.tsnsrv = {
+      enable = true;
+      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
+      services."${config.services.clubcotton.open-webui.tailnetHostname}" = {
+        ephemeral = true;
+        toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
+      };
+    };
   };
 }
