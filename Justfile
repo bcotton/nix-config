@@ -99,5 +99,7 @@ gc generations="5d":
   nix-store --gc
 
 # Run nix flake check to validate all configurations
-check:
-  nix flake check
+# Usage: just check              (pure mode, ZFS tests disabled)
+#        just check --impure     (impure mode, enables ZFS tests)
+check flags="":
+  nix flake check {{flags}}

@@ -11,7 +11,6 @@
     (final: prev:
       lib.foldl' lib.recursiveUpdate {} [
         # Core tools that should always be available
-        ((import ./overlays/yq.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/beets.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/qmk.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/claude-code.nix {inherit config pkgs lib unstablePkgs;}) final prev)

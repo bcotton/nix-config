@@ -19,6 +19,14 @@ in {
     ../../../modules/frigate
   ];
 
+  # Allow insecure frigate packages due to known security advisory
+  # https://github.com/blakeblackshear/frigate/security/advisories/GHSA-vg28-83rp-8xx4
+  # TODO: Remove this once frigate is updated to a secure version
+  nixpkgs.config.permittedInsecurePackages = [
+    "frigate-0.15.2"
+    "frigate-web-0.15.2"
+  ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

@@ -52,24 +52,30 @@
           inherit inputs;
         });
 
-      # ZFS/disko tests
-      zfs-single-root = import ../modules/zfs/zfs-single-root-test.nix {
-        nixpkgs = inputs.nixpkgs;
-        inherit pkgs;
-        disko = inputs.disko;
-      };
-
-      zfs-raidz1 = import ../modules/zfs/zfs-raidz1-test.nix {
-        nixpkgs = inputs.nixpkgs;
-        inherit pkgs;
-        disko = inputs.disko;
-      };
-
-      zfs-mirrored-root = import ../modules/zfs/zfs-mirrored-root-test.nix {
-        nixpkgs = inputs.nixpkgs;
-        inherit pkgs;
-        disko = inputs.disko;
-      };
+      # ZFS/disko tests - DISABLED BY DEFAULT
+      # These tests require --impure flag due to disko's test infrastructure
+      # using impure <nixpkgs> path lookups internally.
+      # See: https://github.com/nix-community/disko/issues/881
+      #
+      # To run these tests, uncomment them and run: just check --impure
+      #
+      # zfs-single-root = import ../modules/zfs/zfs-single-root-test.nix {
+      #   nixpkgs = inputs.nixpkgs;
+      #   disko = inputs.disko;
+      #   inherit pkgs;
+      # };
+      #
+      # zfs-raidz1 = import ../modules/zfs/zfs-raidz1-test.nix {
+      #   nixpkgs = inputs.nixpkgs;
+      #   disko = inputs.disko;
+      #   inherit pkgs;
+      # };
+      #
+      # zfs-mirrored-root = import ../modules/zfs/zfs-mirrored-root-test.nix {
+      #   nixpkgs = inputs.nixpkgs;
+      #   disko = inputs.disko;
+      #   inherit pkgs;
+      # };
     };
   };
 }
