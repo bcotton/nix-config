@@ -9,6 +9,6 @@ rgf() {
         --border \
         --ansi \
         --delimiter : \
-        --preview 'bat --color=always --highlight-line {2} {1}' \
+        --preview 'bat --color=always --theme=1337 --highlight-line {2} {1}' \
         --preview-window 'right,60%,wrap'
 }
