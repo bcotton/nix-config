@@ -11,9 +11,12 @@
     (final: prev:
       lib.foldl' lib.recursiveUpdate {} [
         # Core tools that should always be available
-        ((import ./overlays/beets.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/qmk.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/claude-code.nix {inherit config pkgs lib unstablePkgs;}) final prev)
+
+        # Beets is only available on Linux due to gst-python build issues on Darwin
+        (lib.optionalAttrs prev.stdenv.isLinux
+          ((import ./overlays/beets.nix {inherit config pkgs lib unstablePkgs;}) final prev))
 
         # Conditional overlays based on service/module usage
         (lib.optionalAttrs (config.services.jellyfin.enable or false)

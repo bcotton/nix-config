@@ -33,7 +33,8 @@ in {
     ]
     ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
 
-  programs.beets-cli.enable = true;
+  # Beets is only available on Linux due to gst-python build issues on Darwin
+  programs.beets-cli.enable = pkgs.stdenv.isLinux;
   programs.tmux-plugins.enable = true;
   programs.gwtmux.enable = true;
 
