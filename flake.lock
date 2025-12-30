@@ -748,16 +748,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1766851724,
-        "narHash": "sha256-4iQonq8Ly9NshCc7Veh57fm11km9Fygtm4f9RbSwsFA=",
+        "lastModified": 1767115921,
+        "narHash": "sha256-QmN6X+ipkkD1dWuZkfsNsf5ykcPJE0toywLKM5s6rMQ=",
         "owner": "bcotton",
         "repo": "workmux",
-        "rev": "dc4799a3c2d3e28651b78619684a9226e2df165a",
+        "rev": "2d20d098d3816efe4f229d3ef9235c168cbe5f9a",
         "type": "github"
       },
       "original": {
         "owner": "bcotton",
-        "ref": "dc4799a",
+        "ref": "2d20d09",
         "repo": "workmux",
         "type": "github"
       }

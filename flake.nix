@@ -43,7 +43,7 @@
     };
 
     workmux = {
-      url = "github:bcotton/workmux/dc4799a";
+      url = "github:bcotton/workmux/2d20d09";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
   };

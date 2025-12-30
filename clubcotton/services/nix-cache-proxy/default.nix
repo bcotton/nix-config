@@ -80,6 +80,16 @@ in {
     services.nginx = {
       enable = true;
 
+      # Custom log format with cache status - must be in commonHttpConfig to be available globally
+      commonHttpConfig = ''
+        log_format cache_log '$remote_addr - $remote_user [$time_local] '
+                            '"$request" $status $body_bytes_sent '
+                            '"$http_referer" "$http_user_agent" '
+                            'cache="$upstream_cache_status" '
+                            'upstream="$upstream_addr" '
+                            'rt=$request_time';
+      '';
+
       appendHttpConfig = ''
         # Proxy cache configuration
         proxy_cache_path ${cfg.cachePath}
@@ -97,6 +107,11 @@ in {
             port = cfg.port;
           }
         ];
+
+        # Enable access logging with cache status for all requests
+        extraConfig = ''
+          access_log /var/log/nginx/nix-cache-access.log cache_log;
+        '';
 
         locations."/" = {
           extraConfig = ''

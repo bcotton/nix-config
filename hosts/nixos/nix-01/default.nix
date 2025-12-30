@@ -30,6 +30,42 @@ in {
     bonob.enable = true;
   };
 
+  # Configure distributed build fleet
+  services.nix-builder.coordinator = {
+    enable = true;
+    enableLocalBuilds = true; # nix-01 can build locally as fallback
+    localCache = null; # Don't sign builds on nix-01 - nas-01 handles cache signing
+    builders = [
+      {
+        hostname = "nas-01";
+        systems = ["x86_64-linux"];
+        maxJobs = 16;
+        speedFactor = 2; # nas-01 is faster
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-02";
+        systems = ["x86_64-linux"];
+        maxJobs = 8;
+        speedFactor = 4;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-03";
+        systems = ["x86_64-linux"];
+        maxJobs = 8;
+        speedFactor = 4;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+    ];
+  };
+
+  # Use nas-01 cache for pre-built packages
+  services.nix-builder.client = {
+    enable = true;
+    publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
+  };
+
   # Create builder user for remote builds
   users.users.nix-builder = {
     isNormalUser = true;

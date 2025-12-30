@@ -555,9 +555,14 @@ in {
   programs.ssh = {
     enable = true;
     extraConfig = ''
+      Host nas-01 nix-02 nix-03
+        IdentityFile ~/.ssh/nix-builder-id_ed25519
+        IdentitiesOnly no
+
       Host *
         StrictHostKeyChecking no
         ForwardAgent yes
+
 
       Host github.com
         Hostname ssh.github.com
