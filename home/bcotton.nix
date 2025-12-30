@@ -5,6 +5,7 @@
   unstablePkgs,
   hostName ? "unknown",
   workmuxPackage,
+  inputs,
   ...
 }: let
   nixVsCodeServer = fetchTarball {
@@ -581,6 +582,9 @@ in {
     unstablePkgs.llm
     # nodejs_22
     opentofu
+
+    inputs.opencode.packages.${pkgs.system}.default
+
     procs
     unstablePkgs.sesh
     unstablePkgs.uv

@@ -42,7 +42,7 @@
         usernames
       );
       home-manager.extraSpecialArgs = {
-        inherit unstablePkgs hostName;
+        inherit inputs unstablePkgs hostName;
         localPackages = self.legacyPackages.${system}.localPackages;
         workmuxPackage = inputs.workmux.packages.${system}.default;
       };
@@ -166,7 +166,7 @@
               inputs.workmux.homeManagerModules.default
             ];
             home-manager.extraSpecialArgs = {
-              inherit unstablePkgs hostName;
+              inherit inputs unstablePkgs hostName;
               localPackages = self.legacyPackages.${system}.localPackages;
               workmuxPackage = inputs.workmux.packages.${system}.default;
             };

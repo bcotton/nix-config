@@ -510,6 +510,26 @@
         "type": "indirect"
       }
     },
+    "opencode": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1767105158,
+        "narHash": "sha256-DYWlQc8/asL9YbaeiOJACt2y4enJYhK68PAbiRGAUlQ=",
+        "owner": "sst",
+        "repo": "opencode",
+        "rev": "9115fac4c401e4079019b2231f1112b1a46f94bd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sst",
+        "repo": "opencode",
+        "type": "github"
+      }
+    },
     "pyproject-build-systems": {
       "inputs": {
         "nixpkgs": [
@@ -574,6 +594,7 @@
         "nixos-shell": "nixos-shell",
         "nixpkgs": "nixpkgs_6",
         "nixpkgs-unstable": "nixpkgs-unstable",
+        "opencode": "opencode",
         "tsnsrv": "tsnsrv",
         "vscode-server": "vscode-server",
         "workmux": "workmux"

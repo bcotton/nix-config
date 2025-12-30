@@ -37,6 +37,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    opencode = {
+      url = "github:sst/opencode";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     workmux = {
       url = "github:bcotton/workmux/dc4799a";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
