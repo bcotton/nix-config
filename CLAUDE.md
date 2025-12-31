@@ -61,6 +61,22 @@ just vm                      # Run NixOS VM
 nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 ```
 
+**Important: When creating or debugging tests, force local execution to simplify iteration:**
+```bash
+# Disable distributed builders to run tests locally
+nix flake check --option builders ''
+nix build '.#checks.x86_64-linux.postgresql' --option builders ''
+
+# Or for just check command:
+just check  # (Note: consider adding a 'just check-local' command)
+```
+
+Running tests locally during development avoids:
+- SSH connection overhead and potential failures
+- Complexity of debugging across remote machines
+- Build cache inconsistencies between builders
+- Longer feedback loops during rapid iteration
+
 ## Architecture
 
 ### Flake-Parts Structure
