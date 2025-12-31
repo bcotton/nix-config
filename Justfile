@@ -103,3 +103,20 @@ gc generations="5d":
 #        just check --impure     (impure mode, enables ZFS tests)
 check flags="":
   nix flake check {{flags}}
+
+# Connect to nas-01 Supermicro IPMI console via SSH tunnel through admin host
+nas-01-console:
+  #!/usr/bin/env bash
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "Opening SSH tunnel to nas-01 Supermicro IPMI console"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  echo "Port forward: localhost:8443 → 192.168.5.143:443"
+  echo ""
+  echo "Once connected, open in your browser:"
+  echo "  https://localhost:8443"
+  echo ""
+  echo "Press Ctrl+C to close the tunnel"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  ssh -L 8443:192.168.5.143:443 admin
