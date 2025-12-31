@@ -11,6 +11,7 @@
     ./calibre
     ./calibre-web
     ./filebrowser
+    ./forgejo
     ./freshrss
     ./harmonia
     ./hyprland

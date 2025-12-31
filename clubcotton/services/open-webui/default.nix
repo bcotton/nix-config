@@ -82,7 +82,7 @@ in {
       enable = true;
       package = cfg.package;
       host = "0.0.0.0"; # Listen on all interfaces for Tailscale access
-      port = 3000; # Default port for open-webui
+      port = 3001; # Default port for open-webui
       inherit (cfg) stateDir environment environmentFile;
     };
 

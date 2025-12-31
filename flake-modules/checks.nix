@@ -29,6 +29,14 @@
         nixpkgs = inputs.nixpkgs;
       });
 
+      forgejo = import ../clubcotton/services/forgejo/test.nix {
+        inherit pkgs lib;
+      };
+
+      forgejo-runner = import ../clubcotton/services/forgejo/runner-test.nix {
+        inherit pkgs lib;
+      };
+
       nix-cache-integration = let
         unstablePkgs = import inputs.nixpkgs-unstable {
           inherit system;

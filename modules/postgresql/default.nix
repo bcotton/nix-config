@@ -9,6 +9,7 @@ with lib; let
 in {
   imports = [
     ./atuin.nix
+    ./forgejo.nix
     ./freshrss.nix
     ./immich.nix
     ./open-webui.nix
