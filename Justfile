@@ -119,4 +119,4 @@ nas-01-console:
   echo "Press Ctrl+C to close the tunnel"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
-  ssh -L 8443:192.168.5.143:443 admin
+  ssh -N -L 8443:192.168.5.143:443 admin
