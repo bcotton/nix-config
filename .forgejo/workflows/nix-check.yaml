@@ -12,22 +12,14 @@ jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: nixos/nix:latest
+      image: nas-01.lan:3000/bcotton/nixos-fhs-container:latest
       options: --user root
     steps:
       - name: Setup Nix environment
         run: |
-          # Install git and other essentials for flake operations
-          nix-env -iA nixpkgs.git nixpkgs.coreutils nixpkgs.bash
-          # Create FHS-compatible symlinks for Actions runner
-          ln -sf /nix/var/nix/profiles/default/bin/sleep /bin/sleep || true
-          ln -sf /nix/var/nix/profiles/default/bin/bash /bin/bash || true
           # Configure git for flakes
           git config --global user.email "actions@forgejo.local"
           git config --global user.name "Forgejo Actions"
-          # Enable flakes and other experimental features
-          mkdir -p /etc/nix
-          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,18 +51,13 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     container:
-      image: nixos/nix:latest
+      image: nas-01.lan:3000/bcotton/nixos-fhs-container:latest
       options: --user root
     steps:
       - name: Setup Nix environment
         run: |
-          nix-env -iA nixpkgs.git nixpkgs.coreutils nixpkgs.bash nixpkgs.findutils
-          ln -sf /nix/var/nix/profiles/default/bin/sleep /bin/sleep || true
-          ln -sf /nix/var/nix/profiles/default/bin/bash /bin/bash || true
           git config --global user.email "actions@forgejo.local"
           git config --global user.name "Forgejo Actions"
-          mkdir -p /etc/nix
-          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -90,7 +77,7 @@ jobs:
   build-sample:
     runs-on: ubuntu-latest
     container:
-      image: nixos/nix:latest
+      image: nas-01.lan:3000/bcotton/nixos-fhs-container:latest
       options: --user root
     strategy:
       matrix:
@@ -99,13 +86,8 @@ jobs:
     steps:
       - name: Setup Nix environment
         run: |
-          nix-env -iA nixpkgs.git nixpkgs.coreutils nixpkgs.bash
-          ln -sf /nix/var/nix/profiles/default/bin/sleep /bin/sleep || true
-          ln -sf /nix/var/nix/profiles/default/bin/bash /bin/bash || true
           git config --global user.email "actions@forgejo.local"
           git config --global user.name "Forgejo Actions"
-          mkdir -p /etc/nix
-          echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
 
       - name: Checkout code
         uses: actions/checkout@v4
