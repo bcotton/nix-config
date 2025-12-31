@@ -21,6 +21,7 @@ in {
     ../../../modules/nix-builder
     ../../../modules/k3s-agent
     ../../../modules/incus
+    ../../../modules/systemd-network
   ];
 
   services.clubcotton = {
@@ -67,24 +68,24 @@ in {
 
   networking = {
     hostId = "007f0200";
-    useDHCP = false;
     hostName = "nix-03";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp3s0.ipv4.addresses = [
-      {
-        address = "192.168.5.214";
-        prefixLength = 24;
-      }
-    ];
-    # interfaces.enp2s0.ipv4.addresses = [
-    #   {
-    #     address = "192.168.5.215";
-    #     prefixLength = 24;
-    #   }
-    # ];
-    bridges."br0".interfaces = ["enp2s0"];
-    interfaces."br0".useDHCP = true;
+  };
+
+  # Configure systemd-networkd with bonding and VLANs
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "bonded";
+    interfaces = ["enp2s0" "enp3s0"];
+    bondName = "bond0";
+    bridgeName = "br0";
+    enableIncusBridge = true;
+    enableVlans = true;
+    nativeVlan = {
+      id = 5;
+      address = "192.168.5.214/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
+    };
   };
 
   virtualisation.libvirtd = {

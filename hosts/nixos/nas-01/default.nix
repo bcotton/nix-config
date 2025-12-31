@@ -21,6 +21,7 @@ in {
     ../../../modules/nix-builder
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
+    ../../../modules/systemd-network
     ../../../users/cheryl.nix
     ./borgmatic.nix
     # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
@@ -116,14 +117,22 @@ in {
 
   networking = {
     hostName = "nas-01";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp0s31f6.ipv4.addresses = [
-      {
-        address = "192.168.5.300";
-        prefixLength = 24;
-      }
-    ];
+  };
+
+  # Configure systemd-networkd with VLANs (single NIC mode)
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "single-nic";
+    interfaces = ["enp0s31f6"];
+    bridgeName = "br0";
+    enableIncusBridge = false; # nas-01 doesn't run Incus, but needs VLAN access
+    enableVlans = true;
+    nativeVlan = {
+      id = 5;
+      address = "192.168.5.300/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
+    };
   };
 
   services.nfs.server = {

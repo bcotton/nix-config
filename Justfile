@@ -47,6 +47,15 @@ trace target_host=hostname: (build target_host "--show-trace")
 switch target_host=hostname:
   sudo nixos-rebuild switch --flake .#{{target_host}}
 
+# Safely switch network configuration with automatic rollback
+# This should be run ON the target host, not remotely
+[linux]
+safe-network-switch:
+  @echo "⚠️  This command applies config and tests network connectivity"
+  @echo "⚠️  It will automatically rollback if network tests fail"
+  @echo ""
+  @sudo ./scripts/safe-network-switch.sh
+
 # Update flake inputs to their latest revisions
 update:
   nix flake update
