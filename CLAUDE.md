@@ -163,6 +163,23 @@ To update a package version in an overlay:
 
 Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix` and encrypted files stored in `secrets/` directory.
 
+**Important: Claude should NOT attempt to create, edit, or configure agenix secrets.**
+
+When working with features that require secrets:
+1. Add the secret definition to `secrets/secrets.nix` (this is safe - just metadata)
+2. Reference the secret in your configuration using `config.age.secrets.<name>.path`
+3. Leave clear instructions for the user to create/edit the actual encrypted secret file using `agenix -e <secret-name>.age`
+4. Document what content/format the secret file should contain
+
+Example instructions to provide:
+```bash
+# After this configuration is applied, create the secret:
+agenix -e new-secret.age
+# Then add the required content (e.g., password, API key, etc.)
+```
+
+See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
+
 ### Remote Deployment
 
 Uses `nixinate` for remote deployment with automatic host detection based on Tailscale configuration. Builds can be performed locally or remotely based on configuration.
