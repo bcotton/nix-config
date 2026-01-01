@@ -61,6 +61,22 @@ just vm                      # Run NixOS VM
 nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 ```
 
+**Important: When creating or debugging tests, force local execution to simplify iteration:**
+```bash
+# Disable distributed builders to run tests locally
+nix flake check --option builders ''
+nix build '.#checks.x86_64-linux.postgresql' --option builders ''
+
+# Or for just check command:
+just check  # (Note: consider adding a 'just check-local' command)
+```
+
+Running tests locally during development avoids:
+- SSH connection overhead and potential failures
+- Complexity of debugging across remote machines
+- Build cache inconsistencies between builders
+- Longer feedback loops during rapid iteration
+
 ## Architecture
 
 ### Flake-Parts Structure
@@ -146,6 +162,23 @@ To update a package version in an overlay:
 ### Secrets Management
 
 Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix` and encrypted files stored in `secrets/` directory.
+
+**Important: Claude should NOT attempt to create, edit, or configure agenix secrets.**
+
+When working with features that require secrets:
+1. Add the secret definition to `secrets/secrets.nix` (this is safe - just metadata)
+2. Reference the secret in your configuration using `config.age.secrets.<name>.path`
+3. Leave clear instructions for the user to create/edit the actual encrypted secret file using `agenix -e <secret-name>.age`
+4. Document what content/format the secret file should contain
+
+Example instructions to provide:
+```bash
+# After this configuration is applied, create the secret:
+agenix -e new-secret.age
+# Then add the required content (e.g., password, API key, etc.)
+```
+
+See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
 
 ### Remote Deployment
 
