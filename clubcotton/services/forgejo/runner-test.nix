@@ -98,6 +98,9 @@ in
       }: {
         imports = [./runner.nix];
 
+        # Enable Docker for runner labels
+        virtualisation.docker.enable = true;
+
         # Create test token file (will be chowned after gitea-runner user is created)
         systemd.tmpfiles.rules = [
           "f /run/secrets/forgejo-runner-token 0444 root root - ${testRunnerToken}"
