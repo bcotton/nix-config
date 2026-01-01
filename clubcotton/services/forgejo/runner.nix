@@ -77,30 +77,34 @@ in {
     # The runner will use the Docker-compatible socket provided by Podman
 
     # Configure each runner instance
-    services.gitea-actions-runner.instances =
-      mapAttrs (name: runnerCfg: {
-        enable = runnerCfg.enable;
-        name = runnerCfg.name;
-        url = runnerCfg.url;
-        tokenFile = runnerCfg.tokenFile;
-        labels = runnerCfg.labels;
-        hostPackages = runnerCfg.hostPackages;
-        settings = {
-          runner = {
-            capacity = runnerCfg.capacity;
-            timeout = "3h";
+    services.gitea-actions-runner = {
+      package = pkgs.forgejo-runner;
+      instances =
+        mapAttrs (name: runnerCfg: {
+          # package = pkgs.forgejo-runner;
+          enable = runnerCfg.enable;
+          name = runnerCfg.name;
+          url = runnerCfg.url;
+          tokenFile = runnerCfg.tokenFile;
+          labels = runnerCfg.labels;
+          hostPackages = runnerCfg.hostPackages;
+          settings = {
+            runner = {
+              capacity = runnerCfg.capacity;
+              timeout = "3h";
+            };
+            cache = {
+              enabled = true;
+            };
+            container = {
+              network = "bridge";
+              privileged = false;
+              options = "-v /nix:/nix:ro";
+            };
           };
-          cache = {
-            enabled = true;
-          };
-          container = {
-            network = "bridge";
-            privileged = false;
-            options = "-v /nix:/nix:ro";
-          };
-        };
-      })
-      cfg.instances;
+        })
+        cfg.instances;
+    };
 
     # Open firewall if needed (runners initiate connections, usually not needed)
     # networking.firewall.allowedTCPPorts = [];
