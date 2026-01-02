@@ -12,7 +12,7 @@ jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:e1a127b5d149ad2c31518a551537727f54b1ee39
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
@@ -57,7 +57,7 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:e1a127b5d149ad2c31518a551537727f54b1ee39
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
       options: --user root
     steps:
       - name: Setup Nix environment
@@ -83,7 +83,7 @@ jobs:
   build-sample:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:e1a127b5d149ad2c31518a551537727f54b1ee39
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
       options: --user root
     strategy:
       matrix:
