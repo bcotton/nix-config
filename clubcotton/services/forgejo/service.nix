@@ -281,6 +281,7 @@ in {
         requires = ["postgresql.service"];
       })
       (mkIf (cfg.customPath != null) {
+        after = ["systemd-tmpfiles-setup.service"];
         serviceConfig.ReadWritePaths = [
           cfg.customPath
           "${cfg.customPath}/repositories"
