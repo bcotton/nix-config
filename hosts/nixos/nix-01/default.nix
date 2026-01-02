@@ -62,23 +62,24 @@ in {
     enable = true;
     enableLocalBuilds = true; # nix-01 can build locally as fallback
     localCache = null; # Don't sign builds on nix-01 - nas-01 handles cache signing
+    # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
     builders = [
       {
-        hostname = "nas-01";
+        hostname = "nas-01.lan";
         systems = ["x86_64-linux"];
         maxJobs = 16;
         speedFactor = 2; # nas-01 is faster
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-02";
+        hostname = "nix-02.lan";
         systems = ["x86_64-linux"];
         maxJobs = 8;
         speedFactor = 4;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-03";
+        hostname = "nix-03.lan";
         systems = ["x86_64-linux"];
         maxJobs = 8;
         speedFactor = 4;

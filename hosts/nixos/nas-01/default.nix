@@ -78,22 +78,23 @@ in {
     enableLocalBuilds = true; # nas-01 builds locally, no SSH to itself
     builders = [
       # Note: localhost removed to avoid SSH loop - enableLocalBuilds handles local builds
+      # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
       {
-        hostname = "nix-01";
+        hostname = "nix-01.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-02";
+        hostname = "nix-02.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-03";
+        hostname = "nix-03.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
