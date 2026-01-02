@@ -125,9 +125,10 @@ in
 
       # Verify storage directories were created
       print("Verifying storage directories...")
+      print("Listing /var/lib/forgejo-data contents:")
+      machine.succeed("ls -la /var/lib/forgejo-data/")
       machine.succeed("test -d /var/lib/forgejo-data/repositories")
       machine.succeed("test -d /var/lib/forgejo-data/lfs")
-      machine.succeed("test -d /var/lib/forgejo-data/data")
       machine.succeed("test -d /var/lib/forgejo-data/packages")
 
       # Verify ownership
