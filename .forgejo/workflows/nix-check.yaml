@@ -12,7 +12,7 @@ jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:latest
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:a6ecab772054d1da69cf13c5a44dff0019a75220
       options: --user root
     steps:
       - name: Setup Nix environment
@@ -51,7 +51,7 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:latest
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:a6ecab772054d1da69cf13c5a44dff0019a75220
       options: --user root
     steps:
       - name: Setup Nix environment
@@ -77,7 +77,7 @@ jobs:
   build-sample:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:latest
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:a6ecab772054d1da69cf13c5a44dff0019a75220
       options: --user root
     strategy:
       matrix:
