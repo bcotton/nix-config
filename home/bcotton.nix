@@ -106,9 +106,9 @@ in {
     filter_mode = "session";
   };
 
-  # ZSH performance optimizations - disabled for baseline testing
+  # ZSH performance optimizations
   programs.zsh-profiling.enable = false;
-  programs.kubectl-lazy.enable = false;
+  programs.kubectl-lazy.enable = true; # Step 2: Enable kubectl lazy-loading
   programs.nvm-lazy.enable = false;
 
   # list of programs
@@ -349,7 +349,6 @@ in {
     };
 
     initContent = ''
-      source <(kubectl completion zsh)
       eval "$(atuin init zsh --disable-up-arrow)"
 
       if [[ "$CLAUDECODE" != "1" ]]; then
