@@ -107,7 +107,7 @@ in {
   };
 
   # ZSH performance optimizations
-  programs.zsh-profiling.enable = false;
+  programs.zsh-profiling.enable = true; # Enable to see zprof output on shell startup
   programs.kubectl-lazy.enable = true; # Step 2: Enable kubectl lazy-loading
   programs.nvm-lazy.enable = true; # Step 3: Enable NVM lazy-loading
 
