@@ -13,6 +13,7 @@
         # Core tools that should always be available
         ((import ./overlays/qmk.nix {inherit config pkgs lib unstablePkgs;}) final prev)
         ((import ./overlays/claude-code.nix {inherit config pkgs lib unstablePkgs;}) final prev)
+        ((import ./overlays/llm.nix {inherit config pkgs lib unstablePkgs;}) final prev)
 
         # Beets is only available on Linux due to gst-python build issues on Darwin
         (lib.optionalAttrs prev.stdenv.isLinux
