@@ -28,6 +28,7 @@ in {
       ./modules/beets.nix
       ./modules/hyprland
       ./modules/gwtmux.nix
+      ./modules/llm.nix
       ./modules/zsh-profiling.nix
       ./modules/kubectl-lazy.nix
       ./modules/nvm-lazy.nix
