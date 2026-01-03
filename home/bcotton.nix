@@ -80,6 +80,19 @@ in {
   #   ];
   # };
 
+  programs.llm = {
+    enable = true;
+
+    # Enable specific plugins
+    plugins = {
+      llm-anthropic = true; # Claude models
+      llm-gemini = true; # Google Gemini models
+      llm-openrouter = true; # OpenRouter models
+      llm-jq = true; # jq plugin
+      llm-openai-plugin = true; # OpenAI models
+    };
+  };
+
   programs.workmux = {
     enable = true;
     package = workmuxPackage;
@@ -465,7 +478,6 @@ in {
     kubernetes-helm
     kubectx
     kubectl
-    unstablePkgs.llm
     # nodejs_22
     opentofu
 
