@@ -352,8 +352,7 @@ in {
       zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
 
       if [[ "$CLAUDECODE" != "1" ]]; then
-        zsh-defer -c 'eval "$(zoxide init zsh)"'
-        zsh-defer -a 'alias cd="z"'
+        zsh-defer -c 'eval "$(zoxide init zsh)"; alias cd="z"'
       fi
 
       zsh-defer -c 'eval "$(sesh completion zsh)"'
