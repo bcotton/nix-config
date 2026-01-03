@@ -101,6 +101,13 @@ This baseline is from the unoptimized configuration before any changes.
 - **Trade-off**: Tools initialize in background, ~100ms delay if used immediately
 - **Status**: ✓ Complete
 
+### Bug Fix: Zoxide Alias Error (Commit: daf104b)
+- **Issue**: Error message after prompt: `alias cd="z": command not found`
+- **Root cause**: Using `zsh-defer -a` tried to set alias before zoxide initialized
+- **Fix**: Combined zoxide init and alias into single deferred command
+- **Changed**: `zsh-defer -c 'eval "$(zoxide init zsh)"; alias cd="z"'`
+- **Status**: ✓ Fixed
+
 ---
 
 ## Testing Methodology
@@ -208,6 +215,7 @@ All optimizations have been implemented incrementally with git commits tracking 
 | Step 2 | kubectl lazy-loading | ffeee07 | -300 to -800ms |
 | Step 3 | NVM lazy-loading | 35ec129 | -100 to -400ms |
 | Step 4 | Defer atuin/zoxide/sesh | 6a3c560 | -50 to -150ms |
+| Bug Fix | Fix zoxide alias error | daf104b | No performance impact |
 | **Total Expected** | **All optimizations** | **Current** | **-470ms to -1400ms** |
 
 **Expected Final Startup Time**: 0.20s to 0.90s (depending on environment)
