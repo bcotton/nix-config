@@ -345,14 +345,18 @@ in {
     };
 
     initContent = ''
-      eval "$(atuin init zsh --disable-up-arrow)"
+      # Source zsh-defer for deferred initialization
+      source ${pkgs.zsh-defer}/share/zsh-defer/zsh-defer.plugin.zsh
+
+      # Defer heavy initializations until after prompt displays
+      zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
 
       if [[ "$CLAUDECODE" != "1" ]]; then
-        eval "$(zoxide init zsh)"
-        alias cd="z"
+        zsh-defer -c 'eval "$(zoxide init zsh)"'
+        zsh-defer -a 'alias cd="z"'
       fi
 
-      eval "$(sesh completion zsh)"
+      zsh-defer -c 'eval "$(sesh completion zsh)"'
 
       bindkey -e
       bindkey '^[[A' up-history
@@ -473,6 +477,6 @@ in {
     tldr
     #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
-    # zsh-defer  # Only needed when using deferred initialization
+    zsh-defer # Step 4: Needed for deferred initialization
   ];
 }
