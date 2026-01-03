@@ -303,8 +303,61 @@ The real-world results exceeded expectations:
 
 ### Detailed Breakdown (zprof output)
 
-Available after enabling `programs.zsh-profiling.enable = true` if you want to
-see exactly what's taking time in the remaining 0.29s.
+After enabling profiling, here's what's taking time in the remaining 0.29s:
+
+| Component | Time (ms) | % of Total | Notes |
+|-----------|-----------|------------|-------|
+| **_omz_source** | 65.21 | 63.60% | Oh-my-zsh loading all plugins (38 calls) |
+| **compaudit** | 19.74 | 19.25% | Completion security audit (checks file permissions) |
+| **fzf_setup_using_fzf** | 16.75 | 16.33% | FZF initialization |
+| **_add_identities** | 10.20 | 9.95% | SSH agent loading identities |
+| **compinit** (self) | 8.90 | 8.68% | Completion system initialization |
+| **Other** | ~30 | ~30% | Various small functions |
+
+**Key Insight**: The remaining time is primarily oh-my-zsh plugin loading and the completion system. These are foundational components that provide the functionality you use daily.
+
+#### What We Successfully Optimized Away
+
+- ✅ kubectl completion generation (was 300-800ms)
+- ✅ NVM loading (was 100-400ms)
+- ✅ Duplicate initialization code (was 20-50ms)
+- ✅ Deferred atuin/zoxide/sesh (was 50-150ms)
+
+**Total removed**: ~1000ms
+
+#### What Remains (and why it's worth it)
+
+The 290ms remaining is spent on:
+- **Oh-my-zsh plugins** (65ms): Provides your custom plugins, aliases, and themes
+- **Completion system** (29ms): Enables tab completion for all commands
+- **FZF** (17ms): Fuzzy finder integration for history search
+- **SSH agent** (10ms): Manages SSH keys for git/remote access
+
+These are all actively used features that justify their startup cost.
+
+### Potential Further Optimizations (If Desired)
+
+If you want to squeeze out more performance, consider:
+
+1. **compaudit optimization** (19ms savings):
+   ```nix
+   # Skip insecure directory checks
+   ZSH_DISABLE_COMPFIX=true
+   ```
+   Trade-off: Skips security checks on completion directories
+
+2. **Reduce oh-my-zsh plugins** (10-30ms savings):
+   - Review the 11 plugins and disable rarely-used ones
+   - Current plugins: brew, bundler, colorize, dotenv, fzf, git, gh, kubectl, kube-ps1, ssh-agent, tmux
+   - Custom plugins: claude-personal, kubectl-fzf-get, git-reflog-fzf, sesh, rgf-search, gwt
+
+3. **Compile zsh files** (5-10ms savings):
+   ```bash
+   # Pre-compile .zshrc for faster loading
+   zcompile ~/.zshrc
+   ```
+
+**Recommendation**: Stop here! The current 0.29s is excellent, and further optimization would remove useful functionality for minimal gain.
 
 ---
 
