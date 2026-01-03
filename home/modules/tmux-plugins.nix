@@ -70,6 +70,13 @@
       };
     };
 
+  tmux-file-picker-src = pkgs.fetchFromGitHub {
+    owner = "raine";
+    repo = "tmux-file-picker";
+    rev = "0473f7abe87b95bc008e1cbfd16578e9cee93565";
+    sha256 = lib.fakeHash;
+  };
+
   cfg = config.programs.tmux-plugins;
 in {
   options.programs.tmux-plugins = {
@@ -109,6 +116,15 @@ in {
         run-shell ${tmux-nested}/share/tmux-plugins/tmux-nested/nested.tmux
         run-shell ${tmux-fuzzback}/share/tmux-plugins/tmux-fuzzback/fuzzback.tmux
         run-shell ${tmux-powerkit}/share/tmux-plugins/tmux-powerkit/tmux-powerkit.tmux
+
+        # tmux-file-picker keybindings
+        # bind C-f display-popup -E "tmux-file-picker"
+
+        bind-key C-g display-popup -E "${tmux-file-picker-src}/tmux-file-picker -g"
+        bind-key C-d display-popup -E "${tmux-file-picker-src}/tmux-file-picker --directories"
+        bind-key C-z display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide"
+        bind-key C-v display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide --dir-only"
+        bind-key C-x display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide --git-root"
       '';
     };
 
