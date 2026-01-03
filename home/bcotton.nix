@@ -109,7 +109,7 @@ in {
   # ZSH performance optimizations
   programs.zsh-profiling.enable = false;
   programs.kubectl-lazy.enable = true; # Step 2: Enable kubectl lazy-loading
-  programs.nvm-lazy.enable = false;
+  programs.nvm-lazy.enable = true; # Step 3: Enable NVM lazy-loading
 
   # list of programs
   # https://mipmip.github.io/home-manager-option-search
@@ -270,10 +270,6 @@ in {
       export FZF_TMUX_OPTS="-p"
 
       export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
-
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
       # Fix the docker host for podman on nix-03
       # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
