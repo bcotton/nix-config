@@ -28,6 +28,9 @@ in {
       ./modules/beets.nix
       ./modules/hyprland
       ./modules/gwtmux.nix
+      ./modules/zsh-profiling.nix
+      ./modules/kubectl-lazy.nix
+      ./modules/nvm-lazy.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
@@ -263,10 +266,6 @@ in {
 
       export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
       # Fix the docker host for podman on nix-03
       # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
       # This sould only run on linux hosts
@@ -341,26 +340,18 @@ in {
     };
 
     initContent = ''
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+      # Source zsh-defer for deferred initialization
+      source ${pkgs.zsh-defer}/share/zsh-defer/zsh-defer.plugin.zsh
 
-      if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
-         export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-         export DOCKER_BUILDKIT=0
-      fi
-
-      [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
-
-      source <(kubectl completion zsh)
-      eval "$(atuin init zsh --disable-up-arrow)"
+      # Defer heavy initializations until after prompt displays
+      zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
 
       if [[ "$CLAUDECODE" != "1" ]]; then
-        eval "$(zoxide init zsh)"
-        alias cd="z"
+        zsh-defer -c 'eval "$(zoxide init zsh)"'
+        zsh-defer -a 'alias cd="z"'
       fi
 
-      eval "$(sesh completion zsh)"
+      zsh-defer -c 'eval "$(sesh completion zsh)"'
 
       bindkey -e
       bindkey '^[[A' up-history
@@ -481,5 +472,6 @@ in {
     tldr
     #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
+    zsh-defer
   ];
 }

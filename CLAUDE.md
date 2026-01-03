@@ -57,7 +57,6 @@ nixos-rebuild switch --flake .#hostname \
 ### Testing
 
 ```bash
-just vm                      # Run NixOS VM
 nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 ```
 
@@ -90,11 +89,6 @@ This flake uses [flake-parts](https://flake.parts/) for modular flake organizati
   - `overlays.nix` - Overlay exports for external consumption
   - `checks.nix` - NixOS tests (x86_64-linux only)
   - `hosts.nix` - System builders and all host configurations
-
-**Benefits:**
-- 85% reduction in main flake.nix (390 → 57 lines)
-- Automatic per-system handling via `perSystem`
-- Clean separation of concerns
 - Packages available on all 4 systems (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin)
 
 ### Directory Structure
@@ -180,17 +174,15 @@ agenix -e new-secret.age
 
 See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
 
-### Remote Deployment
-
-Uses `nixinate` for remote deployment with automatic host detection based on Tailscale configuration. Builds can be performed locally or remotely based on configuration.
-
 ## Development Notes
 
-- All configurations support both stable and unstable nixpkgs channels
+- All configurations support both stable and unstable nixpkgs channels, this is setup in flake.nix
 - Home Manager is integrated for user-level configurations
-- ZFS storage configurations available in `modules/zfs/`
+- ZFS storage configurations available in `modules/zfs/` - this applies only to linux hosts, not darwin
 - PostgreSQL integration testing framework in `tests/`
 - Uses `alejandra` for nix code formatting
 - Justfile provides cross-platform commands that detect current hostname automatically
 - Git hooks in `.githooks/` are automatically installed when running `just` commands
   - Pre-commit hook runs `just fmt` to ensure all code is formatted before commit
+  - No need to run 'just fmt', unless you want to syntax check the code
+- Don't forget to 'git add' new files before building with nix. This will save you an error step
