@@ -60,6 +60,10 @@
           inherit inputs;
         });
 
+      technitium = import ../clubcotton/services/technitium/test.nix {
+        inherit pkgs;
+      };
+
       # ZFS/disko tests - DISABLED BY DEFAULT
       # These tests require --impure flag due to disko's test infrastructure
       # using impure <nixpkgs> path lookups internally.

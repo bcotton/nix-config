@@ -29,6 +29,7 @@
     ./sabnzbd
     ./scanner
     ./syncoid
+    ./technitium
     ./wallabag
     ./webdav
   ];

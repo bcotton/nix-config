@@ -58,6 +58,8 @@ in {
   "syncoid-ssh-key.age".publicKeys = users ++ systems;
   "tailscale-keys.env".publicKeys = users ++ systems;
   "tailscale-keys.raw".publicKeys = users ++ systems;
+  "technitium-admin-password.age".publicKeys = users ++ systems;
+  "technitium-cluster-secret.age".publicKeys = users ++ systems;
   "tfstate-database.age".publicKeys = users ++ systems;
   "tfstate-database-raw.age".publicKeys = users ++ systems;
   "unpoller.age".publicKeys = users ++ systems;
