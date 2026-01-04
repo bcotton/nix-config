@@ -48,7 +48,7 @@
     };
 
     nix-builder-config = {
-      url = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config";
+      url = "git+http://nas-01.lan:3000/bcotton/nix-builder-config";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
