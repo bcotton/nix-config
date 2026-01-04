@@ -195,7 +195,10 @@ in {
             then {
               # Bonded mode: enslave interfaces to bond
               matchConfig.Name = iface;
-              networkConfig.Bond = cfg.bondName;
+              networkConfig = {
+                Bond = cfg.bondName;
+                DHCP = "no";
+              };
               linkConfig.RequiredForOnline = "enslaved";
             }
             else {
@@ -263,11 +266,7 @@ in {
             name = "40-${cfg.bridgeName}.${toString vlan.id}";
             value = {
               matchConfig.Name = "${cfg.bridgeName}.${toString vlan.id}";
-              networkConfig = {
-                DHCP = "yes";
-                # Keep VLANs as secondary interfaces
-                KeepConfiguration = "dhcp";
-              };
+              networkConfig.DHCP = "yes";
               dhcpV4Config = {
                 RouteMetric = 1024; # Higher metric so native VLAN is preferred
                 UseDNS = false; # Don't override DNS from native VLAN
@@ -288,10 +287,7 @@ in {
               name = "40-${baseIface}.${toString vlan.id}";
               value = {
                 matchConfig.Name = "${baseIface}.${toString vlan.id}";
-                networkConfig = {
-                  DHCP = "yes";
-                  KeepConfiguration = "dhcp";
-                };
+                networkConfig.DHCP = "yes";
                 dhcpV4Config = {
                   RouteMetric = 1024;
                   UseDNS = false;
@@ -309,10 +305,7 @@ in {
             name = "40-${cfg.bondName}.${toString vlan.id}";
             value = {
               matchConfig.Name = "${cfg.bondName}.${toString vlan.id}";
-              networkConfig = {
-                DHCP = "yes";
-                KeepConfiguration = "dhcp";
-              };
+              networkConfig.DHCP = "yes";
               dhcpV4Config = {
                 RouteMetric = 1024;
                 UseDNS = false;
