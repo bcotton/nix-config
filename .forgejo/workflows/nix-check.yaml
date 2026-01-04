@@ -8,11 +8,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  NIX_CI_IMAGE: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:0307764
+
 jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
+      image: ${{ env.NIX_CI_IMAGE }}
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
@@ -57,7 +60,7 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
+      image: ${{ env.NIX_CI_IMAGE }}
       options: --user root
     steps:
       - name: Setup Nix environment
@@ -83,7 +86,7 @@ jobs:
   build-sample:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:b44a68a
+      image: ${{ env.NIX_CI_IMAGE }}
       options: --user root
     strategy:
       matrix:
