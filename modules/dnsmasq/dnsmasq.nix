@@ -10,12 +10,18 @@
   };
 in {
   config = {
+    # Ensure dnsmasq waits for network interfaces to be configured
+    systemd.services.dnsmasq = {
+      after = ["network-online.target"];
+      wants = ["network-online.target"];
+    };
+
     services.prometheus.exporters.dnsmasq.enable = true;
     services.dnsmasq = {
       enable = true;
       settings.addn-hosts = [hostsFile "${./clubcotton.list}"];
 
-      settings.bind-interfaces = true;
+      settings.bind-dynamic = true;
       settings.bogus-priv = true;
       settings.cache-size = 10000;
       settings.domain-needed = true;
