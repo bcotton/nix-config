@@ -19,7 +19,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/nix-builder
+    inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/k3s-agent
     ../../../modules/incus
   ];
@@ -60,6 +60,7 @@ in {
   # Configure distributed build fleet
   services.nix-builder.coordinator = {
     enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
     enableLocalBuilds = true; # nix-01 can build locally as fallback
     localCache = null; # Don't sign builds on nix-01 - nas-01 handles cache signing
     # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
@@ -88,11 +89,7 @@ in {
     ];
   };
 
-  # Use nas-01 cache for pre-built packages
-  services.nix-builder.client = {
-    enable = true;
-    publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
-  };
+  # Cache client already enabled via flake-modules/hosts.nix with defaults
 
   # Create builder user for remote builds
   users.users.nix-builder = {

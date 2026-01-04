@@ -46,6 +46,11 @@
       url = "github:bcotton/workmux/2d20d09";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    nix-builder-config = {
+      url = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {flake-parts, ...}:

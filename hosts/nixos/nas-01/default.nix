@@ -18,7 +18,7 @@ in {
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
-    ../../../modules/nix-builder
+    inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
     ../../../users/cheryl.nix
@@ -75,6 +75,8 @@ in {
   # Configure distributed build fleet
   services.nix-builder.coordinator = {
     enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
+    signingKeyPath = config.age.secrets."harmonia-signing-key".path;
     enableLocalBuilds = true; # nas-01 builds locally, no SSH to itself
     builders = [
       # Note: localhost removed to avoid SSH loop - enableLocalBuilds handles local builds

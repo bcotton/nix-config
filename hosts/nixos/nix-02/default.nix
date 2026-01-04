@@ -18,7 +18,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/nix-builder
+    # nix-builder client is enabled via flake-modules/hosts.nix
     ../../../modules/k3s-agent
     ../../../modules/incus
   ];

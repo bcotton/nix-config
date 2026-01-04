@@ -4,7 +4,7 @@
   ...
 }: {
   flake = let
-    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko tsnsrv vscode-server nixos-generators;
+    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko tsnsrv vscode-server nixos-generators nix-builder-config;
 
     # Package set generators
     genPkgs = system:
@@ -61,7 +61,7 @@
     internalModules = [
       ../clubcotton
       ../secrets
-      ../modules/nix-builder/client.nix
+      nix-builder-config.nixosModules.client
     ];
 
     # Service modules for full NixOS systems
@@ -92,13 +92,8 @@
         ++ internalModules
         ++ [
           # Enable nix cache client on all NixOS systems
-          {
-            services.nix-builder.client = {
-              enable = true;
-              cacheUrl = "http://nas-01:80";
-              publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
-            };
-          }
+          # Settings come from nix-builder-config flake defaults
+          {services.nix-builder.client.enable = true;}
           ../hosts/nixos/${hostName}
           (mkHomeManagerConfig unstablePkgs system hostName usernames)
         ];
@@ -147,17 +142,14 @@
           (mkModuleArgs unstablePkgs system)
           ../overlays.nix
           inputs.home-manager.darwinModules.home-manager
-          ../modules/nix-builder/client.nix
+          nix-builder-config.darwinModules.client
           ../hosts/darwin/${hostName}
           {
             networking.hostName = hostName;
 
             # Enable nix cache client on all Darwin systems
-            services.nix-builder.client = {
-              enable = true;
-              cacheUrl = "http://nas-01:80";
-              publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
-            };
+            # Settings come from nix-builder-config flake defaults
+            services.nix-builder.client.enable = true;
 
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
