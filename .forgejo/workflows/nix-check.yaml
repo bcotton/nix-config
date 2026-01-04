@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  NIX_CI_IMAGE: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:0307764
+  NIX_CI_IMAGE: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:eb9c844
 
 jobs:
   flake-check:
