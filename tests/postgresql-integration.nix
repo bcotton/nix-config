@@ -10,6 +10,7 @@
   in {
     postgres = {...}: testLib.mkSshConfig 2223;
     immich = {...}: testLib.mkSshConfig 2224;
+    forgejo = {...}: testLib.mkSshConfig 2225;
   };
   nodes = {
     # PostgreSQL server node
@@ -56,6 +57,14 @@
           enable = true;
           database = "test-webui";
           user = "test-webui";
+          passwordFile = "/etc/immich-secrets"; # Using same file since it contains 'test-password'
+        };
+
+        # Enable Forgejo database support
+        forgejo = {
+          enable = true;
+          database = "forgejo";
+          user = "forgejo";
           passwordFile = "/etc/immich-secrets"; # Using same file since it contains 'test-password'
         };
       };
@@ -123,6 +132,76 @@
 
         # Open firewall for Immich
         networking.firewall.allowedTCPPorts = [2283];
+      };
+    };
+
+    # Forgejo server node
+    forgejo = {
+      config,
+      pkgs,
+      lib,
+      ...
+    }: {
+      imports = [
+        ../clubcotton/services/forgejo
+        inputs.tsnsrv.nixosModules.default
+      ];
+
+      # Define minimal clubcotton options for test
+      options.clubcotton = {
+        user = lib.mkOption {
+          default = "share";
+          type = lib.types.str;
+        };
+        group = lib.mkOption {
+          default = "share";
+          type = lib.types.str;
+        };
+        tailscaleAuthKeyPath = lib.mkOption {
+          type = lib.types.str;
+          default = "/dev/null";
+        };
+      };
+
+      config = {
+        # Required for clubcotton services
+        users.groups.share = {};
+
+        # Disable tsnsrv for testing
+        services.tsnsrv.enable = false;
+
+        # Create password file
+        environment.etc."forgejo-secrets".text = ''
+          test-password
+        '';
+
+        # Configure Forgejo service
+        services.clubcotton.forgejo = {
+          enable = true;
+          port = 3000;
+          sshPort = 2222;
+          domain = "forgejo.test";
+          customPath = "/var/lib/forgejo-data";
+          tailnetHostname = null; # Disable Tailscale for testing
+          database = {
+            enable = true;
+            createDB = false; # Don't create locally - use remote PostgreSQL
+            host = "postgres"; # Reference PostgreSQL server node
+            port = 5433;
+            name = "forgejo";
+            user = "forgejo";
+            passwordFile = "/etc/forgejo-secrets";
+          };
+          features = {
+            actions = true;
+            packages = false;
+            lfs = false;
+            federation = false;
+          };
+        };
+
+        # Open firewall for Forgejo
+        networking.firewall.allowedTCPPorts = [3000 2222];
       };
     };
   };
@@ -218,5 +297,47 @@
 
     with subtest("Immich can connect to PostgreSQL"):
         immich.succeed("nc -z postgres 5433")
+
+    with subtest("Forgejo database and user are created"):
+        postgres.succeed(
+            "sudo -u postgres psql -p 5433 -c '\\l' | grep forgejo"
+        )
+        postgres.succeed(
+            "sudo -u postgres psql -p 5433 -c '\\du' | grep forgejo"
+        )
+
+    with subtest("Forgejo schema ownership is correct"):
+        postgres.succeed(
+            "sudo -u postgres psql -p 5433 -d forgejo -c \"SELECT schema_owner FROM information_schema.schemata WHERE schema_name = 'public';\" | grep forgejo"
+        )
+
+    with subtest("Forgejo user can connect to database"):
+        postgres.succeed(
+            "sudo -u postgres psql -p 5433 -U forgejo -d forgejo -c 'SELECT 1'"
+        )
+
+    with subtest("Forgejo user can create tables"):
+        postgres.succeed(
+            "sudo -u postgres psql -p 5433 -U forgejo -d forgejo -c 'CREATE TABLE test_table (id INT); DROP TABLE test_table;'"
+        )
+
+    with subtest("Forgejo service starts"):
+        forgejo.wait_for_unit("forgejo.service")
+        forgejo.succeed("systemctl is-active forgejo.service")
+
+    with subtest("Forgejo HTTP service is listening"):
+        forgejo.wait_until_succeeds("nc -z localhost 3000")
+
+    with subtest("Forgejo SSH service is listening"):
+        forgejo.wait_until_succeeds("nc -z localhost 2222")
+
+    with subtest("Forgejo web interface is accessible"):
+        forgejo.wait_until_succeeds("curl -f -s http://localhost:3000/ | grep -i forgejo")
+
+    with subtest("Forgejo can connect to remote PostgreSQL"):
+        forgejo.succeed("nc -z postgres 5433")
+
+    with subtest("Forgejo API is responding"):
+        forgejo.wait_until_succeeds("curl -f -s http://localhost:3000/api/v1/version")
   '';
 }

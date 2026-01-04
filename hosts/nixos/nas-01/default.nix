@@ -18,7 +18,7 @@ in {
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
-    ../../../modules/nix-builder
+    inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
     ../../../modules/systemd-network
@@ -38,6 +38,7 @@ in {
     calibre-web.enable = true;
     filebrowser.enable = true;
     freshrss.enable = true;
+    forgejo.enable = true;
     harmonia.enable = true;
     immich.enable = true;
     jellyfin.enable = true;
@@ -75,25 +76,28 @@ in {
   # Configure distributed build fleet
   services.nix-builder.coordinator = {
     enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
+    signingKeyPath = config.age.secrets."harmonia-signing-key".path;
     enableLocalBuilds = true; # nas-01 builds locally, no SSH to itself
     builders = [
       # Note: localhost removed to avoid SSH loop - enableLocalBuilds handles local builds
+      # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
       {
-        hostname = "nix-01";
+        hostname = "nix-01.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-02";
+        hostname = "nix-02.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-03";
+        hostname = "nix-03.lan";
         systems = ["x86_64-linux"];
         maxJobs = 4;
         speedFactor = 1;
@@ -178,6 +182,10 @@ in {
     atuin = {
       enable = true;
       passwordFile = config.age.secrets."atuin-database".path;
+    };
+    forgejo = {
+      enable = true;
+      passwordFile = config.age.secrets."forgejo-database".path;
     };
     freshrss = {
       enable = true;
@@ -312,6 +320,25 @@ in {
     tokenKeyFile = config.age.secrets."kavita-token".path;
     bindAddresses = ["0.0.0.0" "::"];
     tailnetHostname = "kavita";
+  };
+
+  services.clubcotton.forgejo = {
+    port = 3000;
+    sshPort = 2222;
+    domain = "nas-01";
+    customPath = "/ssdpool/local/forgejo";
+    tailnetHostname = "forgejo";
+    database = {
+      enable = true;
+      # Database is managed by services.clubcotton.postgresql.forgejo
+      passwordFile = config.age.secrets."forgejo-db-password".path;
+    };
+    features = {
+      actions = true;
+      packages = true;
+      lfs = true;
+      federation = false;
+    };
   };
 
   # This is here and not in the webdav module because of fuckery
@@ -456,6 +483,16 @@ in {
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903194N"
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X905916M"
       ];
+      # filesystems = {
+      #   "ssdpool/local/forgejo" = {
+      #     mountpoint = "/ssdpool/local/forgejo";
+      #     options = {
+      #       compression = "lz4";
+      #       atime = "off";
+      #       quota = "200G";
+      #     };
+      #   };
+      # };
       # filesystems = {
       #   "local/nix-cache" = {
       #     mountpoint = "/ssdpool/local/nix-cache";

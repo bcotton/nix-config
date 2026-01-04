@@ -15,15 +15,42 @@
       final
       prev;
 
-    # Default overlay for convenience - applies core overlays
-    default = final: prev:
-      (import ../overlays/claude-code.nix {
+    llm = final: prev: let
+      pkgs = prev;
+      lib = prev.lib;
+    in
+      (import ../overlays/llm.nix {
         config = {};
-        pkgs = prev;
-        lib = prev.lib;
+        inherit pkgs lib;
         unstablePkgs = prev;
       })
       final
       prev;
+
+    # Default overlay for convenience - applies core overlays
+    default = final: prev: let
+      pkgs = prev;
+      lib = prev.lib;
+      claude-code-overlay =
+        (import ../overlays/claude-code.nix {
+          config = {};
+          inherit pkgs lib;
+          unstablePkgs = prev;
+        })
+        final
+        prev;
+      llm-overlay =
+        (import ../overlays/llm.nix {
+          config = {};
+          inherit pkgs lib;
+          unstablePkgs = prev;
+        })
+        final
+        prev;
+    in
+      lib.foldl' lib.recursiveUpdate {} [
+        claude-code-overlay
+        llm-overlay
+      ];
   };
 }

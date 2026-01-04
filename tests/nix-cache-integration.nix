@@ -25,7 +25,7 @@
     }: {
       imports = [
         ../clubcotton/services/harmonia
-        ../modules/nix-builder
+        inputs.nix-builder-config.nixosModules.coordinator
       ];
 
       # Define minimal clubcotton options for test
@@ -99,7 +99,7 @@
       ...
     }: {
       imports = [
-        ../modules/nix-builder/client.nix
+        inputs.nix-builder-config.nixosModules.client
       ];
 
       networking.hostName = "builder";
@@ -135,7 +135,7 @@
       ...
     }: {
       imports = [
-        ../modules/nix-builder/client.nix
+        inputs.nix-builder-config.nixosModules.client
       ];
 
       networking.hostName = "client";

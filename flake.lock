@@ -280,6 +280,26 @@
         "type": "github"
       }
     },
+    "nix-builder-config": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1767498265,
+        "narHash": "sha256-b3zj8X16XL2rZqEpV8UGLftElPbEMg8KG3vChF8eLlc=",
+        "ref": "refs/heads/main",
+        "rev": "b66943da24a9db4cdb8e4da05ac238fa63b96e89",
+        "revCount": 2,
+        "type": "git",
+        "url": "https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -588,6 +608,7 @@
         "ghostty": "ghostty",
         "home-manager": "home-manager_3",
         "isd": "isd",
+        "nix-builder-config": "nix-builder-config",
         "nix-darwin": "nix-darwin",
         "nixinate": "nixinate",
         "nixos-generators": "nixos-generators",

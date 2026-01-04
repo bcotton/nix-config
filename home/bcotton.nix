@@ -28,6 +28,11 @@ in {
       ./modules/beets.nix
       ./modules/hyprland
       ./modules/gwtmux.nix
+      ./modules/llm.nix
+      ./modules/zsh-profiling.nix
+      ./modules/kubectl-lazy.nix
+      ./modules/nvm-lazy.nix
+      ./modules/tmux-popup-apps.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
@@ -37,6 +42,32 @@ in {
   programs.beets-cli.enable = pkgs.stdenv.isLinux;
   programs.tmux-plugins.enable = true;
   programs.gwtmux.enable = true;
+
+  programs.tmux-popup-apps = {
+    enable = true;
+    apps = [
+      {
+        name = "LazyGit";
+        command = "lazygit";
+      }
+      {
+        name = "LazyDocker";
+        command = "lazydocker";
+      }
+      {
+        name = "K9s";
+        command = "k9s";
+      }
+      {
+        name = "Btop";
+        command = "btop";
+      }
+      {
+        name = "JQ Clipboard";
+        command = "pbpaste | jq -C '.' | less -R";
+      }
+    ];
+  };
 
   # Hyprland configuration - these are default settings
   # Host-specific overrides can be placed in bcotton-hosts/<hostname>.nix
@@ -76,6 +107,19 @@ in {
   #   ];
   # };
 
+  programs.llm = {
+    enable = true;
+
+    # Enable specific plugins
+    plugins = {
+      llm-anthropic = true; # Claude models
+      llm-gemini = true; # Google Gemini models
+      llm-openrouter = true; # OpenRouter models
+      llm-jq = true; # jq plugin
+      llm-openai-plugin = true; # OpenAI models
+    };
+  };
+
   programs.workmux = {
     enable = true;
     package = workmuxPackage;
@@ -102,6 +146,11 @@ in {
     darwinKeyPath = "~/.local/share/atuin/key";
     filter_mode = "session";
   };
+
+  # ZSH performance optimizations
+  programs.zsh-profiling.enable = false; # Enable to see zprof output on shell startup
+  programs.kubectl-lazy.enable = true; # Step 2: Enable kubectl lazy-loading
+  programs.nvm-lazy.enable = true; # Step 3: Enable NVM lazy-loading
 
   # list of programs
   # https://mipmip.github.io/home-manager-option-search
@@ -186,122 +235,6 @@ in {
     settings.show_program_path = true;
   };
 
-  programs.tmux = {
-    enable = true;
-    keyMode = "vi";
-    clock24 = true;
-    mouse = true;
-    prefix = "C-Space";
-    historyLimit = 20000;
-    baseIndex = 1;
-    aggressiveResize = true;
-    # escapeTime = 0;
-    terminal = "screen-256color";
-    extraConfig = ''
-      if-shell "uname | grep -q Darwin" {
-        set-option -g default-command "reattach-to-user-namespace -l zsh"
-      }
-
-      # Bring these environment variables into tmux on re-attach
-      set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY"
-
-      # Vim style pane selection
-      bind h select-pane -L
-      bind j select-pane -D
-      bind k select-pane -U
-      bind l select-pane -R
-
-      # Need to decide if these are the commands I want to use
-      bind "C-h" select-pane -L
-      bind "C-j" select-pane -D
-      bind "C-k" select-pane -U
-      bind "C-l" select-pane -R
-
-      # Recommended for sesh
-      bind-key x kill-pane # skip "kill-pane 1? (y/n)" prompt
-      set -g detach-on-destroy off  # don't exit from tmux when closing a session
-      bind -N "last-session (via sesh) " L run-shell "sesh last"
-
-      bind -n "M-k" run-shell "sesh connect \"$(
-          sesh list --icons | fzf-tmux -p 80%,70% --no-border \
-            --reverse \
-            --ansi \
-            --list-border \
-            --no-sort --prompt '⚡  ' \
-            --color 'list-border:6,input-border:3,preview-border:2,header-bg:-1,header-border:6' \
-            --input-border \
-            --header-border \
-            --bind 'tab:down,btab:up' \
-            --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-            --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-            --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
-            --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
-            --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-            --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
-            --preview-window 'right:70%' \
-            --preview 'sesh preview {}' \
-      )\""
-
-      # set-option -g status-position top
-      set -g renumber-windows on
-      set -g set-clipboard on
-
-      # Status left configuration:
-      # - #[bg=colour241,fg=colour248]: Sets grey background with light text
-      # - Second #[...]: Configures separator styling
-      # - #S: Displays current session name
-      set-option -g status-left "#[bg=colour241,fg=colour46] #S #[bg=colour237,fg=colour241,nobold,noitalics,nounderscore]"
-
-      # Status right configuration:
-      # - First #[...]: Sets up transition styling
-      # - %Y-%m-%d: Shows date in YYYY-MM-DD format
-      # - %H:%M: Shows time in 24-hour format
-      # - #h: Displays hostname
-      # - Second #[...]: Configures styling for session name
-
-      # set-option -g status-right "#[bg=colour237,fg=colour239 nobold, nounderscore, noitalics]#[bg=colour239,fg=colour246] %Y-%m-%d  %H:%M #[bg=colour239,fg=colour248,nobold,noitalics,nounderscore]#[bg=colour248,fg=colour237] #h "
-
-      # Per session kubeconfig
-      set-hook -g session-created 'run-shell "~/.config/tmux/cp-kubeconfig start #{hook_session_name}"'
-      set-hook -g session-closed 'run-shell "~/.config/tmux/cp-kubeconfig stop #{hook_session_name}"'
-
-      # https://github.com/samoshkin/tmux-config/blob/master/tmux/tmux.conf
-      set -g buffer-limit 20
-      set -g display-time 1500
-      set -g remain-on-exit off
-      set -g repeat-time 300
-      # setw -g allow-rename off
-      # setw -g automatic-rename off
-
-      # Turn off the prefix key when nesting tmux sessions, led to this
-      # https://gist.github.com/samoshkin/05e65f7f1c9b55d3fc7690b59d678734?permalink_comment_id=4616322#gistcomment-4616322
-      # Whcih led to the tmux-nested plugin
-
-      # keybind to disable outer-most active tmux
-      set -g @nested_down_keybind 'M-o'
-      # keybind to enable inner-most inactive tmux
-      set -g @nested_up_keybind 'M-O'
-      # keybind to recursively enable all tmux instances
-      set -g @nested_up_recursive_keybind 'M-U'
-      # status style of inactive tmux
-      set -g @nested_inactive_status_style '#[fg=black,bg=red] #h #[bg=colour237,fg=colour241,nobold,noitalics,nounderscore]'
-      set -g @nested_inactive_status_style_target 'status-left'
-
-      # tmux-fzf stuff
-
-      # git-popup: (<prefix> + ctrl-g)
-      bind-key C-g display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "lazygit"
-      # k9s popup: (<prefix> + ctrl-k)
-      bind-key C-k display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "k9s"
-      # jq as a popup, from the clipboard
-      bind-key C-j display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "pbpaste | jq -C '.' | less -R"
-      # btop as a popup
-      bind-key C-b display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "btop"
-
-
-    '';
-  };
-
   services.vscode-server.enable = true;
   services.vscode-server.installPath = [
     "$HOME/.vscode-server"
@@ -379,10 +312,6 @@ in {
 
       export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
       # Fix the docker host for podman on nix-03
       # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
       # This sould only run on linux hosts
@@ -457,26 +386,17 @@ in {
     };
 
     initContent = ''
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+      # Source zsh-defer for deferred initialization
+      source ${pkgs.zsh-defer}/share/zsh-defer/zsh-defer.plugin.zsh
 
-      if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
-         export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-         export DOCKER_BUILDKIT=0
-      fi
-
-      [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
-
-      source <(kubectl completion zsh)
-      eval "$(atuin init zsh --disable-up-arrow)"
+      # Defer heavy initializations until after prompt displays
+      zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
 
       if [[ "$CLAUDECODE" != "1" ]]; then
-        eval "$(zoxide init zsh)"
-        alias cd="z"
+        zsh-defer -c 'eval "$(zoxide init zsh)"; alias cd="z"'
       fi
 
-      eval "$(sesh completion zsh)"
+      zsh-defer -c 'eval "$(sesh completion zsh)"'
 
       bindkey -e
       bindkey '^[[A' up-history
@@ -585,7 +505,6 @@ in {
     kubernetes-helm
     kubectx
     kubectl
-    unstablePkgs.llm
     # nodejs_22
     opentofu
 
@@ -597,5 +516,6 @@ in {
     tldr
     #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
+    zsh-defer # Step 4: Needed for deferred initialization
   ];
 }

@@ -57,9 +57,24 @@ nixos-rebuild switch --flake .#hostname \
 ### Testing
 
 ```bash
-just vm                      # Run NixOS VM
 nix build '.#checks.x86_64-linux.postgresql'  # Run specific tests
 ```
+
+**Important: When creating or debugging tests, force local execution to simplify iteration:**
+```bash
+# Disable distributed builders to run tests locally
+nix flake check --option builders ''
+nix build '.#checks.x86_64-linux.postgresql' --option builders ''
+
+# Or for just check command:
+just check  # (Note: consider adding a 'just check-local' command)
+```
+
+Running tests locally during development avoids:
+- SSH connection overhead and potential failures
+- Complexity of debugging across remote machines
+- Build cache inconsistencies between builders
+- Longer feedback loops during rapid iteration
 
 ## Architecture
 
@@ -74,11 +89,6 @@ This flake uses [flake-parts](https://flake.parts/) for modular flake organizati
   - `overlays.nix` - Overlay exports for external consumption
   - `checks.nix` - NixOS tests (x86_64-linux only)
   - `hosts.nix` - System builders and all host configurations
-
-**Benefits:**
-- 85% reduction in main flake.nix (390 → 57 lines)
-- Automatic per-system handling via `perSystem`
-- Clean separation of concerns
 - Packages available on all 4 systems (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin)
 
 ### Directory Structure
@@ -147,17 +157,32 @@ To update a package version in an overlay:
 
 Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix` and encrypted files stored in `secrets/` directory.
 
-### Remote Deployment
+**Important: Claude should NOT attempt to create, edit, or configure agenix secrets.**
 
-Uses `nixinate` for remote deployment with automatic host detection based on Tailscale configuration. Builds can be performed locally or remotely based on configuration.
+When working with features that require secrets:
+1. Add the secret definition to `secrets/secrets.nix` (this is safe - just metadata)
+2. Reference the secret in your configuration using `config.age.secrets.<name>.path`
+3. Leave clear instructions for the user to create/edit the actual encrypted secret file using `agenix -e <secret-name>.age`
+4. Document what content/format the secret file should contain
+
+Example instructions to provide:
+```bash
+# After this configuration is applied, create the secret:
+agenix -e new-secret.age
+# Then add the required content (e.g., password, API key, etc.)
+```
+
+See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
 
 ## Development Notes
 
-- All configurations support both stable and unstable nixpkgs channels
+- All configurations support both stable and unstable nixpkgs channels, this is setup in flake.nix
 - Home Manager is integrated for user-level configurations
-- ZFS storage configurations available in `modules/zfs/`
+- ZFS storage configurations available in `modules/zfs/` - this applies only to linux hosts, not darwin
 - PostgreSQL integration testing framework in `tests/`
 - Uses `alejandra` for nix code formatting
 - Justfile provides cross-platform commands that detect current hostname automatically
 - Git hooks in `.githooks/` are automatically installed when running `just` commands
   - Pre-commit hook runs `just fmt` to ensure all code is formatted before commit
+  - No need to run 'just fmt', unless you want to syntax check the code
+- Don't forget to 'git add' new files before building with nix. This will save you an error step

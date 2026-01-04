@@ -18,7 +18,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/nix-builder
+    # nix-builder client is enabled via flake-modules/hosts.nix
     ../../../modules/k3s-agent
     ../../../modules/incus
     ../../../modules/systemd-network
@@ -27,6 +27,33 @@ in {
   services.clubcotton = {
     tailscale.enable = true;
     nut-client.enable = true;
+    forgejo-runner = {
+      enable = true;
+      instances = {
+        nix03_1 = {
+          name = "nix-03-runner-1";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+        nix03_2 = {
+          name = "nix-03-runner-2";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+      };
+    };
   };
 
   # Create builder user for remote builds

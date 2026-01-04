@@ -67,6 +67,24 @@
     # group = "mopidy";
   };
 
+  age.secrets."forgejo-database" = lib.mkIf config.services.clubcotton.postgresql.forgejo.enable {
+    file = ./forgejo-database.age;
+    owner = "postgres";
+    group = "postgres";
+  };
+
+  age.secrets."forgejo-db-password" = lib.mkIf config.services.clubcotton.forgejo.enable {
+    file = ./forgejo-db-password.age;
+    owner = "forgejo";
+    group = "forgejo";
+  };
+
+  age.secrets."forgejo-runner-token" = lib.mkIf config.services.clubcotton.forgejo-runner.enable {
+    file = ./forgejo-runner-token.age;
+    owner = "gitea-runner";
+    group = "gitea-runner";
+  };
+
   age.secrets."immich-database" = lib.mkIf config.services.clubcotton.postgresql.enable {
     file = ./immich-database.age;
     owner = "postgres";

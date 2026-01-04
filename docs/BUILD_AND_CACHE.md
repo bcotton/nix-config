@@ -51,6 +51,32 @@ This repository includes a comprehensive distributed build and binary cache infr
 3. **If not local (404)** → nginx proxies to cache.nixos.org and caches the response
 4. **Subsequent requests** → nginx serves from its cache (no upstream hit)
 
+### Module Architecture
+
+The distributed build configuration is provided by the **nix-builder-config** flake, a separate repository that centralizes all builder and cache client settings:
+
+- **Location:** `git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config`
+- **Flake Input:** Defined in this repository's `flake.nix`
+
+The flake provides:
+
+| Output | Description |
+|--------|-------------|
+| `nixosModules.client` | NixOS module for cache client configuration |
+| `nixosModules.coordinator` | NixOS module for build coordinator (dispatches builds) |
+| `darwinModules.client` | Darwin/macOS module for cache client |
+| `lib.cache` | Cache URL and public key defaults |
+| `lib.builders` | Default builder definitions |
+| `lib.mkNixConf` | Generate nix.conf content (for Docker images) |
+| `lib.mkMachinesFile` | Generate machines file (for Docker images) |
+| `lib.mkSshConfig` | Generate SSH config (for Docker images) |
+
+This separation allows the same configuration to be used by:
+- NixOS hosts in this repository
+- Darwin/macOS hosts
+- Docker images (like the CI runner image)
+- Any other Nix environment
+
 ### Cache Details
 
 - **Client URL**: `http://nix-cache` (via Tailscale) or `http://nas-01:80` (direct)
@@ -94,22 +120,31 @@ ssh nas-01 find /ssdpool/local/nix-cache-proxy -type f | head -20
 
 All hosts can benefit from the cache without being builders. This speeds up builds and reduces redundant compilation.
 
+> **Note:** The distributed builder configuration has been extracted to a separate flake: `nix-builder-config`. This flake provides reusable NixOS modules for both cache clients and build coordinators, and can be used by NixOS hosts as well as Docker images.
+
 ### NixOS Hosts
 
-#### 1. Add Module Import
+#### Automatic Configuration (Recommended)
 
-Edit your host configuration (e.g., `hosts/nixos/hostname/default.nix`):
+Most NixOS hosts in this repository automatically get the cache client enabled via `flake-modules/hosts.nix`. The module is imported and enabled with default settings for all hosts.
+
+If your host is defined in `flake-modules/hosts.nix`, it already has cache client access configured.
+
+#### Manual Configuration
+
+For hosts not using the standard flake-modules setup, add the module import manually:
 
 ```nix
 {
   config,
   pkgs,
   lib,
+  inputs,  # Note: inputs is needed for flake module access
   ...
 }: {
   imports = [
     ./hardware-configuration.nix
-    ../../../modules/nix-builder  # Add this line
+    inputs.nix-builder-config.nixosModules.client  # From nix-builder-config flake
     # ... other imports
   ];
 
@@ -123,10 +158,12 @@ Add after your `services.clubcotton` block:
 
 ```nix
 # Enable cache client to use nas-01 cache (via nginx proxy)
+# Default values from the flake are usually sufficient
 services.nix-builder.client = {
   enable = true;
-  cacheUrl = "http://nas-01:80";
-  publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";  # From flake-modules/hosts.nix
+  # These defaults are provided by the flake:
+  # cacheUrl = "http://nas-01:80";
+  # publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
 };
 ```
 
@@ -162,10 +199,11 @@ Edit your Darwin host configuration (e.g., `hosts/darwin/hostname/default.nix`):
   config,
   pkgs,
   lib,
+  inputs,  # Note: inputs is needed for flake module access
   ...
 }: {
   imports = [
-    ../../../modules/nix-builder/client.nix  # Add this line
+    inputs.nix-builder-config.darwinModules.client  # From nix-builder-config flake
     # ... other imports
   ];
 
@@ -177,10 +215,12 @@ Edit your Darwin host configuration (e.g., `hosts/darwin/hostname/default.nix`):
 
 ```nix
 # Enable cache client (via nginx proxy)
+# Default values from the flake are usually sufficient
 services.nix-builder.client = {
   enable = true;
-  cacheUrl = "http://nas-01:80";
-  publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";  # From flake-modules/hosts.nix
+  # These defaults are provided by the flake:
+  # cacheUrl = "http://nas-01:80";
+  # publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
 };
 ```
 
@@ -216,7 +256,16 @@ Builders not only use the cache but also contribute build capacity to the distri
 
 #### 1. Add Module Import and Cache Client
 
-Follow the "NixOS Hosts" steps above to add the module and enable the cache client.
+Follow the "NixOS Hosts" steps above to add the cache client module. For builders, also import the coordinator module:
+
+```nix
+imports = [
+  ./hardware-configuration.nix
+  inputs.nix-builder-config.nixosModules.client       # Cache client
+  inputs.nix-builder-config.nixosModules.coordinator  # Build coordinator (if this host dispatches builds)
+  # ... other imports
+];
+```
 
 #### 2. Create Builder User
 
@@ -242,6 +291,8 @@ Edit `hosts/nixos/nas-01/default.nix` and add the new builder to the fleet:
 ```nix
 services.nix-builder.coordinator = {
   enable = true;
+  sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;  # Required: agenix secret
+  signingKeyPath = config.age.secrets."harmonia-signing-key".path;  # Optional: for cache signing
   enableLocalBuilds = true;
   builders = [
     # ... existing builders ...
@@ -255,6 +306,8 @@ services.nix-builder.coordinator = {
   ];
 };
 ```
+
+> **Note:** The `sshKeyPath` is required for distributed builds to work. It should point to the SSH private key used to connect to remote builders. When using agenix, use the secret path as shown above.
 
 **Builder Settings:**
 - `maxJobs`: Number of parallel builds (typically number of CPU cores)
@@ -360,6 +413,7 @@ Here's a complete example for a new NixOS host that uses the cache:
   config,
   pkgs,
   lib,
+  inputs,
   hostName,
   ...
 }: let
@@ -369,14 +423,15 @@ in {
   imports = [
     ./hardware-configuration.nix
     ../../../modules/node-exporter
-    ../../../modules/nix-builder  # Cache and builder support
+    inputs.nix-builder-config.nixosModules.client  # Cache client from flake
   ];
 
-  # Enable cache client
+  # Enable cache client (uses defaults from flake)
   services.nix-builder.client = {
     enable = true;
-    cacheUrl = "http://nix-cache";
-    publicKey = "nas-01-cache:GCH0WJSbH2MNoaXeyV5Qs+r4jHiGUFFO5c0/Vg0Hx8Y=";
+    # Defaults are provided by the flake:
+    # cacheUrl = "http://nas-01:80";
+    # publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
   };
 
   # Optional: Make this host a builder too
@@ -424,20 +479,22 @@ If the host needs access to the builder SSH keys:
 
 ## Configuration Reference
 
+> **Note:** These modules are provided by the `nix-builder-config` flake (located at `git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-builder-config`). The flake is included as an input in this repository's `flake.nix`.
+
 ### Cache Client Options
 
-Located in `modules/nix-builder/client.nix`:
+Provided by `nix-builder-config.nixosModules.client` (or `darwinModules.client`):
 
 ```nix
 services.nix-builder.client = {
   enable = true;                    # Enable cache client
 
-  cacheUrl = "http://nix-cache";    # Cache URL
+  cacheUrl = "http://nas-01:80";    # Cache URL (default)
                                     # Can be: "http://nix-cache" (Tailscale)
                                     #         "http://nas-01:80" (direct)
                                     #         "http://192.168.5.300:80" (IP)
 
-  publicKey = "nas-01-cache:...";   # Binary cache signing key
+  publicKey = "nas-01-cache:...";   # Binary cache signing key (has default)
                                     # Get from: secrets/cache-public-key.txt
 
   priority = 30;                    # Cache priority
@@ -448,20 +505,24 @@ services.nix-builder.client = {
 
 ### Build Coordinator Options
 
-Located in `modules/nix-builder/default.nix`:
+Provided by `nix-builder-config.nixosModules.coordinator`:
 
 ```nix
 services.nix-builder.coordinator = {
   enable = true;                    # Enable build coordinator
+
+  sshKeyPath = "/path/to/key";      # Path to SSH private key (REQUIRED)
+                                    # For agenix: config.age.secrets."nix-builder-ssh-key".path
+
+  signingKeyPath = null;            # Path to cache signing key (optional)
+                                    # For agenix: config.age.secrets."harmonia-signing-key".path
+                                    # null = disable post-build signing
 
   enableLocalBuilds = true;         # Allow local builds as fallback
                                     # If false, only use remote builders
 
   localCache = "http://localhost:5000";  # Local cache URL
                                          # null to disable cache population
-
-  sshKeyPath = null;               # Path to SSH key
-                                   # null = use agenix secret
 
   builders = [
     {
@@ -675,10 +736,11 @@ To preserve cache longer, increase the ZFS quota instead.
 If you regenerate secrets:
 
 1. Run `secrets/regenerate-nix-cache-secrets.sh`
-2. Update `modules/nix-builder/client.nix` with new key
-3. Deploy to nas-01: `just switch nas-01`
-4. Deploy to all clients: `just deploy-all` (or individually)
-5. Old cached items will be ignored; rebuilds will use new key
+2. Update the public key in the `nix-builder-config` flake (`lib/cache.nix`)
+3. Update `flake.lock` in this repo: `nix flake update nix-builder-config`
+4. Deploy to nas-01: `just switch nas-01`
+5. Deploy to all clients: `just deploy-all` (or individually)
+6. Old cached items will be ignored; rebuilds will use new key
 
 ---
 

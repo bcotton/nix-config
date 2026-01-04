@@ -19,7 +19,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/nix-builder
+    inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/k3s-agent
     ../../../modules/incus
     ../../../modules/systemd-network
@@ -29,30 +29,59 @@ in {
     code-server.enable = true;
     nut-client.enable = true;
     bonob.enable = true;
+    forgejo-runner = {
+      enable = true;
+      instances = {
+        nix01_1 = {
+          name = "nix-01-runner-1";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+        nix01_2 = {
+          name = "nix-01-runner-2";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+      };
+    };
   };
 
   # Configure distributed build fleet
   services.nix-builder.coordinator = {
     enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
     enableLocalBuilds = true; # nix-01 can build locally as fallback
     localCache = null; # Don't sign builds on nix-01 - nas-01 handles cache signing
+    # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
     builders = [
       {
-        hostname = "nas-01";
+        hostname = "nas-01.lan";
         systems = ["x86_64-linux"];
         maxJobs = 16;
         speedFactor = 2; # nas-01 is faster
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-02";
+        hostname = "nix-02.lan";
         systems = ["x86_64-linux"];
         maxJobs = 8;
         speedFactor = 4;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
-        hostname = "nix-03";
+        hostname = "nix-03.lan";
         systems = ["x86_64-linux"];
         maxJobs = 8;
         speedFactor = 4;
@@ -61,11 +90,7 @@ in {
     ];
   };
 
-  # Use nas-01 cache for pre-built packages
-  services.nix-builder.client = {
-    enable = true;
-    publicKey = "nas-01-cache:p+D+bL6JFK+kHmLm6YAZOC0zfVQspOG/R8ZDIkb8Kug=";
-  };
+  # Cache client already enabled via flake-modules/hosts.nix with defaults
 
   # Create builder user for remote builds
   users.users.nix-builder = {
