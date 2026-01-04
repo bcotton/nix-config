@@ -32,6 +32,7 @@ in {
       ./modules/zsh-profiling.nix
       ./modules/kubectl-lazy.nix
       ./modules/nvm-lazy.nix
+      ./modules/tmux-popup-apps.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
@@ -41,6 +42,32 @@ in {
   programs.beets-cli.enable = pkgs.stdenv.isLinux;
   programs.tmux-plugins.enable = true;
   programs.gwtmux.enable = true;
+
+  programs.tmux-popup-apps = {
+    enable = true;
+    apps = [
+      {
+        name = "LazyGit";
+        command = "lazygit";
+      }
+      {
+        name = "LazyDocker";
+        command = "lazydocker";
+      }
+      {
+        name = "K9s";
+        command = "k9s";
+      }
+      {
+        name = "Btop";
+        command = "btop";
+      }
+      {
+        name = "JQ Clipboard";
+        command = "pbpaste | jq -C '.' | less -R";
+      }
+    ];
+  };
 
   # Hyprland configuration - these are default settings
   # Host-specific overrides can be placed in bcotton-hosts/<hostname>.nix
