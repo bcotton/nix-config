@@ -17,6 +17,7 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/dnsmasq/dnsmasq.nix
+    ../../../modules/systemd-network
   ];
 
   services.clubcotton = {
@@ -27,39 +28,28 @@ in {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking = {
-    hostName = "dns-01";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.eno1.ipv4.addresses = [
-      {
-        address = "192.168.5.220";
-        prefixLength = 24;
-      }
-    ];
+  networking.hostName = "dns-01";
 
-    vlans = {
-      vlan10 = {
-        id = 10;
-        interface = "eno1";
-      };
-      vlan20 = {
-        id = 20;
-        interface = "eno1";
-      };
+  # Use systemd-networkd for network configuration
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "single-nic";
+    interfaces = ["eno1"];
+    enableVlans = true;
+    enableIncusBridge = false;
+    nativeVlan = {
+      address = "192.168.5.220/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
     };
-
-    interfaces.vlan10.ipv4.addresses = [
+    vlanConfigs = [
       {
-        address = "192.168.10.220";
-        prefixLength = 24;
+        id = 10;
+        address = "192.168.10.220/24";
       }
-    ];
-
-    interfaces.vlan20.ipv4.addresses = [
       {
-        address = "192.168.20.220";
-        prefixLength = 24;
+        id = 20;
+        address = "192.168.20.220/24";
       }
     ];
   };

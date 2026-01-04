@@ -7,17 +7,23 @@
 with lib; let
   cfg = config.clubcotton.systemd-network;
 
-  # VLAN configuration
-  vlans = [
+  # Default VLAN configuration (used when vlanConfigs not specified)
+  defaultVlans = [
     {
       id = 10;
-      subnet = "192.168.10";
+      address = null;
     }
     {
       id = 20;
-      subnet = "192.168.20";
+      address = null;
     }
   ];
+
+  # Use configured VLANs or defaults
+  vlans =
+    if cfg.vlanConfigs != []
+    then cfg.vlanConfigs
+    else defaultVlans;
 in {
   options.clubcotton.systemd-network = {
     enable = mkEnableOption "systemd-networkd with VLAN and bonding support";
@@ -80,6 +86,36 @@ in {
       type = types.bool;
       default = true;
       description = "Enable additional VLANs (10, 20)";
+    };
+
+    vlanConfigs = mkOption {
+      type = types.listOf (types.submodule {
+        options = {
+          id = mkOption {
+            type = types.int;
+            description = "VLAN ID";
+            example = 10;
+          };
+          address = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Static IP address for this VLAN (null for DHCP)";
+            example = "192.168.10.220/24";
+          };
+        };
+      });
+      default = [];
+      description = "VLAN configurations. If empty, defaults to VLANs 10 and 20 with DHCP.";
+      example = [
+        {
+          id = 10;
+          address = "192.168.10.220/24";
+        }
+        {
+          id = 20;
+          address = "192.168.20.220/24";
+        }
+      ];
     };
 
     enableIncusBridge = mkOption {
@@ -266,8 +302,16 @@ in {
             name = "40-${cfg.bridgeName}.${toString vlan.id}";
             value = {
               matchConfig.Name = "${cfg.bridgeName}.${toString vlan.id}";
-              networkConfig.DHCP = "yes";
-              dhcpV4Config = {
+              networkConfig =
+                if vlan.address != null
+                then {
+                  Address = vlan.address;
+                  DHCP = "no";
+                }
+                else {
+                  DHCP = "yes";
+                };
+              dhcpV4Config = mkIf (vlan.address == null) {
                 RouteMetric = 1024; # Higher metric so native VLAN is preferred
                 UseDNS = false; # Don't override DNS from native VLAN
                 UseRoutes = false; # Don't add default routes
@@ -287,8 +331,16 @@ in {
               name = "40-${baseIface}.${toString vlan.id}";
               value = {
                 matchConfig.Name = "${baseIface}.${toString vlan.id}";
-                networkConfig.DHCP = "yes";
-                dhcpV4Config = {
+                networkConfig =
+                  if vlan.address != null
+                  then {
+                    Address = vlan.address;
+                    DHCP = "no";
+                  }
+                  else {
+                    DHCP = "yes";
+                  };
+                dhcpV4Config = mkIf (vlan.address == null) {
                   RouteMetric = 1024;
                   UseDNS = false;
                   UseRoutes = false;
@@ -305,8 +357,16 @@ in {
             name = "40-${cfg.bondName}.${toString vlan.id}";
             value = {
               matchConfig.Name = "${cfg.bondName}.${toString vlan.id}";
-              networkConfig.DHCP = "yes";
-              dhcpV4Config = {
+              networkConfig =
+                if vlan.address != null
+                then {
+                  Address = vlan.address;
+                  DHCP = "no";
+                }
+                else {
+                  DHCP = "yes";
+                };
+              dhcpV4Config = mkIf (vlan.address == null) {
                 RouteMetric = 1024;
                 UseDNS = false;
                 UseRoutes = false;
