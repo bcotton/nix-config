@@ -80,9 +80,8 @@ in {
   # Configure systemd-networkd with bonding and VLANs
   clubcotton.systemd-network = {
     enable = true;
-    mode = "bonded";
-    interfaces = ["enp2s0" "enp3s0"];
-    bondName = "bond0";
+    mode = "single-nic";
+    interfaces = ["enp3s0"];
     bridgeName = "br0";
     enableIncusBridge = true;
     enableVlans = true;
