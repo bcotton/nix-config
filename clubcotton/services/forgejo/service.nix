@@ -245,6 +245,10 @@ in {
           DEFAULT_ACTIONS_URL = "https://code.forgejo.org";
         };
 
+        metrics = {
+          ENABLED = true;
+        };
+
         packages = mkIf cfg.features.packages {
           ENABLED = true;
           STORAGE_TYPE = "local";
