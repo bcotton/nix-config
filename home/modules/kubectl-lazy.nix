@@ -15,7 +15,7 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    programs.zsh.initExtra = lib.mkAfter ''
+    programs.zsh.initContent = lib.mkAfter ''
       # Lazy-load kubectl completions on first use
       kubectl() {
         # Remove this wrapper function

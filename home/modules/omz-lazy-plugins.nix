@@ -15,7 +15,7 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    programs.zsh.initExtra = lib.mkAfter ''
+    programs.zsh.initContent = lib.mkAfter ''
       # Lazy-load oh-my-zsh plugins on first use
       # This creates wrapper functions that load the plugin on first command use
 

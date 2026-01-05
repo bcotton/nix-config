@@ -20,7 +20,7 @@ in {
       zmodload zsh/zprof
     '';
 
-    programs.zsh.initExtra = ''
+    programs.zsh.initContent = ''
       # Show profiling results at the end
       zprof
     '';

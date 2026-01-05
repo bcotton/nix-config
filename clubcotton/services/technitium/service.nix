@@ -497,19 +497,22 @@ in {
         # Add A record with optional PTR
         add_a_record() {
           local zone=$1 name=$2 ip=$3 create_ptr=$4
-          echo "Adding A record: $name -> $ip"
+          local fqdn="''${name}.''${zone}"
+          echo "Adding A record: $fqdn -> $ip"
           curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=A&domain=$name&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" > /dev/null || \
-            echo "Record $name may already exist"
+            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" > /dev/null || \
+            echo "Record $fqdn may already exist"
         }
 
         # Add CNAME record
         add_cname_record() {
           local zone=$1 name=$2 target=$3
-          echo "Adding CNAME record: $name -> $target"
+          local fqdn="''${name}.''${zone}"
+          local target_fqdn="''${target}.''${zone}"
+          echo "Adding CNAME record: $fqdn -> $target_fqdn"
           curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=CNAME&domain=$name&cname=$target" > /dev/null || \
-            echo "CNAME $name may already exist"
+            -d "zone=$zone&type=CNAME&domain=$fqdn&cname=$target_fqdn" > /dev/null || \
+            echo "CNAME $fqdn may already exist"
         }
 
         login

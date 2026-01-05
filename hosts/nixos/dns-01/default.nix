@@ -26,6 +26,11 @@ in {
     group = "technitium";
   };
 
+  # Ensure that nix can get to the cache server
+  networking.extraHosts = ''
+    192.168.5.42 nas-01
+  '';
+
   services.clubcotton = {
     nut-client.enable = true;
 
