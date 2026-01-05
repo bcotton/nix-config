@@ -612,33 +612,22 @@ in {
         }
 
         # Add DHCP reservation
-        # Note: Technitium API for reservations appears to have issues or requires different approach
-        # Trying the /dhcp/leases/reserve endpoint instead of /reservedLeases/set
+        # Use /dhcp/scopes/addReservedLease to create reservations with specific IPs
+        # Note: /dhcp/leases/reserve only reserves existing dynamic leases at their current IP
         add_reservation() {
           local scope=$1 mac=$2 ip=$3 hostname=$4
           echo "Adding DHCP reservation: $hostname ($mac) -> $ip to scope: $scope"
 
-          # Try using the reserve lease endpoint
-          response=$(curl -sf -X POST "''${API_BASE}/dhcp/leases/reserve?token=''${TOKEN}" \
+          response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/addReservedLease?token=''${TOKEN}" \
             -d "name=$scope" \
-            -d "hardwareAddress=$mac" 2>&1)
-          echo "API response for /dhcp/leases/reserve: $response"
+            -d "hardwareAddress=$mac" \
+            -d "ipAddress=$ip" \
+            -d "hostName=$hostname" 2>&1)
+          echo "API response for addReservedLease: $response"
 
-          # Alternative: Try addReservedLease endpoint
           if ! echo "$response" | grep -q '"status":"ok"'; then
-            echo "Trying /dhcp/scopes/addReservedLease endpoint..."
-            response2=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/addReservedLease?token=''${TOKEN}" \
-              -d "name=$scope" \
-              -d "hardwareAddress=$mac" \
-              -d "ipAddress=$ip" \
-              -d "hostName=$hostname" 2>&1)
-            echo "API response for /addReservedLease: $response2"
+            echo "ERROR: Failed to add reservation for $hostname"
           fi
-
-          # Verify
-          echo "Verifying reservation..."
-          verify_response=$(curl -sf "''${API_BASE}/dhcp/scopes/reservedLeases/get?token=''${TOKEN}&name=$scope" 2>&1)
-          echo "Verification response: $verify_response"
         }
 
         login
