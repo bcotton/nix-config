@@ -582,9 +582,9 @@ in {
           cmd="$cmd -d \"endingAddress=$end\""
           cmd="$cmd -d \"subnetMask=$subnet\""
           cmd="$cmd -d \"leaseTimeDays=$lease\""
-          cmd="$cmd -d \"gatewayAddress=$gateway\""
+          cmd="$cmd -d \"routerAddress=$gateway\""
           cmd="$cmd -d \"domainName=$domain\""
-          cmd="$cmd -d \"interfaceName=$interface\""
+          # Note: interfaceName is not supported by Technitium API - scope binds based on IP range
 
           if [ "$use_this_dns" = "true" ]; then
             cmd="$cmd -d \"useThisDnsServer=true\""
@@ -594,7 +594,7 @@ in {
 
           if [ -n "$pxe_file" ] && [ -n "$pxe_server" ]; then
             cmd="$cmd -d \"bootFileName=$pxe_file\""
-            cmd="$cmd -d \"nextServerAddress=$pxe_server\""
+            cmd="$cmd -d \"serverAddress=$pxe_server\""
           fi
 
           response=$(eval "$cmd" 2>&1)
