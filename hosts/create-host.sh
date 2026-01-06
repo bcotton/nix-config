@@ -62,9 +62,8 @@ in {
   time.timeZone = variables.timeZone;
   programs.zsh.enable = variables.zshEnable;
   
-  # Services
+  # Services (tailscale is enabled by default via common config)
   services.openssh.enable = variables.opensshEnable;
-  services.tailscale.enable = variables.tailscaleEnable;
   networking.firewall.enable = variables.firewallEnable;
   
   # Boot loader configuration

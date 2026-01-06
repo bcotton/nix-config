@@ -29,7 +29,10 @@ in {
   };
 
   # Tailscale configuration
-  services.tailscale.enable = variables.tailscaleEnable;
+  # Note: tailscale is now enabled via common config in flake-modules/hosts.nix
+  # using services.clubcotton.tailscale.enable = variables.tailscaleEnable
+  # Only set this if you need to override routing features:
+  # services.clubcotton.tailscale.useRoutingFeatures = "server";
 
   # Firewall configuration
   networking.firewall = {
