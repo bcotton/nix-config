@@ -302,6 +302,7 @@
         "tmux"
 
         # these are custom
+        "bd-completion"
         "claude-personal"
         "kubectl-fzf-get"
         "git-reflog-fzf"
@@ -347,7 +348,7 @@
       fi
 
       zsh-defer -c 'eval "$(sesh completion zsh)"'
-      zsh-defer -c 'eval "$($HOME/.local/bin/bd completion zsh)"'
+      zsh-defer -c 'eval "$($HOME/.local/bin/bd completion zsh)"; _bd_setup_completion'
 
       bindkey -e
       bindkey '^[[A' up-history
