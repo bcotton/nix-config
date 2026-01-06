@@ -200,8 +200,8 @@ in {
         # set-option -g status-right "#[bg=colour237,fg=colour239 nobold, nounderscore, noitalics]#[bg=colour239,fg=colour246] %Y-%m-%d  %H:%M #[bg=colour239,fg=colour248,nobold,noitalics,nounderscore]#[bg=colour248,fg=colour237] #h "
 
         # better windown focus styling, need to make this closer to the current color scheme
-        # set-window-option -g window-style 'bg=#101010'
-        # set-window-option -g window-active-style 'bg=#151515'
+        set-window-option -g window-style 'bg=#1A1B26'
+        set-window-option -g window-active-style 'bg=#011627'
         set -g pane-border-style 'fg=colour238,bg=#101010'
         set -g pane-active-border-style 'fg=colour113,bg=#151515'
 
