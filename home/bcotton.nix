@@ -392,6 +392,14 @@
         esac
       }
 
+      # Wrapper for nix-shell that reminds about nix-run when using -p
+      function nix-shell () {
+        if [[ "$1" == "-p" ]]; then
+          echo "💡 Tip: Use 'nix-run $2' instead of 'nix-shell -p $2'" >&2
+        fi
+        command nix-shell "$@"
+      }
+
       # nix shell nixpkgs#pacakge and 'nix run' and the proper channel-less way to bring in a program
       function nix-run () {
         program="$1"
