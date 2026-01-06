@@ -22,16 +22,16 @@ in {
     ../../../modules/nfs
   ];
 
-  services.clubcotton = {
-    scanner.enable = true;
-    tailscale.enable = true;
-  };
-
   services.xserver.enable = true;
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
+
+  services.clubcotton = {
+    scanner.enable = true;
+    tailscale.enable = true;
+  };
 
   virtualisation.containers.enable = true;
   virtualisation.podman = {

@@ -20,8 +20,6 @@ in {
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    # ../../../modules/docker/minecraft
-    # ../../../modules/docker/audiobookshelf
   ];
 
   services.xserver.enable = true;
