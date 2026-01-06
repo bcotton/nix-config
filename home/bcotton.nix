@@ -315,6 +315,8 @@
       # Development
       autotest = "watchexec -c clear -o do-nothing --delay-run 100ms --exts go 'pkg=\".\${WATCHEXEC_COMMON_PATH/\$PWD/}/...\"; echo \"running tests for \$pkg\"; go test \"\$pkg\"'";
       gdn = "git diff | gitnav";
+      lg = "lazygit";
+      ld = "lazydocker";
       tf = "tofu";
       wm = "workmux";
 
