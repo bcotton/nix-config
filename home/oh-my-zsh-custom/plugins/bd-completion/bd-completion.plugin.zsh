@@ -48,10 +48,9 @@ _bd_get_issues() {
   fi
 
   if (( ! cache_valid )); then
-    # Refresh cache - get open and in_progress issues
-    # Run in background to avoid blocking, but wait for first completion
+    # Refresh cache - get open issues (most useful for completion)
     {
-      $HOME/.local/bin/bd list --json --status open,in_progress 2>/dev/null | \
+      $HOME/.local/bin/bd list --json --status open 2>/dev/null | \
         jq -r '.[] | "\(.id)\t\(.title | gsub("\n"; " ") | .[0:50])"' 2>/dev/null
     } > "$cache_file.tmp" && mv "$cache_file.tmp" "$cache_file"
   fi
