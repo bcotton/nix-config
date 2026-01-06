@@ -347,7 +347,7 @@
       fi
 
       zsh-defer -c 'eval "$(sesh completion zsh)"'
-      zsh-defer -c 'eval "$(bd completion zsh)"'
+      zsh-defer -c 'eval "$($HOME/.local/bin/bd completion zsh)"'
 
       bindkey -e
       bindkey '^[[A' up-history
