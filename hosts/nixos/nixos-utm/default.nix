@@ -13,6 +13,7 @@
   # Get merged variables (defaults + host overrides)
   commonLib = import ../../common/lib.nix;
   variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
 in {
   imports = [
     # Include the results of the hardware scan.
@@ -96,9 +97,7 @@ in {
   programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.

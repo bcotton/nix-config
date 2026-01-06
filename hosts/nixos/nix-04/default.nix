@@ -15,6 +15,7 @@
   # Get merged variables (defaults + host overrides)
   commonLib = import ../../common/lib.nix;
   variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
 in {
   imports = [
     # Include the results of the hardware scan.
@@ -65,10 +66,7 @@ in {
   };
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys ++ [keys.users.tcotton-mbp];
   };
 
   virtualisation.podman = {

@@ -12,6 +12,7 @@
   # Get merged variables (defaults + host overrides)
   commonLib = import ../../common/lib.nix;
   variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
 in {
   imports = [
     # Include the results of the hardware scan.
@@ -60,9 +61,7 @@ in {
   users.users.nix-builder = {
     isNormalUser = true;
     description = "Nix remote builder";
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDqGI8tMC4OzuZB8mmYnPSQgIgZaDUglqdIqS9U4H5fT nix-builder@nas-01"
-    ];
+    openssh.authorizedKeys.keys = keys.builderAuthorizedKeys;
   };
 
   nix.settings.trusted-users = ["nix-builder"];
@@ -139,9 +138,7 @@ in {
   programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # An attemp at a headless x server
