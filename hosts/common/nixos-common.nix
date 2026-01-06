@@ -7,7 +7,7 @@
 }: let
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
-  time.timeZone = "America/Denver";
+  # timeZone is set via variables.nix (default: America/Denver)
 
   nix = {
     settings = {
