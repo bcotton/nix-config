@@ -10,6 +10,19 @@
 }: {
   home.stateVersion = "23.05";
 
+  # Declarative PATH management - cross-platform paths
+  home.sessionPath =
+    [
+      "$HOME/.local/bin"
+      "$HOME/projects/deployment_tools/scripts/gcom"
+      "$HOME/projects/grafana-app-sdk/target"
+    ]
+    # macOS-specific paths (Homebrew)
+    ++ lib.optionals pkgs.stdenv.isDarwin [
+      "/opt/homebrew/sbin"
+      "/opt/homebrew/share/google-cloud-sdk/bin"
+    ];
+
   imports = let
     # Create the path to the host-specific config file
     # We use string interpolation here because hostName is available as a function argument
@@ -282,10 +295,9 @@
       export LESS="-iMSx4 -FXR"
       export OKTA_MFA_OPTION=1
       export PAGER=less
+      # Variable-dependent PATH additions (static paths are in home.sessionPath)
       export PNPM_HOME="$HOME/.local/share/pnpm"
-      export PATH="$PNPM_HOME:$PATH"
-      export PATH="$PATH:/Users/bcotton/.local/bin"
-      export PATH=$GOPATH/bin:/opt/homebrew/sbin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
+      export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
       export QMK_HOME=~/projects/qmk_firmware
       export TMPDIR=/tmp/
       export XDG_CONFIG_HOME="$HOME/.config"
