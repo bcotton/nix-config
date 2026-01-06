@@ -99,7 +99,7 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking = {
-    hostId = "038f8559";
+    hostId = variables.hostId;
     hostName = hostName;
   };
 

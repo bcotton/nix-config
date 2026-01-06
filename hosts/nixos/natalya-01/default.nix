@@ -72,7 +72,7 @@ in {
   };
 
   networking = {
-    hostId = "8fb0eda8";
+    hostId = variables.hostId;
     hostName = "natalya-01";
     defaultGateway = "10.0.0.1";
     nameservers = ["10.0.0.1"];

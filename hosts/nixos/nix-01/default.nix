@@ -133,7 +133,7 @@ in {
 
   networking = {
     hostName = "nix-01";
-    hostId = "85c6dbc0";
+    hostId = variables.hostId;
   };
 
   # Configure systemd-networkd with bonding and VLANs

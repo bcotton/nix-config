@@ -55,7 +55,7 @@ in {
 
   networking = {
     hostName = "imac-01";
-    hostId = "238f8e1e";
+    hostId = variables.hostId;
 
     useDHCP = false;
     defaultGateway = "192.168.5.1";

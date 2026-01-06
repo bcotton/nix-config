@@ -382,7 +382,7 @@ in {
   '';
 
   networking.firewall.enable = variables.firewallEnable;
-  networking.hostId = "007f0200";
+  networking.hostId = variables.hostId;
 
   # CUPS PDF service for paperless consumption
   services.printing = {

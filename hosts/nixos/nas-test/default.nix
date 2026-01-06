@@ -28,7 +28,7 @@ in {
   services.openssh.enable = variables.opensshEnable;
   networking.firewall.enable = variables.firewallEnable;
 
-  networking.hostId = "420cbfd4";
+  networking.hostId = variables.hostId;
   # boot.loader.systemd-boot.enable = true;
 
   clubcotton.zfs_mirrored_root = {

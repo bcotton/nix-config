@@ -93,7 +93,7 @@ in {
   };
 
   networking = {
-    hostId = "007f0200";
+    hostId = variables.hostId;
     hostName = "nix-03";
   };
 

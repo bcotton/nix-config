@@ -21,7 +21,7 @@ in {
     openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
-  networking.hostId = "420cbfd4";
+  networking.hostId = variables.hostId;
 
   fileSystems."/".fsType = lib.mkForce "zfs";
   fileSystems."/".device = lib.mkForce "rpool/local/root";

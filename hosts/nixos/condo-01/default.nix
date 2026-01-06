@@ -72,7 +72,7 @@ in {
   };
 
   networking = {
-    hostId = "3fa4e0cb";
+    hostId = variables.hostId;
     hostName = "condo-01";
     defaultGateway = "192.168.12.1";
     nameservers = ["192.168.12.1"];

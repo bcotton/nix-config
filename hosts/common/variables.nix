@@ -11,6 +11,10 @@
   # See: https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion
   stateVersion = null; # Force override - no sensible default
 
+  # ZFS host ID - required for ZFS hosts, null for non-ZFS hosts
+  # Generate with: head -c 8 /etc/machine-id or od -An -tx4 -N4 /dev/urandom | tr -d ' '
+  hostId = null;
+
   # Network Configuration
   # Set to true to enable DHCP, false for static IP
   useDHCP = false;
