@@ -312,22 +312,25 @@
     };
 
     shellAliases = {
-      # Automatically run `go test` for a package when files change.
+      # Development
       autotest = "watchexec -c clear -o do-nothing --delay-run 100ms --exts go 'pkg=\".\${WATCHEXEC_COMMON_PATH/\$PWD/}/...\"; echo \"running tests for \$pkg\"; go test \"\$pkg\"'";
+      gdn = "git diff | gitnav";
+      tf = "tofu";
+      wm = "workmux";
+
+      # File viewing
       batj = "bat -l json";
       batly = "bat -l yaml";
       batmd = "bat -l md";
       dir = "exa -l --icons --no-user --group-directories-first  --time-style long-iso --color=always";
-      gdn = "git diff | gitnav";
+      tree = "exa -Tl --color=always";
+      ltr = "ll -snew";
+      watch = "viddy ";
+
+      # Kubernetes
       k = "kubectl";
       kctx = "kubectx";
       kns = "kubens";
-      ltr = "ll -snew";
-      tf = "tofu";
-      tree = "exa -Tl --color=always";
-      # watch = "watch --color "; # Note the trailing space for alias expansion https://unix.stackexchange.com/questions/25327/watch-command-alias-expansion
-      watch = "viddy ";
-      wm = "workmux";
     };
 
     initContent = ''
