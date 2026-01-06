@@ -213,18 +213,16 @@ To add a new variable that all hosts can use:
 
 ## Implementation Status
 
-### ✅ Complete Rollout (25 hosts)
+### ✅ Complete Rollout (16 hosts)
 
-**NixOS Hosts (20):**
+**NixOS Hosts (12):**
 - admin, condo-01, dns-01, frigate-host, imac-01, imac-02
-- incus, k3s-01, k3s-02, k3s-03
-- nas-01, nas-test, natalya-01
-- nix-01, nix-02, nix-03, nix-04
-- nixbox, nixos, octoprint
+- nas-01, natalya-01
+- nix-01, nix-02, nix-03, nix-04, octoprint
 
-**Darwin Hosts (5):**
+**Darwin Hosts (4):**
 - bobs-laptop, bobs-imac
-- toms-darwin, toms-MBP, toms-mini
+- toms-MBP, toms-mini
 
 All hosts now have:
 - `variables.nix` - Empty override file (ready for customization)

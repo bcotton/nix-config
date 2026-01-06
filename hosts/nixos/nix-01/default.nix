@@ -21,7 +21,6 @@ in {
     ../../../modules/node-exporter
     ../../../modules/nfs
     inputs.nix-builder-config.nixosModules.coordinator
-    ../../../modules/k3s-agent
     ../../../modules/incus
     ../../../modules/systemd-network
   ];
@@ -124,8 +123,6 @@ in {
       };
     };
   };
-
-  services.k3s.role = lib.mkForce "agent";
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;

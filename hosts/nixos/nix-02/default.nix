@@ -20,7 +20,6 @@ in {
     ../../../modules/node-exporter
     ../../../modules/nfs
     # nix-builder client is enabled via flake-modules/hosts.nix
-    ../../../modules/k3s-agent
     ../../../modules/incus
     ../../../modules/systemd-network
   ];
@@ -77,8 +76,6 @@ in {
     # Required for containers under podman-compose to be able to talk to each other.
     defaultNetwork.settings.dns_enabled = true;
   };
-
-  services.k3s.role = lib.mkForce "agent";
 
   clubcotton.zfs_single_root = {
     enable = true;

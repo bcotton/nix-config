@@ -207,24 +207,6 @@ in {
           }
           {
             scope = "main";
-            macAddress = "6c:4b:90:31:73:72";
-            ipAddress = "192.168.5.200";
-            hostName = "k3s-01";
-          }
-          {
-            scope = "main";
-            macAddress = "6c:4b:90:2E:9E:7F";
-            ipAddress = "192.168.5.201";
-            hostName = "k3s-02";
-          }
-          {
-            scope = "main";
-            macAddress = "6c:4b:90:31:66:D2";
-            ipAddress = "192.168.5.202";
-            hostName = "k3s-03";
-          }
-          {
-            scope = "main";
             macAddress = "58:47:ca:74:27:2a";
             ipAddress = "192.168.5.210";
             hostName = "nix-01";
