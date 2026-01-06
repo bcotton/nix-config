@@ -573,7 +573,7 @@ in {
 
         # Create DHCP scope
         create_scope() {
-          local name=$1 interface=$2 start=$3 end=$4 subnet=$5 gateway=$6 dns=$7 lease=$8 domain=$9 use_this_dns=$10 pxe_file=$11 pxe_server=$12
+          local name=$1 interface=$2 start=$3 end=$4 subnet=$5 gateway=$6 dns=$7 lease=$8 domain=$9 use_this_dns=''${10} pxe_file=''${11} pxe_server=''${12}
           echo "Creating DHCP scope: $name"
 
           local cmd="curl -sf -X POST \"''${API_BASE}/dhcp/scopes/set?token=''${TOKEN}\""
