@@ -86,27 +86,6 @@ in {
     gapsOut = lib.mkDefault 10;
   };
 
-  # programs.sesh-config = {
-  #   enable = true;
-  #   sessions = [
-  #     {
-  #       name = "default";
-  #     }
-  #     {
-  #       name = "just";
-  #       startup_command = "cd ~/nix-config && just";
-  #     }
-  #     {
-  #       name = "admin";
-  #       startup_command = "ssh admin -t 'tmux a'";
-  #     }
-  #     {
-  #       name = "nix-03";
-  #       startup_command = "ssh -q nix-03 -L 10350:localhost:10350 -L 3000:localhost:3000  -t 'tmux a'";
-  #     }
-  #   ];
-  # };
-
   programs.llm = {
     enable = true;
 
@@ -194,15 +173,11 @@ in {
 
       core = {
         whitespace = "trailing-space,space-before-tab";
-        # pager = "difftastic";
       };
-      # interactive.diffFilter = "difft";
       merge.conflictstyle = "diff3";
       diff = {
-        # tool = "difftastic";
         colorMoved = "default";
       };
-      # difftool."difftastic".cmd = "difft $LOCAL $REMOTE";
     };
     difftastic = {
       enable = false;
@@ -215,14 +190,7 @@ in {
     delta = {
       enable = true;
       options = {
-        # decorations = {
-        #   commit-decoration-style = "bold yellow box ul";
-        #   file-decoration-style = "none";
-        #   file-style = "bold yellow ul";
-        # };
-        # features = "mellow-barbet";
         features = "collared-trogon";
-        # whitespace-error-style = "22 reverse";
         navigate = true;
         light = false;
         side-by-side = true;
@@ -368,7 +336,7 @@ in {
         "bundler"
         "colorize"
         "dotenv"
-        "fzf"
+        # "fzf" # Using programs.fzf.enableZshIntegration instead
         "git"
         "gh"
         "kubectl"
@@ -491,7 +459,10 @@ in {
 
   #  programs.neovim.enable = true;
   programs.nix-index.enable = true;
-  programs.zoxide.enable = true;
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = false; # Using zsh-defer for deferred init in initContent
+  };
 
   programs.ssh = {
     enable = true;
@@ -509,8 +480,6 @@ in {
         Hostname ssh.github.com
         Port 443
     '';
-    matchBlocks = {
-    };
   };
 
   home.packages = with pkgs; [
@@ -525,7 +494,6 @@ in {
     kubernetes-helm
     kubectx
     kubectl
-    # nodejs_22
     opentofu
 
     inputs.opencode.packages.${pkgs.system}.default
@@ -534,7 +502,6 @@ in {
     unstablePkgs.sesh
     unstablePkgs.uv
     tldr
-    #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
     zsh-defer # Step 4: Needed for deferred initialization
 
