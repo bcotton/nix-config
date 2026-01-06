@@ -104,6 +104,13 @@
         ++ [
           ../hosts/common/common-packages.nix
           ../hosts/common/nixos-common.nix
+          # Enable tailscale from variables
+          ({hostName, ...}: let
+            commonLib = import ../hosts/common/lib.nix;
+            variables = commonLib.getHostVariables hostName;
+          in {
+            services.clubcotton.tailscale.enable = variables.tailscaleEnable;
+          })
         ];
 
       # User modules
