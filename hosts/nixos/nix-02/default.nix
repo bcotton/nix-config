@@ -116,8 +116,6 @@ in {
     };
   };
 
-  services.tailscale.enable = variables.tailscaleEnable;
-
   virtualisation.libvirtd = {
     enable = true;
     qemu = {

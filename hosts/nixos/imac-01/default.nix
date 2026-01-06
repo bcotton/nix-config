@@ -65,8 +65,6 @@ in {
     ];
   };
 
-  services.tailscale.enable = variables.tailscaleEnable;
-
   # Set your time zone.
   time.timeZone = variables.timeZone;
 

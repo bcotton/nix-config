@@ -27,9 +27,7 @@ in {
     freshrss.enable = false;
     paperless.enable = false;
     filebrowser.enable = false;
-    tailscale.enable = true;
   };
-  # services.clubcotton.services.tailscale.enable = variables.tailscaleEnable;
 
   clubcotton.zfs_single_root.enable = true;
 

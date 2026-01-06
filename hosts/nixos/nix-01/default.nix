@@ -150,8 +150,6 @@ in {
     };
   };
 
-  services.tailscale.enable = variables.tailscaleEnable;
-
   services.clubcotton.code-server = {
     tailnetHostname = "nix-01-vscode";
     user = "bcotton";
