@@ -414,25 +414,11 @@
       }
 
       # Reload home-manager environment after 'just switch'
-      # This bypasses the __HM_SESS_VARS_SOURCED guard to pick up new env vars
+      # Uses exec zsh to get a fresh shell with proper PATH initialization
       function reload-hm () {
         echo "🔄 Reloading home-manager environment..."
 
-        # Unset the guard variable so hm-session-vars.sh will re-run
-        unset __HM_SESS_VARS_SOURCED
-
-        # Re-source hm-session-vars if it exists
-        local hm_vars="$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
-        if [[ -f "$hm_vars" ]]; then
-          source "$hm_vars"
-          echo "  ✓ Sourced hm-session-vars.sh"
-        fi
-
-        # Re-source .zshrc
-        source "$HOME/.zshrc"
-        echo "  ✓ Sourced .zshrc"
-
-        # Reload tmux config if in a tmux session
+        # Reload tmux config first (before exec replaces this shell)
         if [[ -n "$TMUX" ]]; then
           local tmux_conf="$HOME/.config/tmux/tmux.conf"
           if [[ -f "$tmux_conf" ]]; then
@@ -441,7 +427,11 @@
           fi
         fi
 
-        echo "✅ Home-manager environment reloaded!"
+        # Unset the guard so hm-session-vars.sh runs in the new shell
+        unset __HM_SESS_VARS_SOURCED
+
+        echo "  ✓ Starting fresh shell..."
+        exec zsh
       }
 
       if [[ "$TERM_PROGRAM" != "vscode" ]]; then
