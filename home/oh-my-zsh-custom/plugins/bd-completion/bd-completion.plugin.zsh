@@ -70,25 +70,6 @@ _bd_complete_issue_id() {
   _describe -t issues 'issue' issues
 }
 
-# Main bd completion function with issue ID support
-_bd_with_issues() {
-  local cmd=${words[2]}
-
-  # Check if we're completing an issue ID command
-  if (( ${_BD_ISSUE_ID_COMMANDS[(Ie)$cmd]} )); then
-    # If we're past the command name, complete issue IDs
-    if (( CURRENT > 2 )); then
-      _bd_complete_issue_id
-      return
-    fi
-  fi
-
-  # Fall back to original bd completion
-  if (( ${+functions[_bd_original]} )); then
-    _bd_original "$@"
-  fi
-}
-
 # Force refresh of issue cache
 bd-refresh-completions() {
   rm -f "$_BD_COMPLETION_CACHE_FILE"
@@ -104,8 +85,20 @@ _bd_setup_completion() {
     if (( ! ${+functions[_bd_original]} )); then
       functions[_bd_original]="${functions[_bd]}"
     fi
-    # Replace with our enhanced version
-    functions[_bd]="${functions[_bd_with_issues]}"
+    # Replace _bd with our enhanced version that adds issue ID completion
+    _bd() {
+      local cmd=${words[2]}
+      # Check if we're completing an issue ID command
+      if (( ${_BD_ISSUE_ID_COMMANDS[(Ie)$cmd]} )); then
+        # If we're past the command name, complete issue IDs
+        if (( CURRENT > 2 )); then
+          _bd_complete_issue_id
+          return
+        fi
+      fi
+      # Fall back to original bd completion
+      _bd_original "$@"
+    }
 
     # Pre-warm the cache in background
     ( _bd_get_issues > /dev/null 2>&1 & )
