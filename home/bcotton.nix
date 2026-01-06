@@ -449,10 +449,54 @@
         DISABLE_UPDATE_PROMPT="true"
       fi
 
-      setopt autocd autopushd autoresume cdablevars correct correctall extendedglob histignoredups longlistjobs mailwarning  notify pushdminus pushdsilent pushdtohome rcquotes recexact sunkeyboardhack always_to_end hist_allow_clobber no_share_history
-      unsetopt menucomplete
-      unset globdots
-      unsetopt bgnice
+      # ═══════════════════════════════════════════════════════════════════
+      # ZSH Options - Organized by Category
+      # Reference: https://zsh.sourceforge.io/Doc/Release/Options.html
+      # ═══════════════════════════════════════════════════════════════════
+
+      # Directory Navigation
+      # --------------------
+      setopt autocd            # Type dir name to cd (handled by programs.zsh.autocd)
+      setopt autopushd         # cd pushes old dir onto stack
+      setopt cdablevars        # cd to value of variable if not a directory
+      setopt pushdminus        # Swap +/- meanings in pushd
+      setopt pushdsilent       # Don't print stack after pushd/popd
+      setopt pushdtohome       # pushd with no args goes to ~
+
+      # History
+      # -------
+      setopt histignoredups    # Don't record duplicate entries
+      setopt hist_allow_clobber # Add | to redirections in history for safety
+      setopt no_share_history  # Don't share history between sessions (atuin handles sync)
+
+      # Completion
+      # ----------
+      setopt always_to_end     # Move cursor to end after completion
+      setopt recexact          # Accept exact match even if ambiguous
+      unsetopt menucomplete    # Don't cycle completions on tab (use menu-select instead)
+
+      # Spelling Correction
+      # -------------------
+      setopt correct           # Correct spelling of commands
+      setopt correctall        # Correct spelling of all arguments
+
+      # Globbing
+      # --------
+      setopt extendedglob      # Extended glob operators (#, ~, ^)
+      unsetopt globdots        # Don't match dotfiles without explicit dot
+
+      # Job Control
+      # -----------
+      setopt autoresume        # Single-word commands resume existing job if matches
+      setopt longlistjobs      # List jobs in long format
+      setopt notify            # Report job status immediately, not at next prompt
+      unsetopt bgnice          # Don't run background jobs at lower priority
+
+      # Miscellaneous
+      # -------------
+      setopt mailwarning       # Warn if mail file has been accessed
+      setopt rcquotes          # Two single-quotes inside quoted string = literal quote
+      setopt sunkeyboardhack   # Ignore trailing | (for Sun keyboard quirks, legacy)
 
     '';
   };
