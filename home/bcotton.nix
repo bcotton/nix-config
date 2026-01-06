@@ -253,8 +253,6 @@
 
         export FZF_CTRL_R_OPTS="--reverse"
         export FZF_TMUX_OPTS="-p"
-        # Set empty trigger so TAB invokes fzf completion directly (instead of requiring **)
-        export FZF_COMPLETION_TRIGGER=""
 
         export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
