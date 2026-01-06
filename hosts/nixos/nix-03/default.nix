@@ -153,5 +153,5 @@ in {
   };
 
   networking.firewall.enable = variables.firewallEnable;
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

@@ -99,5 +99,5 @@ in {
     code-cursor
   ];
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

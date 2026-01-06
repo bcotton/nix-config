@@ -575,5 +575,5 @@ in {
     cacheUrl = "http://nas-01.lan:80";
   };
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }
