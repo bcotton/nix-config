@@ -260,11 +260,6 @@
         hostName = "frigate-host";
         usernames = ["bcotton"];
       };
-      nixos-utm = nixosSystem {
-        system = "aarch64-linux";
-        hostName = "nixos-utm";
-        usernames = ["bcotton"];
-      };
     };
   };
 }
