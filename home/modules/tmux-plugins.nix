@@ -57,9 +57,10 @@
       };
     };
 
-  tmux-powerkit =
-    pkgs.tmuxPlugins.mkTmuxPlugin
-    {
+  # tmux-powerkit requires runtime dependencies (uname, grep, awk, etc.)
+  # We wrap all shell scripts with the necessary PATH
+  tmux-powerkit = let
+    unwrapped = pkgs.tmuxPlugins.mkTmuxPlugin {
       pluginName = "tmux-powerkit";
       version = "head";
       src = pkgs.fetchFromGitHub {
@@ -68,6 +69,26 @@
         rev = "9d5bfdaabf2a03e05d8ae11f1065f694d15df0d5";
         sha256 = "sha256-QhCUQDmt+Ur6KakrycJ4uvnIZzTHGkG/f01vslFxR5w=";
       };
+    };
+    runtimeDeps = with pkgs; [coreutils gnugrep gawk gnused findutils];
+    runtimePath = lib.makeBinPath runtimeDeps;
+    wrapped = pkgs.runCommand "tmux-powerkit-wrapped" {} ''
+      cp -r ${unwrapped} $out
+      chmod -R +w $out
+
+      # Add PATH to all shell scripts
+      for f in $(find $out -name "*.sh" -o -name "*.tmux"); do
+        if [[ -f "$f" ]] && head -1 "$f" | grep -q "^#!.*bash"; then
+          sed -i '2i export PATH="${runtimePath}:$PATH"' "$f"
+        fi
+      done
+    '';
+  in
+    wrapped
+    // {
+      inherit (unwrapped) pname version meta;
+      rtp = "${wrapped}/share/tmux-plugins/tmux-powerkit/tmux-powerkit.tmux";
+      passthru = unwrapped.passthru or {};
     };
 
   tmux-file-picker-src = pkgs.fetchFromGitHub {
