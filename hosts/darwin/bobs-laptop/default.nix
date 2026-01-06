@@ -13,8 +13,8 @@
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
   config = {
-    system.primaryUser = "bcotton";
-    users.users.bcotton.home = "/Users/bcotton";
+    system.primaryUser = variables.primaryUser;
+    users.users.${variables.primaryUser}.home = "/Users/${variables.primaryUser}";
     ids.gids.nixbld = 30000;
 
     # These are packages are just for darwin systems
