@@ -235,6 +235,25 @@ in {
     settings.show_program_path = true;
   };
 
+  # GitHub CLI with SSH protocol
+  programs.gh = {
+    enable = true;
+    settings = {
+      git_protocol = "ssh";
+    };
+  };
+
+  # Kubernetes dashboard
+  programs.k9s = {
+    enable = true;
+  };
+
+  # Command correction
+  programs.thefuck = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
   services.vscode-server.enable = true;
   services.vscode-server.installPath = [
     "$HOME/.vscode-server"
@@ -518,5 +537,45 @@ in {
     #  unstablePkgs.spotdl
     unstablePkgs.zed-editor
     zsh-defer # Step 4: Needed for deferred initialization
+
+    # Migrated from Homebrew brews
+    # Kubernetes/Cloud tools
+    kustomize
+    minikube
+    tanka
+    jsonnet
+    jsonnet-bundler
+
+    # Development tools
+    azure-cli
+    golangci-lint
+    shellcheck
+    terraform
+    trufflehog
+    # zizmor  # not in nixpkgs yet
+
+    # CLI utilities
+    colordiff
+    etcd
+    fswatch
+    git-absorb
+    glances
+    hwatch
+    # jd  # not in nixpkgs - keep in Homebrew
+    jnv
+    silver-searcher # the_silver_searcher (ag)
+    inetutils # provides telnet
+
+    # Monitoring
+    prometheus
+    prometheus-node-exporter
+
+    # macOS tmux support
+    tmux
+    reattach-to-user-namespace
+
+    # Additional tools
+    tailscale
+    lastpass-cli
   ];
 }

@@ -68,69 +68,19 @@ in {
       taps = [
         #
       ];
+      # Most CLI tools migrated to Nix/Home Manager
+      # Keep only macOS-specific tools and those not in nixpkgs
       brews = [
-        "azure-cli"
-        "bash"
-        "borders"
-        "colordiff"
-        "duf"
-        "etcd"
-        "fswatch"
-        "fzf"
-        "gh"
-        "git-absorb"
-        "git-delta"
-        "glances"
-        "glow"
-        "go"
-        "golangci-lint"
-        "gron"
-        "helm"
-        "hwatch"
-        "jd"
-        "jnv"
-        "jq"
-        "jsonnet"
-        "jsonnet-bundler"
-        "k9s"
-        "kube-fzf"
-        "kubectx"
-        "kubernetes-cli"
-        "kustomize"
-        "lastpass-cli"
-        "lazydocker"
-        "lazygit"
-        "mage"
-        "mas"
-        "minikube"
-        "mkdocs"
-        "mods"
-        "node"
-        "node_exporter"
-        "npm"
-        "oh-my-posh"
-        "prometheus"
-        "reattach-to-user-namespace"
-        "ripgrep"
-        "shellcheck"
-        "skhd"
-        "stern"
-        "tailscale"
-        "tanka"
-        "telnet"
-        "terminal-notifier"
-        "terraform"
-        "the_silver_searcher"
-        "thefuck"
-        "tilt"
-        "tmux"
-        "tree"
-        "trufflehog"
-        "watch"
-        "wget"
-        "yarn"
-        "yq"
-        "zizmor"
+        "bash" # system shell alternative
+        "borders" # macOS window borders (FelixKratz)
+        "jd" # JSON diff tool - not in nixpkgs
+        "kube-fzf" # not in nixpkgs
+        "mas" # Mac App Store CLI (needed by nix-darwin)
+        "mods" # AI CLI tool
+        "oh-my-posh" # shell prompt (complex integration)
+        "skhd" # macOS hotkey daemon
+        "terminal-notifier" # macOS notifications
+        "zizmor" # not in nixpkgs yet
       ];
       casks = [
         "1password"

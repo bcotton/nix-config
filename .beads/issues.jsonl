@@ -1,0 +1,1 @@
+{"id":"default-9xm","title":"Homebrew to nix","description":"Migrate packages from Homebrew, in to nix for declarative management, using home manager, pull from hosts/darwin/bobs-laptop\n","status":"in_progress","priority":2,"issue_type":"feature","created_at":"2026-01-05T19:57:14.076331-07:00","created_by":"bcotton","updated_at":"2026-01-05T20:04:55.769041-07:00"}
