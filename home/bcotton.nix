@@ -282,47 +282,48 @@
     ];
 
     # atuin register -u bcotton -e bob.cotton@gmail.com
-    envExtra = ''
-      #export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
-      export BAT_THEME="Visual Studio Dark+"
-      export DFT_DISPLAY=side-by-side
-      export EDITOR=vim
-      export EMAIL=bob.cotton@gmail.com
-      export EXA_COLORS="da=1;35"
-      export FULLNAME='Bob Cotton'
-      export GOPATH=$HOME/projects/go
-      export GOPRIVATE="github.com/grafana/*"
-      export LESS="-iMSx4 -FXR"
-      export OKTA_MFA_OPTION=1
-      export PAGER=less
-      # Variable-dependent PATH additions (static paths are in home.sessionPath)
-      export PNPM_HOME="$HOME/.local/share/pnpm"
-      export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
-      export QMK_HOME=~/projects/qmk_firmware
-      export TMPDIR=/tmp/
-      export XDG_CONFIG_HOME="$HOME/.config"
+    envExtra =
+      ''
+        export BAT_THEME="Visual Studio Dark+"
+        export DFT_DISPLAY=side-by-side
+        export EDITOR=vim
+        export EMAIL=bob.cotton@gmail.com
+        export EXA_COLORS="da=1;35"
+        export FULLNAME='Bob Cotton'
+        export GOPATH=$HOME/projects/go
+        export GOPRIVATE="github.com/grafana/*"
+        export LESS="-iMSx4 -FXR"
+        export OKTA_MFA_OPTION=1
+        export PAGER=less
+        # Variable-dependent PATH additions (static paths are in home.sessionPath)
+        export PNPM_HOME="$HOME/.local/share/pnpm"
+        export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
+        export QMK_HOME=~/projects/qmk_firmware
+        export TMPDIR=/tmp/
+        export XDG_CONFIG_HOME="$HOME/.config"
 
-      export FZF_CTRL_R_OPTS="--reverse"
-      export FZF_TMUX_OPTS="-p"
+        export FZF_CTRL_R_OPTS="--reverse"
+        export FZF_TMUX_OPTS="-p"
 
-      export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+        export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-      # Fix the docker host for podman on nix-03
-      # if the symlink at $HOME/.config/systemd/user/podman.service is broken, rm it
-      # This sould only run on linux hosts
-      if [ -L "$HOME/.config/systemd/user/podman.service" ] && [ "$(uname)" = "Linux" ]; then
-        echo "Fixing podman.service"
-        systemctl --user enable podman.socket
-        systemctl --user start podman.socket
-      fi
+        [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
+      ''
+      # Linux-specific: podman socket configuration
+      # TODO: The systemctl fix should ideally be in NixOS activation, not shell init
+      + lib.optionalString pkgs.stdenv.isLinux ''
+        # Fix broken podman.service symlink if present
+        if [ -L "$HOME/.config/systemd/user/podman.service" ]; then
+          systemctl --user enable podman.socket 2>/dev/null
+          systemctl --user start podman.socket 2>/dev/null
+        fi
 
-      if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
-         export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-         export DOCKER_BUILDKIT=0
-      fi
-
-      [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
-    '';
+        # Set DOCKER_HOST to use podman socket if available
+        if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
+          export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
+          export DOCKER_BUILDKIT=0
+        fi
+      '';
 
     oh-my-zsh = {
       enable = true;
