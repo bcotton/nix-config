@@ -12,7 +12,7 @@ jobs:
   build-sample:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:eb9c844
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:21b6a28
       options: --user root
     strategy:
       matrix:

@@ -575,7 +575,7 @@ in {
   services.prometheus.nixBuildCacheCheck = {
     enable = true;
     interval = "15m";
-    cacheUrl = "http://nas-01:80";
+    cacheUrl = "http://nas-01.lan:80";
   };
 
   system.stateVersion = "24.11"; # Did you read the comment?

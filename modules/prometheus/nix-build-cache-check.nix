@@ -16,7 +16,7 @@
     set -euo pipefail
 
     # Configuration
-    CACHE_URL="''${CACHE_URL:-http://nas-01:80}"
+    CACHE_URL="''${CACHE_URL:-http://nas-01.lan:80}"
     LOCAL_CACHE_URL="''${LOCAL_CACHE_URL:-http://localhost:5000}"
     TIMEOUT=''${TIMEOUT:-120}
 
@@ -368,7 +368,7 @@ in {
 
     cacheUrl = lib.mkOption {
       type = lib.types.str;
-      default = "http://nas-01:80";
+      default = "http://nas-01.lan:80";
       description = "URL of the Nix binary cache";
     };
 
