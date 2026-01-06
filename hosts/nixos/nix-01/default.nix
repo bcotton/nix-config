@@ -76,14 +76,14 @@ in {
       {
         hostname = "nix-02.lan";
         systems = ["x86_64-linux"];
-        maxJobs = 8;
+        maxJobs = 16;
         speedFactor = 4;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
       {
         hostname = "nix-03.lan";
         systems = ["x86_64-linux"];
-        maxJobs = 8;
+        maxJobs = 16;
         speedFactor = 4;
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
