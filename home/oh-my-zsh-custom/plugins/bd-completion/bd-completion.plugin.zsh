@@ -37,13 +37,10 @@ _bd_get_issues() {
   # Check if cache exists and is fresh
   if [[ -f "$cache_file" ]]; then
     local cache_time
-    if [[ "$OSTYPE" == darwin* ]]; then
-      cache_time=$(stat -f %m "$cache_file" 2>/dev/null)
-    else
-      cache_time=$(stat -c %Y "$cache_file" 2>/dev/null)
-    fi
-    # Only compare if we got a valid cache_time
-    if [[ -n "$cache_time" ]] && (( now - cache_time < _BD_COMPLETION_CACHE_TTL )); then
+    # Try GNU stat first (works on Linux and macOS with coreutils), fall back to BSD stat
+    cache_time=$(stat -c "%Y" "$cache_file" 2>/dev/null || stat -f "%m" "$cache_file" 2>/dev/null)
+    # Only compare if we got a valid numeric cache_time
+    if [[ "$cache_time" =~ ^[0-9]+$ ]] && (( now - cache_time < _BD_COMPLETION_CACHE_TTL )); then
       cache_valid=1
     fi
   fi
