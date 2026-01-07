@@ -98,8 +98,11 @@ _bd_setup_completion() {
       _bd_original "$@"
     }
 
-    # Pre-warm the cache in background
-    ( _bd_get_issues > /dev/null 2>&1 & )
+    # Pre-warm the cache synchronously if it doesn't exist
+    # This only runs once per shell session and is fast enough to not be noticeable
+    if [[ ! -f "$_BD_COMPLETION_CACHE_FILE" ]]; then
+      _bd_get_issues > /dev/null 2>&1
+    fi
   fi
 }
 
