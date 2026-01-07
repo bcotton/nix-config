@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.bcotton.arc-tab-archiver</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Update this path after nix build -->
+        <string>/Users/bcotton/.nix-profile/bin/arc-tab-archiver</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>OBSIDIAN_FILE</key>
+        <!-- Update this path to your Obsidian vault -->
+        <string>/Users/bcotton/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archived-tabs.md</string>
+    </dict>
+
+    <key>StartInterval</key>
+    <integer>1800</integer> <!-- Run every 30 minutes (1800 seconds) -->
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/bcotton/Library/Logs/arc-tab-archiver.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/bcotton/Library/Logs/arc-tab-archiver.log</string>
+</dict>
+</plist>
