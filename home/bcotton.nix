@@ -465,6 +465,9 @@
       setopt recexact          # Accept exact match even if ambiguous
       unsetopt menucomplete    # Don't cycle completions on tab (use menu-select instead)
 
+      # Prioritize local directories in cd/z completion over cdpath and zoxide
+      zstyle ':completion:*:(cd|z):*' tag-order 'local-directories' 'directory-stack' 'named-directories' 'path-directories'
+
       # Spelling Correction
       # -------------------
       setopt correct           # Correct spelling of commands
