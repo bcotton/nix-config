@@ -2,6 +2,7 @@
   pkgs,
   lib,
   config,
+  localPackages,
   ...
 }: let
   # tmux-window-name requires Python with libtmux
@@ -161,7 +162,12 @@ in {
         }
 
         # Bring these environment variables into tmux on re-attach
-        set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY"
+        set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY REMOTE_BROWSER_PORT"
+
+        ${lib.optionalString pkgs.stdenv.isLinux ''
+          # Use xdg-open-remote for fzf-tmux-url plugin (opens URLs on Mac via SSH tunnel)
+          set -g @fzf-url-open '${localPackages.xdg-open-remote}/bin/xdg-open-remote'
+        ''}
 
         # Vim style pane selection
         bind h select-pane -L
