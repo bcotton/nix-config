@@ -483,7 +483,10 @@
       # ----------
       setopt always_to_end     # Move cursor to end after completion
       setopt recexact          # Accept exact match even if ambiguous
-      unsetopt menucomplete    # Don't cycle completions on tab (use menu-select instead)
+      setopt menucomplete      # First tab completes to first match, subsequent tabs cycle
+
+      # Menu selection: show list and highlight current selection
+      zstyle ':completion:*' menu select
 
       # Prioritize local directories in cd/z completion over cdpath and zoxide
       zstyle ':completion:*:(cd|z):*' tag-order 'local-directories' 'directory-stack' 'named-directories' 'path-directories'
