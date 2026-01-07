@@ -12,13 +12,13 @@
   # 3. Update the hash with the output
   # 4. Update npmDepsHash by setting it to lib.fakeHash, building, then using the correct hash from error
   claude-code = prev.claude-code.overrideAttrs (oldAttrs: rec {
-    version = "2.0.76"; # Update this to the desired version
+    version = "2.1.1"; # Update this to the desired version
 
     src = prev.fetchzip {
       url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${version}.tgz";
-      hash = "sha256-46IqiGJZrZM4vVcanZj/vY4uxFH3/4LxNA+Qb6iIHDk=";
+      hash = "sha256-GZIh20GyhsXaAm13veg2WErT4rF9a1x8Dzr9q5Al0io=";
     };
 
-    npmDepsHash = "sha256-mDErPWWqOe+3fKriTBLNCzXP48pmmlOMoB+kCP4FoT8=";
+    npmDepsHash = lib.fakeHash;
   });
 }

@@ -36,8 +36,9 @@ sed -i "s/version = \"[^\"]*\";/version = \"${LATEST_VERSION}\";/" "$OVERLAY_FIL
 # Step 2: Get source hash
 echo -e "${BLUE}==> Fetching source hash...${NC}"
 SOURCE_URL="https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${LATEST_VERSION}.tgz"
-SOURCE_HASH=$(nix-prefetch-url --unpack "$SOURCE_URL" 2>/dev/null)
-SOURCE_HASH_SRI="sha256-${SOURCE_HASH}"
+SOURCE_HASH_NIX32=$(nix-prefetch-url --unpack "$SOURCE_URL" 2>/dev/null)
+# Convert nix32 hash to SRI format (base64)
+SOURCE_HASH_SRI=$(nix hash convert --to sri --hash-algo sha256 "$SOURCE_HASH_NIX32")
 
 echo -e "${GREEN}Source hash: ${SOURCE_HASH_SRI}${NC}"
 
