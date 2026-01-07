@@ -19,7 +19,8 @@ function bdl() {
             --preview-window=right:60%:wrap \
             --preview "$preview_cmd" \
             --bind 'ctrl-r:reload(bd list '"${bd_args[*]}"')' \
-            --header 'ctrl-r: refresh' | \
+            --bind 'ctrl-s:execute-silent(tmux send-keys -t :.1 "please start work on bead {1}" Enter)+abort' \
+            --header 'ctrl-r: refresh | ctrl-s: send to claude (pane 1)' | \
         awk '{print $1}')
 
     # If an issue was selected, show it
