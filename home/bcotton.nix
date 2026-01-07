@@ -303,6 +303,7 @@
 
         # these are custom
         "bd-completion"
+        "bdl"
         "claude-personal"
         "kubectl-fzf-get"
         "git-reflog-fzf"
