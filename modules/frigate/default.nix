@@ -5,6 +5,8 @@
   lib,
   ...
 }: let
+  # Use frigate from unstable to get 0.16.x (resolves security advisory GHSA-vg28-83rp-8xx4)
+  frigatePackage = unstablePkgs.frigate;
   go2rtcExporter = pkgs.python3Packages.buildPythonApplication {
     pname = "go2rtc-exporter";
     version = "1.0.0";
@@ -31,6 +33,7 @@ in {
   services.frigate = {
     enable = true;
     hostname = "frigate";
+    package = frigatePackage;
 
     settings = {
       detectors = {
@@ -63,6 +66,11 @@ in {
       birdseye = {
         enabled = true;
         mode = "continuous";
+      };
+
+      # Frigate 0.16+ requires explicit detection enablement (disabled by default)
+      detect = {
+        enabled = true;
       };
 
       objects = {
