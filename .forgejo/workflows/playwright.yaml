@@ -1,0 +1,47 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches:
+      - main
+      - playwrite-in-nix
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    steps:
+      - name: Setup Nix environment
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Enter Playwright shell and run tests
+        run: |
+          cd shells/playwright
+          nix develop --command bash -c '
+            echo "=== Playwright Environment ==="
+            echo "Node version: $(node --version)"
+            echo "Browser path: $PLAYWRIGHT_BROWSERS_PATH"
+
+            # Install npm dependencies
+            npm ci
+
+            # Run Playwright tests
+            npx playwright test
+          '
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: shells/playwright/playwright-report/
+          retention-days: 7
