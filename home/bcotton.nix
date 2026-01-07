@@ -42,6 +42,8 @@
       ./modules/kubectl-lazy.nix
       ./modules/nvm-lazy.nix
       ./modules/tmux-popup-apps.nix
+      ./modules/browser-opener.nix
+      ./modules/xdg-open-remote.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
@@ -51,6 +53,11 @@
   programs.beets-cli.enable = pkgs.stdenv.isLinux;
   programs.tmux-plugins.enable = true;
   programs.gwtmux.enable = true;
+
+  # Remote browser opening - allows CLI tools on remote Linux hosts to open
+  # URLs in the browser on the local Mac desktop via SSH reverse port forwarding
+  programs.browser-opener.enable = pkgs.stdenv.isDarwin;
+  programs.xdg-open-remote.enable = pkgs.stdenv.isLinux;
 
   programs.tmux-popup-apps = {
     enable = true;
@@ -366,6 +373,7 @@
           export $(tmux show-environment | grep "^SSH_AUTH_SOCK") > /dev/null
           export $(tmux show-environment | grep "^DISPLAY") > /dev/null
           export $(tmux show-environment | grep "^KUBECONFIG") > /dev/null
+          export $(tmux show-environment | grep "^REMOTE_BROWSER_PORT") > /dev/null
         }
       else
         function refresh { }
@@ -533,6 +541,11 @@
       Host nas-01 nix-02 nix-03
         IdentityFile ~/.ssh/nix-builder-id_ed25519
         IdentitiesOnly no
+
+      # Remote browser opening - forward port 7890 from remote Linux hosts
+      # to localhost:7890 where browser-opener listens (macOS only)
+      Host admin condo-01 natalya-01 nas-01 nix-01 nix-02 nix-03 nix-04 imac-01 imac-02 dns-01 octoprint frigate-host
+        RemoteForward 7890 localhost:7890
 
       Host *
         StrictHostKeyChecking no

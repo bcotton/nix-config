@@ -161,7 +161,7 @@ in {
         }
 
         # Bring these environment variables into tmux on re-attach
-        set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY"
+        set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY REMOTE_BROWSER_PORT"
 
         # Vim style pane selection
         bind h select-pane -L
