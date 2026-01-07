@@ -42,7 +42,8 @@ _bd_get_issues() {
     else
       cache_time=$(stat -c %Y "$cache_file" 2>/dev/null)
     fi
-    if (( now - cache_time < _BD_COMPLETION_CACHE_TTL )); then
+    # Only compare if we got a valid cache_time
+    if [[ -n "$cache_time" ]] && (( now - cache_time < _BD_COMPLETION_CACHE_TTL )); then
       cache_valid=1
     fi
   fi
