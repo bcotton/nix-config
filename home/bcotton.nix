@@ -414,11 +414,24 @@
         nix run "nixpkgs-unstable#$program" -- "$@"
       }
 
-      # Run command with --help piped through pager
-      # Usage: h git, h kubectl, h nix
+      # Auto-page help output: detects --help or -h and pipes through pager
+      # Also provides manual 'h' function: h git, h kubectl, etc.
       function h () {
         "$@" --help 2>&1 | ''${PAGER:-less}
       }
+
+      # ZLE widget: auto-append pager when command ends with --help or -h
+      function _auto_page_help() {
+        # Check if command ends with --help, -h, or help (standalone)
+        if [[ "$BUFFER" =~ '(--help|-h|[[:space:]]help)$' ]]; then
+          # Don't double-pipe if already piped
+          if [[ "$BUFFER" != *"|"* ]]; then
+            BUFFER="$BUFFER 2>&1 | ''${PAGER:-less}"
+          fi
+        fi
+        zle .accept-line
+      }
+      zle -N accept-line _auto_page_help
 
       # Reload home-manager environment after 'just switch'
       # Uses exec zsh to get a fresh shell with proper PATH initialization
