@@ -4,9 +4,11 @@
   config,
   ...
 }: let
-  tmux-window-name =
-    pkgs.tmuxPlugins.mkTmuxPlugin
-    {
+  # tmux-window-name requires Python with libtmux
+  # We wrap the plugin to use the correct Python environment
+  tmux-window-name = let
+    pythonWithLibtmux = pkgs.python312.withPackages (ps: [ps.libtmux]);
+    unwrapped = pkgs.tmuxPlugins.mkTmuxPlugin {
       pluginName = "tmux-window-name";
       version = "head";
       src = pkgs.fetchFromGitHub {
@@ -15,6 +17,24 @@
         rev = "dc97a79ac35a9db67af558bb66b3a7ad41c924e7";
         sha256 = "sha256-o7ZzlXwzvbrZf/Uv0jHM+FiHjmBO0mI63pjeJwVJEhE=";
       };
+    };
+    wrapped = pkgs.runCommand "tmux-window-name-wrapped" {} ''
+      cp -r ${unwrapped} $out
+      chmod -R +w $out
+
+      # Replace Python shebangs with the correct Python path
+      for f in $(find $out -name "*.py"); do
+        if [[ -f "$f" ]]; then
+          sed -i '1s|^#!.*python.*|#!${pythonWithLibtmux}/bin/python|' "$f"
+        fi
+      done
+    '';
+  in
+    wrapped
+    // {
+      inherit (unwrapped) pname version meta;
+      rtp = "${wrapped}/share/tmux-plugins/tmux-window-name/tmux-window-name.tmux";
+      passthru = unwrapped.passthru or {};
     };
 
   tmux-fzf-head =
