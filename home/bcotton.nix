@@ -522,67 +522,72 @@
     '';
   };
 
-  home.packages = with pkgs; [
-    (pkgs.python312.withPackages (ppkgs: [
-      ppkgs.libtmux
-    ]))
-    # unstablePkgs.aider-chat
-    bottom
-    claude-code
-    devenv
-    fx
-    kubernetes-helm
-    kubectx
-    kubectl
-    opentofu
+  home.packages = with pkgs;
+    [
+      (pkgs.python312.withPackages (ppkgs: [
+        ppkgs.libtmux
+      ]))
+      # unstablePkgs.aider-chat
+      bottom
+      claude-code
+      devenv
+      fx
+      kubernetes-helm
+      kubectx
+      kubectl
+      opentofu
 
-    inputs.opencode.packages.${pkgs.system}.default
+      inputs.opencode.packages.${pkgs.system}.default
 
-    procs
-    unstablePkgs.sesh
-    unstablePkgs.uv
-    tldr
-    unstablePkgs.zed-editor
-    zsh-defer # Step 4: Needed for deferred initialization
+      procs
+      unstablePkgs.sesh
+      unstablePkgs.uv
+      tldr
+      unstablePkgs.zed-editor
+      zsh-defer # Step 4: Needed for deferred initialization
 
-    # Migrated from Homebrew brews
-    # Kubernetes/Cloud tools
-    kustomize
-    minikube
-    tanka
-    jsonnet
-    jsonnet-bundler
+      # Migrated from Homebrew brews
+      # Kubernetes/Cloud tools
+      kustomize
+      minikube
+      tanka
+      jsonnet
+      jsonnet-bundler
 
-    # Development tools
-    azure-cli
-    golangci-lint
-    shellcheck
-    terraform
-    trufflehog
-    # zizmor  # not in nixpkgs yet
+      # Development tools
+      azure-cli
+      golangci-lint
+      shellcheck
+      terraform
+      trufflehog
+      # zizmor  # not in nixpkgs yet
 
-    # CLI utilities
-    colordiff
-    etcd
-    fswatch
-    git-absorb
-    glances
-    hwatch
-    # jd  # not in nixpkgs - keep in Homebrew
-    jnv
-    silver-searcher # the_silver_searcher (ag)
-    inetutils # provides telnet
+      # CLI utilities
+      colordiff
+      etcd
+      fswatch
+      git-absorb
+      glances
+      hwatch
+      # jd  # not in nixpkgs - keep in Homebrew
+      jnv
+      silver-searcher # the_silver_searcher (ag)
+      inetutils # provides telnet
 
-    # Monitoring
-    prometheus
-    prometheus-node-exporter
+      # Monitoring
+      prometheus
+      prometheus-node-exporter
 
-    # macOS tmux support
-    tmux
-    reattach-to-user-namespace
-
-    # Additional tools
-    tailscale
-    lastpass-cli
-  ];
+      # tmux (cross-platform)
+      tmux
+    ]
+    ++ lib.optionals stdenv.isDarwin [
+      # macOS-only: tmux clipboard integration
+      reattach-to-user-namespace
+    ]
+    ++ [
+      # Additional tools
+      tailscale
+      lastpass-cli
+    ];
 }
