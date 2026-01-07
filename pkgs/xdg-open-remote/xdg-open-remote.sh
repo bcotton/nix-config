@@ -23,16 +23,11 @@ Examples:
 EOF
 }
 
-check_tunnel() {
-    # Check if the SSH tunnel port is listening
-    # Use timeout to avoid hanging if port isn't available
-    timeout 1 bash -c "echo >/dev/tcp/127.0.0.1/$REMOTE_BROWSER_PORT" 2>/dev/null
-}
-
 send_url() {
     local url="$1"
-    # Send URL to browser-opener via the SSH tunnel
-    echo "$url" | timeout 2 nc 127.0.0.1 "$REMOTE_BROWSER_PORT" 2>/dev/null
+    # Send URL to browser-opener via the SSH tunnel using bash /dev/tcp
+    # This avoids netcat compatibility issues across different distributions
+    timeout 2 bash -c "echo '$url' > /dev/tcp/127.0.0.1/$REMOTE_BROWSER_PORT" 2>/dev/null
 }
 
 main() {
@@ -43,20 +38,17 @@ main() {
 
     local url="$1"
 
-    # Check if we have a tunnel available
-    if check_tunnel; then
-        if send_url "$url"; then
-            exit 0
-        else
-            echo "Warning: Failed to send URL through tunnel, falling back to local" >&2
-        fi
+    # Try to send through tunnel first
+    if send_url "$url"; then
+        exit 0
     fi
 
     # Fall back to local xdg-open if available
     if command -v xdg-open &>/dev/null; then
+        echo "Note: Remote tunnel not available, using local browser" >&2
         exec xdg-open "$url"
     else
-        echo "Error: No remote tunnel and no local xdg-open available" >&2
+        echo "Error: Remote tunnel not available and no local xdg-open found" >&2
         exit 1
     fi
 }

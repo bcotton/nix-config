@@ -2,11 +2,12 @@
   lib,
   stdenv,
   makeWrapper,
-  netcat-gnu,
+  coreutils,
+  bash,
 }:
 stdenv.mkDerivation {
   pname = "xdg-open-remote";
-  version = "1.0.0";
+  version = "1.0.1";
 
   src = ./.;
 
@@ -19,9 +20,10 @@ stdenv.mkDerivation {
     cp xdg-open-remote.sh $out/bin/xdg-open-remote
     chmod +x $out/bin/xdg-open-remote
 
-    # Wrap to include netcat in PATH
+    # Wrap to ensure timeout and bash are available
+    # Uses bash's /dev/tcp for networking (no netcat needed)
     wrapProgram $out/bin/xdg-open-remote \
-      --prefix PATH : ${lib.makeBinPath [netcat-gnu]}
+      --prefix PATH : ${lib.makeBinPath [coreutils bash]}
   '';
 
   meta = with lib; {
