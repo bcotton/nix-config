@@ -414,6 +414,12 @@
         nix run "nixpkgs-unstable#$program" -- "$@"
       }
 
+      # Run command with --help piped through pager
+      # Usage: h git, h kubectl, h nix
+      function h () {
+        "$@" --help 2>&1 | ''${PAGER:-less}
+      }
+
       # Reload home-manager environment after 'just switch'
       # Uses exec zsh to get a fresh shell with proper PATH initialization
       function reload-hm () {
