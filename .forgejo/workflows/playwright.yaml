@@ -34,8 +34,8 @@ jobs:
             # Install npm dependencies
             npm ci
 
-            # Run Playwright tests
-            npx playwright test
+            # Run Playwright tests via npm script (avoids /usr/bin/env issue)
+            npm test
           '
 
       - name: Upload test results
