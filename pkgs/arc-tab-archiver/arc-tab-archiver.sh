@@ -13,6 +13,13 @@ OBSIDIAN_DIR="${OBSIDIAN_DIR:?OBSIDIAN_DIR environment variable must be set}"
 # Core Foundation epoch offset (Jan 1, 2001 to Jan 1, 1970)
 CF_EPOCH_OFFSET=978307200
 
+# Send macOS notification
+notify() {
+    local title="$1"
+    local message="$2"
+    osascript -e "display notification \"$message\" with title \"$title\"" 2>/dev/null || true
+}
+
 # Validate Arc archive schema
 validate_archive_schema() {
     if ! jq -e '
@@ -26,10 +33,12 @@ validate_archive_schema() {
         (.items[1].sidebarItem | has("data")) and
         (.items[1].sidebarItem.data | has("tab"))
     ' "$ARC_ARCHIVE" > /dev/null 2>&1; then
-        echo "ERROR: Arc archive schema validation failed!" >&2
+        local msg="Arc archive schema validation failed. Arc may have changed their data format."
+        echo "ERROR: $msg" >&2
         echo "Expected structure in StorableArchiveItems.json:" >&2
         echo '  { "items": ["UUID", {archivedAt, reason, sidebarItem: {data: {tab: {...}}}, source}, ...], "version": N }' >&2
         echo "Arc may have changed their format. Please report this issue." >&2
+        notify "Arc Tab Archiver" "$msg"
         return 1
     fi
 }
@@ -49,10 +58,12 @@ validate_sidebar_schema() {
         (.sidebar.containers[1].spaces[1] | type == "object") and
         (.sidebar.containers[1].spaces[1] | has("title"))
     ' "$ARC_SIDEBAR" > /dev/null 2>&1; then
-        echo "ERROR: Arc sidebar schema validation failed!" >&2
+        local msg="Arc sidebar schema validation failed. Arc may have changed their data format."
+        echo "ERROR: $msg" >&2
         echo "Expected structure in StorableSidebar.json:" >&2
         echo '  { "sidebar": { "containers": [{...}, { "spaces": ["UUID", {title: "...", ...}, ...] }] } }' >&2
         echo "Arc may have changed their format. Please report this issue." >&2
+        notify "Arc Tab Archiver" "$msg"
         return 1
     fi
 }
