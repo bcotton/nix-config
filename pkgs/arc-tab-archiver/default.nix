@@ -30,13 +30,16 @@ stdenv.mkDerivation {
     description = "Capture auto-archived Arc browser tabs to Obsidian vault";
     longDescription = ''
       A tool that reads Arc browser's archive data and saves auto-archived tabs
-      to an Obsidian vault as markdown. Tracks processed tabs to avoid duplicates.
+      to an Obsidian vault as markdown tables, organized by Arc space.
+
+      Creates one file per space (e.g., Grafana.md, Home Lab.md) with a table
+      of archived tabs sorted by date (newest first).
 
       Required environment variable:
-        OBSIDIAN_FILE - Path to the Obsidian markdown file for output
+        OBSIDIAN_DIR - Directory for output files (e.g., ~/vault/arc-archive)
 
       Optional environment variables:
-        ARC_ARCHIVE - Path to Arc's StorableArchiveItems.json (default: ~/Library/Application Support/Arc/StorableArchiveItems.json)
+        ARC_DIR - Path to Arc's data directory (default: ~/Library/Application Support/Arc)
         STATE_DIR - Directory for state file (default: ~/.local/state/arc-tab-archiver)
     '';
     license = licenses.mit;

@@ -13,9 +13,9 @@
 
     <key>EnvironmentVariables</key>
     <dict>
-        <key>OBSIDIAN_FILE</key>
-        <!-- Update this path to your Obsidian vault -->
-        <string>/Users/bcotton/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archived-tabs.md</string>
+        <key>OBSIDIAN_DIR</key>
+        <!-- Update this path to your Obsidian vault subdirectory -->
+        <string>/Users/bcotton/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archive</string>
     </dict>
 
     <key>StartInterval</key>

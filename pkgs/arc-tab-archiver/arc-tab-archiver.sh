@@ -1,125 +1,157 @@
 #!/usr/bin/env bash
 # arc-tab-archiver: Capture auto-archived Arc tabs to Obsidian
+# Organizes tabs by Arc space into separate markdown files with tables
 set -euo pipefail
 
 # Configuration (can be overridden via environment)
-ARC_ARCHIVE="${ARC_ARCHIVE:-$HOME/Library/Application Support/Arc/StorableArchiveItems.json}"
-# OBSIDIAN_FILE must be set via environment variable
-# Example: OBSIDIAN_FILE="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archived-tabs.md"
-OBSIDIAN_FILE="${OBSIDIAN_FILE:?OBSIDIAN_FILE environment variable must be set}"
+ARC_DIR="${ARC_DIR:-$HOME/Library/Application Support/Arc}"
+ARC_ARCHIVE="${ARC_ARCHIVE:-$ARC_DIR/StorableArchiveItems.json}"
+ARC_SIDEBAR="${ARC_SIDEBAR:-$ARC_DIR/StorableSidebar.json}"
+# OBSIDIAN_DIR must be set - the directory where space files will be created
+# Example: OBSIDIAN_DIR="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archive"
+OBSIDIAN_DIR="${OBSIDIAN_DIR:?OBSIDIAN_DIR environment variable must be set}"
 STATE_DIR="${STATE_DIR:-$HOME/.local/state/arc-tab-archiver}"
 STATE_FILE="${STATE_DIR}/processed.txt"
 
-# Core Foundation epoch: January 1, 2001 00:00:00 UTC
-# Unix epoch: January 1, 1970 00:00:00 UTC
-# Difference: 978307200 seconds
+# Core Foundation epoch offset (Jan 1, 2001 to Jan 1, 1970)
 CF_EPOCH_OFFSET=978307200
 
-# Convert Core Foundation timestamp to ISO date
-cf_to_date() {
+# Build space ID to name mapping from Arc sidebar
+build_space_map() {
+    jq -r '
+        .sidebar.containers[1].spaces as $spaces |
+        [range(0; $spaces | length; 2)] |
+        map("\($spaces[.])|\($spaces[. + 1].title)") |
+        .[]
+    ' "$ARC_SIDEBAR" 2>/dev/null
+}
+
+# Sanitize filename (remove/replace problematic characters)
+sanitize_filename() {
+    local name="$1"
+    echo "$name" | sed 's/[\/\\:*?"<>|]/-/g' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//'
+}
+
+# Convert CF timestamp to sortable and display dates
+cf_to_dates() {
     local cf_timestamp="$1"
     local unix_timestamp
     unix_timestamp=$(echo "$cf_timestamp + $CF_EPOCH_OFFSET" | bc | cut -d. -f1)
-    date -r "$unix_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null || date -d "@$unix_timestamp" "+%Y-%m-%d %H:%M"
+    # Output: sortable_timestamp|display_date
+    echo "${unix_timestamp}|$(date -r "$unix_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null || date -d "@$unix_timestamp" "+%Y-%m-%d %H:%M")"
 }
 
-# Initialize state directory and files
-init_state() {
-    mkdir -p "$STATE_DIR"
-    touch "$STATE_FILE"
-}
+# Generate markdown table for a space
+generate_space_file() {
+    local space_name="$1"
+    local safe_name
+    safe_name=$(sanitize_filename "$space_name")
+    local output_file="$OBSIDIAN_DIR/${safe_name}.md"
+    local temp_file
+    temp_file=$(mktemp)
 
-# Check if an ID has been processed
-is_processed() {
-    local id="$1"
-    grep -qxF "$id" "$STATE_FILE" 2>/dev/null
-}
+    # Write header
+    cat > "$temp_file" << EOF
+# Arc Archive: ${space_name}
 
-# Mark an ID as processed
-mark_processed() {
-    local id="$1"
-    echo "$id" >> "$STATE_FILE"
-}
+Auto-archived tabs from Arc browser's **${space_name}** space.
 
-# Initialize Obsidian file with header if it doesn't exist
-init_obsidian_file() {
-    if [[ ! -f "$OBSIDIAN_FILE" ]]; then
-        mkdir -p "$(dirname "$OBSIDIAN_FILE")"
-        cat > "$OBSIDIAN_FILE" << 'EOF'
-# Arc Archived Tabs
-
-Auto-captured tabs from Arc browser archive.
-
----
-
+| Title | Archived |
+|-------|----------|
 EOF
+
+    # Get space ID for this name
+    local space_id=""
+    while IFS='|' read -r id name; do
+        if [[ "$name" == "$space_name" ]]; then
+            space_id="$id"
+            break
+        fi
+    done < <(build_space_map)
+
+    if [[ -z "$space_id" ]]; then
+        echo "Warning: Could not find space ID for '$space_name'" >&2
+        rm -f "$temp_file"
+        return
     fi
+
+    # Extract and sort tabs for this space (newest first)
+    # Filter: auto-archived, from this space (not littleArc), has URL
+    jq -r --arg space_id "$space_id" '
+        .items[] |
+        select(type == "object" and .reason == "auto") |
+        select(.source.space._0 == $space_id) |
+        select(.sidebarItem.data.tab.savedURL != null) |
+        [
+            .archivedAt,
+            (.sidebarItem.data.tab.savedTitle // .sidebarItem.data.tab.savedURL),
+            .sidebarItem.data.tab.savedURL
+        ] |
+        @tsv
+    ' "$ARC_ARCHIVE" 2>/dev/null | while IFS=$'\t' read -r archived_at title url; do
+        # Convert timestamp
+        local dates
+        dates=$(cf_to_dates "$archived_at")
+        local sort_ts="${dates%%|*}"
+        local display_date="${dates##*|}"
+
+        # Escape pipe characters in title for markdown table
+        local escaped_title="${title//|/\\|}"
+        # Escape brackets for markdown links in title
+        escaped_title="${escaped_title//\[/\\[}"
+        escaped_title="${escaped_title//\]/\\]}"
+
+        # Output with sort key prefix (will be sorted and stripped)
+        echo "${sort_ts}|[${escaped_title}](${url})|${display_date}"
+    done | sort -t'|' -k1 -rn | cut -d'|' -f2- | while IFS='|' read -r linked_title date; do
+        echo "| ${linked_title} | ${date} |"
+    done >> "$temp_file"
+
+    # Check if we have any tabs
+    local line_count
+    line_count=$(wc -l < "$temp_file")
+    if [[ "$line_count" -le 6 ]]; then
+        # Only header, no tabs
+        rm -f "$temp_file"
+        return 0
+    fi
+
+    # Move to final location
+    mkdir -p "$OBSIDIAN_DIR"
+    mv "$temp_file" "$output_file"
+    echo "  Updated: ${safe_name}.md"
 }
 
 # Main processing
 main() {
-    # Check if Arc archive exists
+    # Check required files exist
     if [[ ! -f "$ARC_ARCHIVE" ]]; then
         echo "Error: Arc archive not found at: $ARC_ARCHIVE" >&2
         exit 1
     fi
+    if [[ ! -f "$ARC_SIDEBAR" ]]; then
+        echo "Error: Arc sidebar not found at: $ARC_SIDEBAR" >&2
+        exit 1
+    fi
 
-    init_state
-    init_obsidian_file
+    mkdir -p "$STATE_DIR"
+    mkdir -p "$OBSIDIAN_DIR"
 
-    local count=0
-    local new_count=0
+    echo "Arc Tab Archiver - Generating per-space files..."
+    echo "Output directory: $OBSIDIAN_DIR"
+    echo ""
 
-    # Process the JSON file
-    # The file structure has entries as objects in an array
-    # We need to filter for reason="auto" and extract tab data
-    while IFS= read -r line; do
-        local id url title archived_at archived_date
-
-        id=$(echo "$line" | jq -r '.sidebarItem.id')
-
-        # Skip if already processed
-        if is_processed "$id"; then
-            ((count++)) || true
-            continue
+    # Get unique space names from sidebar
+    local space_count=0
+    while IFS='|' read -r space_id space_name; do
+        if [[ -n "$space_name" ]]; then
+            generate_space_file "$space_name"
+            ((space_count++)) || true
         fi
+    done < <(build_space_map)
 
-        url=$(echo "$line" | jq -r '.sidebarItem.data.tab.savedURL // empty')
-        title=$(echo "$line" | jq -r '.sidebarItem.data.tab.savedTitle // empty')
-        archived_at=$(echo "$line" | jq -r '.archivedAt // empty')
-
-        # Skip entries without URL
-        if [[ -z "$url" ]]; then
-            continue
-        fi
-
-        # Convert timestamp
-        if [[ -n "$archived_at" ]]; then
-            archived_date=$(cf_to_date "$archived_at")
-        else
-            archived_date="Unknown"
-        fi
-
-        # Use URL as title if title is empty
-        if [[ -z "$title" ]]; then
-            title="$url"
-        fi
-
-        # Append to Obsidian file
-        cat >> "$OBSIDIAN_FILE" << EOF
-
-## [$title]($url)
-- Archived: $archived_date
-
-EOF
-
-        mark_processed "$id"
-        ((new_count++)) || true
-        ((count++)) || true
-
-    done < <(jq -c '.items[] | select(type == "object" and .reason == "auto")' "$ARC_ARCHIVE" 2>/dev/null)
-
-    echo "Processed $count auto-archived tabs, $new_count new entries added"
+    echo ""
+    echo "Processed $space_count spaces"
 }
 
 main "$@"
