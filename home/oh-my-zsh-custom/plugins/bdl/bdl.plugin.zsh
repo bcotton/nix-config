@@ -40,7 +40,7 @@ function bdl() {
     preview_cmd='bd show {1}'
 
     # Main fzf command with preview
-    issue_id=$(bd list ${bd_args[*]} | \
+    issue_id=$(bd list --pretty ${bd_args[*]} | \
         fzf --layout=reverse \
             --border \
             --prompt="Select issue > " \
@@ -48,9 +48,9 @@ function bdl() {
             --preview "$preview_cmd" \
             --bind 'ctrl-r:reload(bd list '"${bd_args[*]}"')' \
             --bind 'ctrl-s:execute-silent(tmux send-keys -t :.1 "please start work on bead {1}" Enter)+abort' \
-            --bind 'd:execute-silent(bd delete {1})+reload(bd list '"${bd_args[*]}"')' \
-            --bind 'w:execute(zsh -ic "_bdl_worktree {1}")+abort' \
-            --bind 'p:execute(zsh -ic "_bdl_worktree_plan {1}")+abort' \
+            --bind 'ctrl-d:execute-silent(bd delete {1})+reload(bd list '"${bd_args[*]}"')' \
+            --bind 'ctrl-w:execute(zsh -ic "_bdl_worktree {1}")+abort' \
+            --bind 'ctrl-p:execute(zsh -ic "_bdl_worktree_plan {1}")+abort' \
             --header 'ctrl-r: refresh | ctrl-s: claude | d: delete | w: work | p: plan' | \
         awk '{print $1}')
 
