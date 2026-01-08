@@ -20,7 +20,7 @@
 
         echo "Playwright environment ready"
         echo "  Browser path: $PLAYWRIGHT_BROWSERS_PATH"
-        echo "  Required npm version: @playwright/test@1.52.0"
+        echo "  Required npm version: @playwright/test@1.57.0"
       '';
     };
   };

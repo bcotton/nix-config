@@ -9,6 +9,6 @@
     "report": "node node_modules/@playwright/test/cli.js show-report"
   },
   "devDependencies": {
-    "@playwright/test": "1.52.0"
+    "@playwright/test": "1.57.0"
   }
 }
