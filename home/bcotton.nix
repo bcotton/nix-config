@@ -44,6 +44,7 @@
       ./modules/tmux-popup-apps.nix
       ./modules/browser-opener.nix
       ./modules/xdg-open-remote.nix
+      ./modules/arc-tab-archiver.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
     ]
@@ -58,6 +59,12 @@
   # URLs in the browser on the local Mac desktop via SSH reverse port forwarding
   programs.browser-opener.enable = pkgs.stdenv.isDarwin;
   programs.xdg-open-remote.enable = pkgs.stdenv.isLinux;
+
+  # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
+  programs.arc-tab-archiver = {
+    enable = pkgs.stdenv.isDarwin;
+    obsidianDir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archive";
+  };
 
   programs.tmux-popup-apps = {
     enable = true;
@@ -567,6 +574,7 @@
       bottom
       claude-code
       devenv
+      forgejo-cli
       fx
       kubernetes-helm
       kubectx

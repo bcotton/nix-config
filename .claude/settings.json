@@ -59,7 +59,5 @@
     ],
     "deny": []
   },
-  "enabledPlugins": {
-    "beads@beads-marketplace": true
-  }
+  "enabledPlugins": {}
 }

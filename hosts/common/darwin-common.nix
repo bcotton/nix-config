@@ -63,6 +63,29 @@
           };
         };
       })
+
+      # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
+      (lib.mkIf (pkgs.stdenv.isDarwin && builtins.any (user: config.home-manager.users.${user}.programs.arc-tab-archiver.enable or false) (builtins.attrNames config.home-manager.users)) (
+        let
+          # Get the first user with arc-tab-archiver enabled
+          enabledUsers = builtins.filter (user: config.home-manager.users.${user}.programs.arc-tab-archiver.enable or false) (builtins.attrNames config.home-manager.users);
+          firstUser = builtins.head enabledUsers;
+          userCfg = config.home-manager.users.${firstUser}.programs.arc-tab-archiver;
+        in {
+          arc-tab-archiver = {
+            serviceConfig = {
+              ProgramArguments = ["${localPackages.arc-tab-archiver}/bin/arc-tab-archiver"];
+              StartInterval = userCfg.interval;
+              RunAtLoad = true;
+              EnvironmentVariables = {
+                OBSIDIAN_DIR = userCfg.obsidianDir;
+              };
+              StandardOutPath = "/tmp/arc-tab-archiver.log";
+              StandardErrorPath = "/tmp/arc-tab-archiver.log";
+            };
+          };
+        }
+      ))
     ];
   };
 }
