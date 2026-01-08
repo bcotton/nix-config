@@ -44,8 +44,9 @@ in {
       };
 
       ffmpeg = {
+        # Explicit path required on NixOS - Frigate appends /bin/ffmpeg to this
+        path = "${pkgs.ffmpeg-headless}";
         hwaccel_args = "preset-vaapi";
-        # hwaccel_args = "-vaapi_device /dev/dri/renderD128 -hwaccel_output_format qsv -c:v h264_qsv";
       };
 
       mqtt = {
@@ -141,15 +142,15 @@ in {
           exec = "trace";
         };
 
-        streams.backporch = [
-          "rtsp://192.168.20.194:8554/1080p?mp4"
-          "ffmpeg:backporch#video=h264#hardware"
-        ];
+        # streams.backporch = [
+        #   "rtsp://192.168.20.194:8554/1080p?mp4"
+        #   "ffmpeg:backporch#video=h264#hardware"
+        # ];
 
-        streams.frontporch = [
-          "rtsp://192.168.20.140:8554/1080p?mp4"
-          "ffmpeg:frontporch#video=h264#hardware"
-        ];
+        # streams.frontporch = [
+        #   "rtsp://192.168.20.140:8554/1080p?mp4"
+        #   "ffmpeg:frontporch#video=h264#hardware"
+        # ];
 
         streams.northside = [
           "rtmp://192.168.20.129/bcs/channel0_main.bcs?channel=0&stream=0&user=\${FRIGATE_CAMERA_USER}&password=\${FRIGATE_CAMERA_PASSWORD}"
