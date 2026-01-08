@@ -1,20 +1,61 @@
 #!/usr/bin/env bash
 # arc-tab-archiver: Capture auto-archived Arc tabs to Obsidian
-# Organizes tabs by Arc space into separate markdown files with tables
+# Uses JSONL cache for persistent history even after Arc prunes old tabs
 set -euo pipefail
 
 # Configuration (can be overridden via environment)
 ARC_DIR="${ARC_DIR:-$HOME/Library/Application Support/Arc}"
 ARC_ARCHIVE="${ARC_ARCHIVE:-$ARC_DIR/StorableArchiveItems.json}"
 ARC_SIDEBAR="${ARC_SIDEBAR:-$ARC_DIR/StorableSidebar.json}"
-# OBSIDIAN_DIR must be set - the directory where space files will be created
-# Example: OBSIDIAN_DIR="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archive"
+# OBSIDIAN_DIR must be set - directory for .jsonl cache and .md files
 OBSIDIAN_DIR="${OBSIDIAN_DIR:?OBSIDIAN_DIR environment variable must be set}"
-STATE_DIR="${STATE_DIR:-$HOME/.local/state/arc-tab-archiver}"
-STATE_FILE="${STATE_DIR}/processed.txt"
 
 # Core Foundation epoch offset (Jan 1, 2001 to Jan 1, 1970)
 CF_EPOCH_OFFSET=978307200
+
+# Validate Arc archive schema
+validate_archive_schema() {
+    if ! jq -e '
+        (type == "object") and
+        has("items") and has("version") and
+        (.items | type == "array") and
+        (.items | length > 1) and
+        (.items[0] | type == "string") and
+        (.items[1] | type == "object") and
+        (.items[1] | has("archivedAt", "reason", "sidebarItem", "source")) and
+        (.items[1].sidebarItem | has("data")) and
+        (.items[1].sidebarItem.data | has("tab"))
+    ' "$ARC_ARCHIVE" > /dev/null 2>&1; then
+        echo "ERROR: Arc archive schema validation failed!" >&2
+        echo "Expected structure in StorableArchiveItems.json:" >&2
+        echo '  { "items": ["UUID", {archivedAt, reason, sidebarItem: {data: {tab: {...}}}, source}, ...], "version": N }' >&2
+        echo "Arc may have changed their format. Please report this issue." >&2
+        return 1
+    fi
+}
+
+# Validate Arc sidebar schema
+validate_sidebar_schema() {
+    if ! jq -e '
+        (type == "object") and
+        has("sidebar") and
+        (.sidebar | has("containers")) and
+        (.sidebar.containers | type == "array") and
+        (.sidebar.containers | length > 1) and
+        (.sidebar.containers[1] | has("spaces")) and
+        (.sidebar.containers[1].spaces | type == "array") and
+        (.sidebar.containers[1].spaces | length > 1) and
+        (.sidebar.containers[1].spaces[0] | type == "string") and
+        (.sidebar.containers[1].spaces[1] | type == "object") and
+        (.sidebar.containers[1].spaces[1] | has("title"))
+    ' "$ARC_SIDEBAR" > /dev/null 2>&1; then
+        echo "ERROR: Arc sidebar schema validation failed!" >&2
+        echo "Expected structure in StorableSidebar.json:" >&2
+        echo '  { "sidebar": { "containers": [{...}, { "spaces": ["UUID", {title: "...", ...}, ...] }] } }' >&2
+        echo "Arc may have changed their format. Please report this issue." >&2
+        return 1
+    fi
+}
 
 # Build space ID to name mapping from Arc sidebar
 build_space_map() {
@@ -32,21 +73,81 @@ sanitize_filename() {
     echo "$name" | sed 's/[\/\\:*?"<>|]/-/g' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//'
 }
 
-# Convert CF timestamp to sortable and display dates
-cf_to_dates() {
+# Convert CF timestamp to display date
+cf_to_display_date() {
     local cf_timestamp="$1"
     local unix_timestamp
     unix_timestamp=$(echo "$cf_timestamp + $CF_EPOCH_OFFSET" | bc | cut -d. -f1)
-    # Output: sortable_timestamp|display_date
-    echo "${unix_timestamp}|$(date -r "$unix_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null || date -d "@$unix_timestamp" "+%Y-%m-%d %H:%M")"
+    date -r "$unix_timestamp" "+%Y-%m-%d %H:%M" 2>/dev/null || date -d "@$unix_timestamp" "+%Y-%m-%d %H:%M"
 }
 
-# Generate markdown table for a space
-generate_space_file() {
+# Get IDs already in JSONL cache
+get_cached_ids() {
+    local jsonl_file="$1"
+    if [[ -f "$jsonl_file" ]]; then
+        jq -r '.id' "$jsonl_file" 2>/dev/null | sort -u
+    fi
+}
+
+# Append new tabs to JSONL cache
+append_to_cache() {
+    local space_id="$1"
+    local space_name="$2"
+    local jsonl_file="$3"
+    local captured_at
+    captured_at=$(date -u "+%Y-%m-%dT%H:%M:%SZ")
+
+    # Get existing IDs
+    local existing_ids
+    existing_ids=$(get_cached_ids "$jsonl_file")
+
+    # Extract new tabs from Arc and append to cache
+    local new_count=0
+    while IFS=$'\t' read -r id url title archived_at; do
+        # Skip if already in cache
+        if echo "$existing_ids" | grep -qxF "$id" 2>/dev/null; then
+            continue
+        fi
+
+        # Append to JSONL (escape for JSON)
+        jq -n -c \
+            --arg id "$id" \
+            --arg url "$url" \
+            --arg title "$title" \
+            --argjson archivedAt "$archived_at" \
+            --arg spaceName "$space_name" \
+            --arg capturedAt "$captured_at" \
+            '{id: $id, url: $url, title: $title, archivedAt: $archivedAt, spaceName: $spaceName, capturedAt: $capturedAt}' \
+            >> "$jsonl_file"
+
+        ((new_count++)) || true
+    done < <(jq -r --arg space_id "$space_id" '
+        .items[] |
+        select(type == "object" and .reason == "auto") |
+        select(.source.space._0 == $space_id) |
+        select(.sidebarItem.data.tab.savedURL != null) |
+        [
+            .sidebarItem.id,
+            .sidebarItem.data.tab.savedURL,
+            (.sidebarItem.data.tab.savedTitle // .sidebarItem.data.tab.savedURL),
+            .archivedAt
+        ] |
+        @tsv
+    ' "$ARC_ARCHIVE" 2>/dev/null)
+
+    echo "$new_count"
+}
+
+# Generate markdown table from JSONL cache
+generate_markdown_from_cache() {
     local space_name="$1"
-    local safe_name
-    safe_name=$(sanitize_filename "$space_name")
-    local output_file="$OBSIDIAN_DIR/${safe_name}.md"
+    local jsonl_file="$2"
+    local md_file="$3"
+
+    if [[ ! -f "$jsonl_file" ]] || [[ ! -s "$jsonl_file" ]]; then
+        return 0
+    fi
+
     local temp_file
     temp_file=$(mktemp)
 
@@ -60,66 +161,62 @@ Auto-archived tabs from Arc browser's **${space_name}** space.
 |-------|----------|
 EOF
 
-    # Get space ID for this name
-    local space_id=""
-    while IFS='|' read -r id name; do
-        if [[ "$name" == "$space_name" ]]; then
-            space_id="$id"
-            break
-        fi
-    done < <(build_space_map)
+    # Read from JSONL, sort by archivedAt (newest first), generate table rows
+    jq -r '[.archivedAt, .title, .url] | @tsv' "$jsonl_file" 2>/dev/null | \
+    sort -t$'\t' -k1 -rn | \
+    while IFS=$'\t' read -r archived_at title url; do
+        local display_date
+        display_date=$(cf_to_display_date "$archived_at")
 
-    if [[ -z "$space_id" ]]; then
-        echo "Warning: Could not find space ID for '$space_name'" >&2
-        rm -f "$temp_file"
-        return
-    fi
-
-    # Extract and sort tabs for this space (newest first)
-    # Filter: auto-archived, from this space (not littleArc), has URL
-    jq -r --arg space_id "$space_id" '
-        .items[] |
-        select(type == "object" and .reason == "auto") |
-        select(.source.space._0 == $space_id) |
-        select(.sidebarItem.data.tab.savedURL != null) |
-        [
-            .archivedAt,
-            (.sidebarItem.data.tab.savedTitle // .sidebarItem.data.tab.savedURL),
-            .sidebarItem.data.tab.savedURL
-        ] |
-        @tsv
-    ' "$ARC_ARCHIVE" 2>/dev/null | while IFS=$'\t' read -r archived_at title url; do
-        # Convert timestamp
-        local dates
-        dates=$(cf_to_dates "$archived_at")
-        local sort_ts="${dates%%|*}"
-        local display_date="${dates##*|}"
-
-        # Escape pipe characters in title for markdown table
+        # Escape for markdown table
         local escaped_title="${title//|/\\|}"
-        # Escape brackets for markdown links in title
         escaped_title="${escaped_title//\[/\\[}"
         escaped_title="${escaped_title//\]/\\]}"
 
-        # Output with sort key prefix (will be sorted and stripped)
-        echo "${sort_ts}|[${escaped_title}](${url})|${display_date}"
-    done | sort -t'|' -k1 -rn | cut -d'|' -f2- | while IFS='|' read -r linked_title date; do
-        echo "| ${linked_title} | ${date} |"
+        echo "| [${escaped_title}](${url}) | ${display_date} |"
     done >> "$temp_file"
 
-    # Check if we have any tabs
+    # Check if we have any tabs (more than just header)
     local line_count
     line_count=$(wc -l < "$temp_file")
     if [[ "$line_count" -le 6 ]]; then
-        # Only header, no tabs
         rm -f "$temp_file"
         return 0
     fi
 
-    # Move to final location
-    mkdir -p "$OBSIDIAN_DIR"
-    mv "$temp_file" "$output_file"
-    echo "  Updated: ${safe_name}.md"
+    mv "$temp_file" "$md_file"
+}
+
+# Process a single space
+# Outputs: new_count to stdout (for arithmetic), status to stderr
+process_space() {
+    local space_id="$1"
+    local space_name="$2"
+    local safe_name
+    safe_name=$(sanitize_filename "$space_name")
+
+    local jsonl_file="$OBSIDIAN_DIR/${safe_name}.jsonl"
+    local md_file="$OBSIDIAN_DIR/${safe_name}.md"
+
+    # Append new tabs to JSONL cache
+    local new_count
+    new_count=$(append_to_cache "$space_id" "$space_name" "$jsonl_file")
+
+    # Regenerate markdown from cache
+    generate_markdown_from_cache "$space_name" "$jsonl_file" "$md_file"
+
+    # Report to stderr so stdout only has the count
+    local total_count=0
+    if [[ -f "$jsonl_file" ]]; then
+        total_count=$(wc -l < "$jsonl_file" | tr -d ' ')
+    fi
+
+    if [[ "$new_count" -gt 0 ]] || [[ "$total_count" -gt 0 ]]; then
+        echo "  ${safe_name}: +${new_count} new, ${total_count} total" >&2
+    fi
+
+    # Only output the count for capture
+    echo "$new_count"
 }
 
 # Main processing
@@ -134,24 +231,55 @@ main() {
         exit 1
     fi
 
-    mkdir -p "$STATE_DIR"
-    mkdir -p "$OBSIDIAN_DIR"
-
-    echo "Arc Tab Archiver - Generating per-space files..."
-    echo "Output directory: $OBSIDIAN_DIR"
+    # Validate schemas before processing
+    echo "Validating Arc data format..."
+    validate_archive_schema
+    validate_sidebar_schema
+    echo "Schema validation passed."
     echo ""
 
-    # Get unique space names from sidebar
+    mkdir -p "$OBSIDIAN_DIR"
+
+    echo "Arc Tab Archiver - Syncing to: $OBSIDIAN_DIR"
+    echo ""
+
+    # Process each space
+    local total_new=0
     local space_count=0
     while IFS='|' read -r space_id space_name; do
         if [[ -n "$space_name" ]]; then
-            generate_space_file "$space_name"
+            local new_count
+            new_count=$(process_space "$space_id" "$space_name")
+            ((total_new += new_count)) || true
             ((space_count++)) || true
         fi
     done < <(build_space_map)
 
+    # Also regenerate any existing JSONL files for spaces no longer in Arc
+    shopt -s nullglob
+    for jsonl_file in "$OBSIDIAN_DIR"/*.jsonl; do
+        if [[ -f "$jsonl_file" ]]; then
+            local base_name
+            base_name=$(basename "$jsonl_file" .jsonl)
+            local md_file="$OBSIDIAN_DIR/${base_name}.md"
+
+            # Get space name from first entry in JSONL
+            local space_name
+            space_name=$(head -1 "$jsonl_file" 2>/dev/null | jq -r '.spaceName // empty' 2>/dev/null)
+
+            if [[ -n "$space_name" ]]; then
+                # Only regenerate if we haven't already processed this space
+                local safe_current
+                safe_current=$(sanitize_filename "$space_name")
+                if [[ "$safe_current" != "$base_name" ]]; then
+                    generate_markdown_from_cache "$space_name" "$jsonl_file" "$md_file"
+                fi
+            fi
+        fi
+    done
+
     echo ""
-    echo "Processed $space_count spaces"
+    echo "Done: $total_new new tabs captured across $space_count spaces"
 }
 
 main "$@"
