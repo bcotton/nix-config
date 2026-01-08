@@ -43,6 +43,9 @@ in {
         };
       };
 
+      # Disable web UI authentication (new default in 0.16)
+      auth.enabled = false;
+
       ffmpeg = {
         # Explicit path required on NixOS - Frigate appends /bin/ffmpeg to this
         path = "${pkgs.ffmpeg-headless}";
@@ -79,38 +82,38 @@ in {
       };
 
       cameras = {
-        frontporch = {
-          ffmpeg.inputs = [
-            {
-              path = "rtsp://127.0.0.1:8554/frontporch?video=copy&audio=aac";
-              roles = ["record" "detect"];
-            }
-          ];
-          snapshots = {
-            enabled = true;
-            required_zones = ["zone_0"];
-          };
-          record = {
-            enabled = true;
-            retain.days = 2;
-            events.retain.default = 5;
-            events.required_zones = ["zone_0"];
-          };
-          zones = {
-            zone_0 = {
-              coordinates = "0,1080,1920,1080,1899,256,0,239";
-            };
-          };
-        };
+        # frontporch = {
+        #   ffmpeg.inputs = [
+        #     {
+        #       path = "rtsp://127.0.0.1:8554/frontporch?video=copy&audio=aac";
+        #       roles = ["record" "detect"];
+        #     }
+        #   ];
+        #   snapshots = {
+        #     enabled = true;
+        #     required_zones = ["zone_0"];
+        #   };
+        #   record = {
+        #     enabled = true;
+        #     retain.days = 2;
+        #     events.retain.default = 5;
+        #     events.required_zones = ["zone_0"];
+        #   };
+        #   zones = {
+        #     zone_0 = {
+        #       coordinates = "0,1080,1920,1080,1899,256,0,239";
+        #     };
+        #   };
+        # };
 
-        backporch = {
-          ffmpeg.inputs = [
-            {
-              path = "rtsp://127.0.0.1:8554/backporch?video=copy&audio=aac";
-              roles = ["record" "detect"];
-            }
-          ];
-        };
+        # backporch = {
+        #   ffmpeg.inputs = [
+        #     {
+        #       path = "rtsp://127.0.0.1:8554/backporch?video=copy&audio=aac";
+        #       roles = ["record" "detect"];
+        #     }
+        #   ];
+        # };
         northside = {
           ffmpeg.inputs = [
             {
