@@ -582,6 +582,7 @@
       opentofu
 
       inputs.opencode.packages.${pkgs.system}.default
+      inputs.beads.packages.${pkgs.system}.default
 
       procs
       unstablePkgs.sesh
