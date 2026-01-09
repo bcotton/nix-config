@@ -42,6 +42,11 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    beads = {
+      url = "github:steveyegge/beads";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     workmux = {
       url = "github:bcotton/workmux/2d20d09";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
