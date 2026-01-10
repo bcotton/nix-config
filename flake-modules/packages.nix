@@ -26,6 +26,8 @@
         xdg-open-remote = pkgs.callPackage ../pkgs/xdg-open-remote {};
         # remote-copy: Send text through SSH tunnel to copy on remote desktop
         remote-copy = pkgs.callPackage ../pkgs/remote-copy {};
+        # osc52-copy: Copy to clipboard via OSC52 escape sequence (for tmux-fingers)
+        osc52-copy = pkgs.callPackage ../pkgs/osc52-copy {};
       };
 
     # Expose localPackages via legacyPackages for backward compatibility
@@ -38,7 +40,7 @@
         inherit (config.packages) browser-opener clipboard-receiver arc-tab-archiver;
       }
       // lib.optionalAttrs pkgs.stdenv.isLinux {
-        inherit (config.packages) xdg-open-remote remote-copy;
+        inherit (config.packages) xdg-open-remote remote-copy osc52-copy;
       };
   };
 }

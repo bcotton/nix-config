@@ -155,6 +155,10 @@ in {
           plugin = fingers;
           extraConfig = ''
             set -g @fingers-show-copied-notification 0
+            ${lib.optionalString pkgs.stdenv.isLinux ''
+              # Use OSC52 for clipboard on Linux (works through SSH/nested tmux)
+              set -g @fingers-main-action '${localPackages.osc52-copy}/bin/osc52-copy'
+            ''}
           '';
         }
         extrakto
@@ -218,7 +222,7 @@ in {
         # set-option -g status-position top
         set -g renumber-windows on
         set -g set-clipboard on
-        set -g allow-passthrough on  # Allow OSC52 clipboard through nested tmux/SSH
+        set -g allow-passthrough all  # Allow OSC52 clipboard through nested tmux/SSH (all panes, not just active)
 
         # Status left configuration:
         # - #[bg=colour241,fg=colour248]: Sets grey background with light text
