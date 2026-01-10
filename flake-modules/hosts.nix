@@ -42,7 +42,7 @@
         usernames
       );
       home-manager.extraSpecialArgs = {
-        inherit inputs unstablePkgs hostName;
+        inherit inputs unstablePkgs hostName nixosHosts;
         localPackages = self.legacyPackages.${system}.localPackages;
         workmuxPackage = inputs.workmux.packages.${system}.default;
       };
@@ -71,6 +71,66 @@
       ../modules/tailscale
       ../modules/zfs
     ];
+
+    # NixOS host specifications - single source of truth for all NixOS hosts
+    # Adding a host here automatically includes it in nixosConfigurations and SSH RemoteForward
+    nixosHostSpecs = {
+      admin = {
+        system = "x86_64-linux";
+        usernames = ["bcotton"];
+      };
+      condo-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton"];
+      };
+      natalya-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton"];
+      };
+      nas-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      nix-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      nix-02 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      nix-03 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      nix-04 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      imac-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      imac-02 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      dns-01 = {
+        system = "x86_64-linux";
+        usernames = ["bcotton"];
+      };
+      octoprint = {
+        system = "x86_64-linux";
+        usernames = ["bcotton" "tomcotton"];
+      };
+      frigate-host = {
+        system = "x86_64-linux";
+        usernames = ["bcotton"];
+      };
+    };
+
+    # Derive host list from specs - used for SSH RemoteForward configuration
+    nixosHosts = builtins.attrNames nixosHostSpecs;
 
     # NixOS system builder (consolidated from nixosSystem and nixosMinimalSystem)
     nixosSystem = {
@@ -165,7 +225,7 @@
               inputs.workmux.homeManagerModules.default
             ];
             home-manager.extraSpecialArgs = {
-              inherit inputs unstablePkgs hostName;
+              inherit inputs unstablePkgs hostName nixosHosts;
               localPackages = self.legacyPackages.${system}.localPackages;
               workmuxPackage = inputs.workmux.packages.${system}.default;
             };
@@ -200,73 +260,15 @@
       };
     };
 
-    # NixOS configurations
-    nixosConfigurations = {
-      admin = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "admin";
-        usernames = ["bcotton"];
-      };
-      condo-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "condo-01";
-        usernames = ["bcotton"];
-      };
-      natalya-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "natalya-01";
-        usernames = ["bcotton"];
-      };
-      nas-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "nas-01";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      nix-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "nix-01";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      nix-02 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "nix-02";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      nix-03 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "nix-03";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      nix-04 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "nix-04";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      imac-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "imac-01";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      imac-02 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "imac-02";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      dns-01 = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "dns-01";
-        usernames = ["bcotton"];
-      };
-      octoprint = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "octoprint";
-        usernames = ["bcotton" "tomcotton"];
-      };
-      frigate-host = nixosSystem {
-        system = "x86_64-linux";
-        hostName = "frigate-host";
-        usernames = ["bcotton"];
-      };
-    };
+    # NixOS configurations - generated from nixosHostSpecs
+    nixosConfigurations =
+      builtins.mapAttrs (
+        hostName: spec:
+          nixosSystem {
+            inherit hostName;
+            inherit (spec) system usernames;
+          }
+      )
+      nixosHostSpecs;
   };
 }

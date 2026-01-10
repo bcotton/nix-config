@@ -209,6 +209,7 @@ in {
         # set-option -g status-position top
         set -g renumber-windows on
         set -g set-clipboard on
+        set -g allow-passthrough on  # Allow OSC52 clipboard through nested tmux/SSH
 
         # Status left configuration:
         # - #[bg=colour241,fg=colour248]: Sets grey background with light text

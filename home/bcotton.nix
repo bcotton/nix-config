@@ -4,6 +4,7 @@
   lib,
   unstablePkgs,
   hostName ? "unknown",
+  nixosHosts ? [],
   workmuxPackage,
   inputs,
   ...
@@ -43,7 +44,9 @@
       ./modules/nvm-lazy.nix
       ./modules/tmux-popup-apps.nix
       ./modules/browser-opener.nix
+      ./modules/clipboard-receiver.nix
       ./modules/xdg-open-remote.nix
+      ./modules/remote-copy.nix
       ./modules/arc-tab-archiver.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
@@ -59,6 +62,10 @@
   # URLs in the browser on the local Mac desktop via SSH reverse port forwarding
   programs.browser-opener.enable = pkgs.stdenv.isDarwin;
   programs.xdg-open-remote.enable = pkgs.stdenv.isLinux;
+
+  # Remote clipboard - allows remote Linux hosts to copy text to local Mac clipboard
+  programs.clipboard-receiver.enable = pkgs.stdenv.isDarwin;
+  programs.remote-copy.enable = pkgs.stdenv.isLinux;
 
   # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
   programs.arc-tab-archiver = {
@@ -544,15 +551,20 @@
 
   programs.ssh = {
     enable = true;
-    extraConfig = ''
+    extraConfig = let
+      # Generate host list from nixosHosts for RemoteForward configuration
+      remoteForwardHosts = lib.concatStringsSep " " nixosHosts;
+    in ''
       Host nas-01 nix-02 nix-03
         IdentityFile ~/.ssh/nix-builder-id_ed25519
         IdentitiesOnly no
 
       # Remote browser opening - forward port 7890 from remote Linux hosts
       # to localhost:7890 where browser-opener listens (macOS only)
-      Host admin condo-01 natalya-01 nas-01 nix-01 nix-02 nix-03 nix-04 imac-01 imac-02 dns-01 octoprint frigate-host
+      # Remote clipboard - forward port 7891 for clipboard-receiver
+      Host ${remoteForwardHosts}
         RemoteForward 7890 localhost:7890
+        RemoteForward 7891 localhost:7891
 
       Host *
         StrictHostKeyChecking no
