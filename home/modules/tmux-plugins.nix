@@ -31,7 +31,8 @@
       done
 
       # Patch the main tmux script to skip pip check (we know libtmux is available)
-      sed -i '/pip_list=/,/exit 0/d' $out/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux
+      # Delete from pip_list= through the closing fi of the if block
+      sed -i '/pip_list=/,/^fi$/d' $out/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux
     '';
   in
     wrapped
