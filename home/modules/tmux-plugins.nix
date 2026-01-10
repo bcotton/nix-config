@@ -151,7 +151,12 @@ in {
         tmux-colors-solarized
         fzf-tmux-url
         tmux-fzf-head
-        fingers
+        {
+          plugin = fingers;
+          extraConfig = ''
+            set -g @fingers-show-copied-notification 0
+          '';
+        }
         extrakto
         {
           plugin = tmux-window-name;
@@ -283,6 +288,7 @@ in {
         bind-key C-z display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide"
         bind-key C-v display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide --dir-only"
         bind-key C-x display-popup -E "${tmux-file-picker-src}/tmux-file-picker --zoxide --git-root"
+
       '';
     };
 
