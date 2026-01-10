@@ -64,6 +64,20 @@
         };
       })
 
+      # Clipboard receiver daemon - listens for text from remote hosts via SSH tunnel
+      (lib.mkIf (pkgs.stdenv.isDarwin && builtins.any (user: config.home-manager.users.${user}.programs.clipboard-receiver.enable or false) (builtins.attrNames config.home-manager.users)) {
+        clipboard-receiver = {
+          serviceConfig = {
+            ProgramArguments = ["${localPackages.clipboard-receiver}/bin/clipboard-receiver"];
+            KeepAlive = true;
+            RunAtLoad = true;
+            ThrottleInterval = 10;
+            StandardOutPath = "/tmp/clipboard-receiver.log";
+            StandardErrorPath = "/tmp/clipboard-receiver.error.log";
+          };
+        };
+      })
+
       # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
       (lib.mkIf (pkgs.stdenv.isDarwin && builtins.any (user: config.home-manager.users.${user}.programs.arc-tab-archiver.enable or false) (builtins.attrNames config.home-manager.users)) (
         let
