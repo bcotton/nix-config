@@ -29,12 +29,15 @@
           sed -i '1s|^#!.*python.*|#!${pythonWithLibtmux}/bin/python|' "$f"
         fi
       done
+
+      # Patch the main tmux script to skip pip check (we know libtmux is available)
+      sed -i '/pip_list=/,/exit 0/d' $out/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux
     '';
   in
     wrapped
     // {
       inherit (unwrapped) pname version meta;
-      rtp = "${wrapped}/share/tmux-plugins/tmux-window-name/tmux-window-name.tmux";
+      rtp = "${wrapped}/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux";
       passthru = unwrapped.passthru or {};
     };
 
@@ -147,7 +150,7 @@ in {
         tmux-colors-solarized
         fzf-tmux-url
         tmux-fzf-head
-        tmux-thumbs
+        fingers
         extrakto
         {
           plugin = tmux-window-name;
