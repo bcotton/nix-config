@@ -586,6 +586,7 @@
       bottom
       claude-code
       devenv
+      docker-compose
       forgejo-cli
       fx
       kubernetes-helm
