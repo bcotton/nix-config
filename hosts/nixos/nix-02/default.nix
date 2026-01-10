@@ -96,7 +96,7 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Enable cgroups v2 unified hierarchy for containers
-  boot.kernelParams = [ "systemd.unified_cgroup_hierarchy=1" ];
+  boot.kernelParams = ["systemd.unified_cgroup_hierarchy=1"];
 
   # Delegate cgroup controllers for container management
   systemd.services."user@".serviceConfig.Delegate = "cpu cpuset io memory pids";
