@@ -235,7 +235,7 @@
       source = ./bcotton.config/git-worktrees/git-clone-bare-for-worktrees.sh;
     };
   };
-
+  
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
@@ -269,6 +269,7 @@
         export PNPM_HOME="$HOME/.local/share/pnpm"
         export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
         export QMK_HOME=~/projects/qmk_firmware
+        export TILT_HOST=0.0.0.0
         export TMPDIR=/tmp/
         export XDG_CONFIG_HOME="$HOME/.config"
 
@@ -583,12 +584,14 @@
         ppkgs.libtmux
       ]))
       # unstablePkgs.aider-chat
+      _1password-cli
       bottom
       claude-code
       devenv
       docker-compose
       forgejo-cli
       fx
+      google-cloud-sdk
       kubernetes-helm
       kubectx
       kubectl
