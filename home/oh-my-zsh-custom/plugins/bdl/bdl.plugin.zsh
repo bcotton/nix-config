@@ -36,19 +36,26 @@ function bdl() {
     # Store arguments to pass to bd list
     bd_args=("$@")
 
-    # Build the preview command - extract issue ID from first column
+    # Build the preview command - ID is prepended as first field
     preview_cmd='bd show {1}'
 
+    # Preprocessing: prepend ID to each line for consistent {1} access
+    # awk extracts ID (matches namespace-shortcode pattern) and prepends it
+    local preprocess='awk '\''{for(i=1;i<=NF;i++) if($i ~ /^[a-z]+-[a-z0-9.]+$/) {print $i, $0; next}} {print "", $0}'\'''
+    local reload_cmd="bd list --pretty ${bd_args[*]} | $preprocess"
+
     # Main fzf command with preview
-    issue_id=$(bd list --pretty ${bd_args[*]} | \
+    # --with-nth=2.. hides the prepended ID from display but {1} still accesses it
+    issue_id=$(bd list --pretty ${bd_args[*]} | eval "$preprocess" | \
         fzf --layout=reverse \
             --border \
+            --with-nth=2.. \
             --prompt="Select issue > " \
             --preview-window=right:60%:wrap \
             --preview "$preview_cmd" \
-            --bind 'ctrl-r:reload(bd list '"${bd_args[*]}"')' \
+            --bind "ctrl-r:reload($reload_cmd)" \
             --bind 'ctrl-s:execute-silent(tmux send-keys -t :.1 "please start work on bead {1}" Enter)+abort' \
-            --bind 'ctrl-d:execute-silent(bd delete {1})+reload(bd list '"${bd_args[*]}"')' \
+            --bind 'ctrl-d:execute-silent(bd delete {1})+reload('"$reload_cmd"')' \
             --bind 'ctrl-w:execute(zsh -ic "_bdl_worktree {1}")+abort' \
             --bind 'ctrl-p:execute(zsh -ic "_bdl_worktree_plan {1}")+abort' \
             --header 'ctrl-r: refresh | ctrl-s: claude | d: delete | w: work | p: plan' | \
