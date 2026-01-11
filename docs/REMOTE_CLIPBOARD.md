@@ -60,7 +60,11 @@ A shell script that:
 Terminal-native clipboard via escape sequences:
 - Configured in `home/modules/tmux-plugins.nix`
 - `set -g set-clipboard on` - enables clipboard integration
-- `set -g allow-passthrough on` - works through nested tmux/SSH
+- `set -g allow-passthrough all` - works through nested tmux/SSH (all panes, not just active)
+
+### tmux-fingers Integration
+
+tmux-fingers uses `tmux load-buffer -w` for OSC52 clipboard support. A patched version is used via overlay (`overlays/tmux-fingers.nix`) that fixes stdin handling for proper OSC52 passthrough in nested tmux sessions.
 
 ## Configuration
 
@@ -93,7 +97,7 @@ programs.ssh = {
 
 ### Shell Aliases
 
-On Linux, `pbcopy` is aliased to `remote-copy` when enabled.
+On Linux, `pbcopy` is aliased to `remote-copy` when enabled. This is a shell alias (unlike the `xdg-open` wrapper) because `pbcopy` is typically only used interactively from the shell.
 
 ## Usage
 
@@ -230,7 +234,9 @@ Only the first SSH connection's RemoteForward will succeed. Subsequent connectio
 | `pkgs/remote-copy/remote-copy.sh` | Client script |
 | `home/modules/clipboard-receiver.nix` | Mac Home Manager module |
 | `home/modules/remote-copy.nix` | Linux Home Manager module |
+| `home/modules/tmux-plugins.nix` | tmux OSC52 configuration |
 | `hosts/common/darwin-common.nix` | Launchd service definition |
+| `overlays/tmux-fingers.nix` | tmux-fingers stdin fix overlay |
 
 ## Security Considerations
 

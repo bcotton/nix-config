@@ -80,9 +80,9 @@ programs.ssh = {
 | `REMOTE_BROWSER_PORT` | Linux | Port for tunnel (default: 7890) |
 | `BROWSER` | Linux | Set to xdg-open-remote path for CLI tools |
 
-### Shell Aliases
+### xdg-open Wrapper
 
-On Linux, `xdg-open` is aliased to `xdg-open-remote` when enabled.
+On Linux, an `xdg-open` wrapper script is installed that calls `xdg-open-remote`. This ensures programs that search PATH for `xdg-open` (like tmux-fingers) can find it, unlike shell aliases which only work in interactive shells.
 
 ## Usage
 
