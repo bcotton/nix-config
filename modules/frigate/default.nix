@@ -43,8 +43,9 @@ in {
         };
       };
 
-      # Disable web UI authentication (new default in 0.16)
-      auth.enabled = false;
+      # Reset admin password on startup (check logs for new password)
+      auth.reset_admin_password = true;
+      # auth.enabled = false;
 
       ffmpeg = {
         # Explicit path required on NixOS - Frigate appends /bin/ffmpeg to this

@@ -234,6 +234,10 @@
       executable = true;
       source = ./bcotton.config/git-worktrees/git-clone-bare-for-worktrees.sh;
     };
+    configFile."beads-init/beads-init.sh" = {
+      executable = true;
+      source = ./bcotton.config/beads-init/beads-init.sh;
+    };
   };
 
   programs.zsh = {
