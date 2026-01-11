@@ -154,10 +154,12 @@ in {
         {
           plugin = fingers;
           extraConfig = ''
+            set -g @fingers-key "Space"
             set -g @fingers-show-copied-notification 0
             ${lib.optionalString pkgs.stdenv.isLinux ''
               # Use OSC52 for clipboard on Linux (works through SSH/nested tmux)
-              set -g @fingers-main-action '${localPackages.osc52-copy}/bin/osc52-copy'
+              # This is a workaround for a possible bug in tmux-fingers
+              # set -g @fingers-main-action '${localPackages.osc52-copy}/bin/osc52-copy'
             ''}
           '';
         }
