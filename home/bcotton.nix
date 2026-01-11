@@ -235,7 +235,7 @@
       source = ./bcotton.config/git-worktrees/git-clone-bare-for-worktrees.sh;
     };
   };
-  
+
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
