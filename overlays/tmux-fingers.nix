@@ -41,11 +41,14 @@ in {
         pluginName = fingersFixed.src.repo;
         rtpFilePath = "tmux-fingers.tmux";
 
-        patches = [
-          (prev.replaceVars "${prev.path}/pkgs/misc/tmux-plugins/tmux-fingers/fix.patch" {
-            tmuxFingersDir = "${fingersFixed}/bin";
-          })
-        ];
+        # Replace patch with postPatch to rewrite the script entirely
+        postPatch = ''
+          cat > tmux-fingers.tmux << 'EOF'
+          #!/usr/bin/env bash
+          tmux run "${fingersFixed}/bin/tmux-fingers load-config"
+          exit $?
+          EOF
+        '';
       };
     };
 }
