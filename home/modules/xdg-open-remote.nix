@@ -25,22 +25,20 @@ in {
   };
 
   config = mkIf (cfg.enable && pkgs.stdenv.isLinux) {
-    home.packages = [localPackages.xdg-open-remote];
+    home.packages = [
+      localPackages.xdg-open-remote
+      # Create xdg-open wrapper so programs using Process.find_executable can find it
+      # (shell aliases don't work for programs that search PATH directly)
+      (pkgs.writeShellScriptBin "xdg-open" ''
+        exec ${localPackages.xdg-open-remote}/bin/xdg-open-remote "$@"
+      '')
+    ];
 
     # Set environment variables
     home.sessionVariables = {
       REMOTE_BROWSER_PORT = toString cfg.port;
       # Set BROWSER so CLI tools like gh, glab, etc. use xdg-open-remote
       BROWSER = "${localPackages.xdg-open-remote}/bin/xdg-open-remote";
-    };
-
-    # Create xdg-open alias to use remote browser
-    programs.zsh.shellAliases = mkIf cfg.setAsDefault {
-      xdg-open = "${localPackages.xdg-open-remote}/bin/xdg-open-remote";
-    };
-
-    programs.bash.shellAliases = mkIf cfg.setAsDefault {
-      xdg-open = "${localPackages.xdg-open-remote}/bin/xdg-open-remote";
     };
 
     # Create a desktop entry to make xdg-open-remote available as a browser option
