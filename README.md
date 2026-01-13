@@ -98,7 +98,7 @@ services.getty.autologinUser = "yourusername";
 
 ## Booting the Test VM
 
-The test VM lets you experiment with the flake without affecting your real system. It mounts this directory at `/mnt/flake` so you can edit files on your host and test changes inside the VM.
+The test VM lets you experiment with the flake without affecting your real system. It mounts this directory at `/tmp/shared` so you can edit files on your host and test changes inside the VM.
 
 ### Build and run the VM
 
@@ -115,7 +115,7 @@ just run-test-vm
 
 - The VM boots in your terminal (headless/console mode)
 - You're automatically logged in as your configured user
-- The flake directory is mounted at `/mnt/flake`
+- The flake directory is mounted at `/tmp/shared`
 - SSH is available on port 2222: `ssh -p 2222 yourusername@localhost`
 
 ### Exiting the VM
@@ -135,14 +135,14 @@ The real power of this setup is iterating quickly: edit files on your host, then
 2. **Inside the VM**: Apply the changes
 
 ```bash
-cd /mnt/flake
+cd /tmp/shared
 sudo nixos-rebuild switch --flake .#test-vm
 ```
 
 Or use the just command:
 
 ```bash
-cd /mnt/flake
+cd /tmp/shared
 just switch test-vm
 ```
 

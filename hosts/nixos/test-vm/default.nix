@@ -20,13 +20,6 @@
     fsType = "ext4";
   };
 
-  # Shared folder for accessing the flake from host
-  fileSystems."/mnt/flake" = {
-    device = "shared";
-    fsType = "9p";
-    options = ["trans=virtio" "version=9p2000.L" "msize=104857600" "nofail"];
-  };
-
   networking.useDHCP = true;
   networking.firewall.enable = false;
 
