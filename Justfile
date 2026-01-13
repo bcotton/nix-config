@@ -63,3 +63,22 @@ repl:
 gc generations="5d":
   nix-env --delete-generations {{generations}}
   nix-store --gc
+
+# Build the test VM
+[linux]
+build-test-vm:
+  nix build .#test-vm
+
+# Run the test VM with shared folder mounting this directory to /mnt/flake
+[linux]
+run-test-vm:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  nix build .#test-vm
+  SHARED_DIR="$(pwd)" ./result/bin/run-test-vm-vm
+
+# Clean up test VM artifacts
+[linux]
+clean-test-vm:
+  rm -f test-vm.qcow2 *.qcow2
+  rm -rf result

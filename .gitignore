@@ -3,3 +3,4 @@ com.googlecode.iterm2.plist
 nixos.qcow2
 .nixos-test-history
 .aider*
+test-vm.qcow2

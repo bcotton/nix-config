@@ -158,7 +158,9 @@
         system = "x86_64-linux";
         config.allowUnfree = true;
       };
-    in {};
+    in {
+      test-vm = self.nixosConfigurations.test-vm.config.system.build.vm;
+    };
 
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.alejandra;
     formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.alejandra;
@@ -170,6 +172,7 @@
 
     nixosConfigurations = {
       nixhost = nixosSystem "x86_64-linux" "nixhost" ["bcotton"];
+      test-vm = nixosSystem "x86_64-linux" "test-vm" ["bcotton"];
     };
   };
 }
