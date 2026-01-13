@@ -164,10 +164,6 @@ echo $REMOTE_NOTIFY_PORT
    launchctl load ~/Library/LaunchAgents/org.nixos.notification-receiver.plist
    ```
 
-4. Check macOS notification permissions:
-   - System Settings > Notifications
-   - Ensure "Script Editor" (or "osascript") is allowed to send notifications
-
 ### Tunnel not working
 
 1. Verify SSH was started with RemoteForward:

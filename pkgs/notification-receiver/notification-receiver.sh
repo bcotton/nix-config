@@ -11,11 +11,11 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG_FILE"
 }
 
-# Escape single quotes for AppleScript
+# Escape double quotes for AppleScript
 escape_applescript() {
     local str="$1"
-    # Replace single quotes with escaped version for AppleScript
-    echo "${str//\'/\'\"\'\"\'}"
+    # Replace double quotes with escaped version for AppleScript
+    echo "${str//\"/\\\"}"
 }
 
 show_notification() {
@@ -32,7 +32,7 @@ show_notification() {
             1) message="$line" ;;
             2) subtitle="$line" ;;
         esac
-        ((line_num++))
+        line_num=$((line_num + 1))
     done
 
     if [[ -z "$title" ]] && [[ -z "$message" ]]; then
@@ -51,10 +51,10 @@ show_notification() {
     escaped_message=$(escape_applescript "$message")
     escaped_subtitle=$(escape_applescript "$subtitle")
 
-    # Build AppleScript command
-    local applescript="display notification '${escaped_message}' with title '${escaped_title}'"
+    # Build AppleScript command (AppleScript requires double quotes for strings)
+    local applescript="display notification \"${escaped_message}\" with title \"${escaped_title}\""
     if [[ -n "$subtitle" ]]; then
-        applescript="display notification '${escaped_message}' with title '${escaped_title}' subtitle '${escaped_subtitle}'"
+        applescript="display notification \"${escaped_message}\" with title \"${escaped_title}\" subtitle \"${escaped_subtitle}\""
     fi
 
     log "Showing notification: title='$title' message='$message' subtitle='$subtitle'"
