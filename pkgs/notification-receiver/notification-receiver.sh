@@ -51,11 +51,13 @@ show_notification() {
     escaped_message=$(escape_applescript "$message")
     escaped_subtitle=$(escape_applescript "$subtitle")
 
-    # Build AppleScript command (AppleScript requires double quotes for strings)
-    local applescript="display notification \"${escaped_message}\" with title \"${escaped_title}\""
+    # Build AppleScript command using display alert for persistent notification
+    # display alert stays on screen until user clicks OK
+    local alert_message="${escaped_message}"
     if [[ -n "$subtitle" ]]; then
-        applescript="display notification \"${escaped_message}\" with title \"${escaped_title}\" subtitle \"${escaped_subtitle}\""
+        alert_message="${escaped_subtitle}: ${escaped_message}"
     fi
+    local applescript="display alert \"${escaped_title}\" message \"${alert_message}\" buttons {\"OK\"} default button 1"
 
     log "Showing notification: title='$title' message='$message' subtitle='$subtitle'"
 
