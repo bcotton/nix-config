@@ -33,8 +33,10 @@ When working on remote Linux hosts via SSH, you often want to send notifications
 A launchd service that:
 - Listens on TCP port 7892 using socat
 - Receives notification data (title, message, optional subtitle)
-- Displays **persistent alerts** using `osascript display alert` (stays on screen until dismissed)
+- Displays notifications using `terminal-notifier`
 - Logs to `/tmp/notification-receiver.log`
+
+**To make notifications persistent:** Go to System Settings > Notifications > terminal-notifier and set the style to "Alerts" instead of "Banners".
 
 **Package**: `pkgs/notification-receiver/`
 **Module**: `home/modules/notification-receiver.nix`

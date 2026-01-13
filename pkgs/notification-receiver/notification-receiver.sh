@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# notification-receiver: Listen for notifications on a TCP port and display via osascript
+# notification-receiver: Listen for notifications on a TCP port and display via terminal-notifier
 # Used with SSH RemoteForward to allow remote hosts to send notifications to local Mac
+#
+# terminal-notifier appears in System Settings > Notifications where you can
+# configure it to show as "Alerts" (persistent) instead of "Banners" (auto-dismiss)
 
 set -euo pipefail
 
@@ -9,13 +12,6 @@ LOG_FILE="${NOTIFICATION_RECEIVER_LOG:-/tmp/notification-receiver.log}"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG_FILE"
-}
-
-# Escape double quotes for AppleScript
-escape_applescript() {
-    local str="$1"
-    # Replace double quotes with escaped version for AppleScript
-    echo "${str//\"/\\\"}"
 }
 
 show_notification() {
@@ -43,25 +39,19 @@ show_notification() {
     # Default title if empty
     [[ -z "$title" ]] && title="Notification"
 
-    # Escape strings for AppleScript
-    local escaped_title
-    local escaped_message
-    local escaped_subtitle
-    escaped_title=$(escape_applescript "$title")
-    escaped_message=$(escape_applescript "$message")
-    escaped_subtitle=$(escape_applescript "$subtitle")
-
-    # Build AppleScript command using display alert for persistent notification
-    # display alert stays on screen until user clicks OK
-    local alert_message="${escaped_message}"
-    if [[ -n "$subtitle" ]]; then
-        alert_message="${escaped_subtitle}: ${escaped_message}"
-    fi
-    local applescript="display alert \"${escaped_title}\" message \"${alert_message}\" buttons {\"OK\"} default button 1"
-
     log "Showing notification: title='$title' message='$message' subtitle='$subtitle'"
 
-    if osascript -e "$applescript" 2>> "$LOG_FILE"; then
+    # Build terminal-notifier command
+    local cmd=(terminal-notifier -title "$title" -message "$message")
+
+    if [[ -n "$subtitle" ]]; then
+        cmd+=(-subtitle "$subtitle")
+    fi
+
+    # Add sound for attention
+    cmd+=(-sound default)
+
+    if "${cmd[@]}" 2>> "$LOG_FILE"; then
         echo "OK"
     else
         log "Failed to show notification"
