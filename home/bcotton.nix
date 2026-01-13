@@ -45,8 +45,10 @@
       ./modules/tmux-popup-apps.nix
       ./modules/browser-opener.nix
       ./modules/clipboard-receiver.nix
+      ./modules/notification-receiver.nix
       ./modules/xdg-open-remote.nix
       ./modules/remote-copy.nix
+      ./modules/remote-notify.nix
       ./modules/arc-tab-archiver.nix
       # workmux module is imported via flake input in flake.nix
       # ./modules/sesh.nix
@@ -66,6 +68,10 @@
   # Remote clipboard - allows remote Linux hosts to copy text to local Mac clipboard
   programs.clipboard-receiver.enable = pkgs.stdenv.isDarwin;
   programs.remote-copy.enable = pkgs.stdenv.isLinux;
+
+  # Remote notifications - allows remote Linux hosts to send macOS notifications
+  programs.notification-receiver.enable = pkgs.stdenv.isDarwin;
+  programs.remote-notify.enable = pkgs.stdenv.isLinux;
 
   # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
   programs.arc-tab-archiver = {
@@ -567,9 +573,11 @@
       # Remote browser opening - forward port 7890 from remote Linux hosts
       # to localhost:7890 where browser-opener listens (macOS only)
       # Remote clipboard - forward port 7891 for clipboard-receiver
+      # Remote notifications - forward port 7892 for notification-receiver
       Host ${remoteForwardHosts}
         RemoteForward 7890 localhost:7890
         RemoteForward 7891 localhost:7891
+        RemoteForward 7892 localhost:7892
 
       Host *
         StrictHostKeyChecking no
