@@ -17,6 +17,8 @@
         browser-opener = pkgs.callPackage ../pkgs/browser-opener {};
         # clipboard-receiver: TCP listener for copying text to local clipboard
         clipboard-receiver = pkgs.callPackage ../pkgs/clipboard-receiver {};
+        # notification-receiver: TCP listener for displaying macOS notifications
+        notification-receiver = pkgs.callPackage ../pkgs/notification-receiver {};
         # arc-tab-archiver: Capture auto-archived Arc browser tabs to Obsidian
         arc-tab-archiver = pkgs.callPackage ../pkgs/arc-tab-archiver {};
       }
@@ -26,6 +28,8 @@
         xdg-open-remote = pkgs.callPackage ../pkgs/xdg-open-remote {};
         # remote-copy: Send text through SSH tunnel to copy on remote desktop
         remote-copy = pkgs.callPackage ../pkgs/remote-copy {};
+        # remote-notify: Send notifications through SSH tunnel to Mac desktop
+        remote-notify = pkgs.callPackage ../pkgs/remote-notify {};
         # osc52-copy: Copy to clipboard via OSC52 escape sequence (for tmux-fingers)
         osc52-copy = pkgs.callPackage ../pkgs/osc52-copy {};
       };
@@ -37,10 +41,10 @@
         inherit (config.packages) primp gwtmux;
       }
       // lib.optionalAttrs pkgs.stdenv.isDarwin {
-        inherit (config.packages) browser-opener clipboard-receiver arc-tab-archiver;
+        inherit (config.packages) browser-opener clipboard-receiver notification-receiver arc-tab-archiver;
       }
       // lib.optionalAttrs pkgs.stdenv.isLinux {
-        inherit (config.packages) xdg-open-remote remote-copy osc52-copy;
+        inherit (config.packages) xdg-open-remote remote-copy remote-notify osc52-copy;
       };
   };
 }

@@ -78,6 +78,20 @@
         };
       })
 
+      # Notification receiver daemon - listens for notifications from remote hosts via SSH tunnel
+      (lib.mkIf (pkgs.stdenv.isDarwin && builtins.any (user: config.home-manager.users.${user}.programs.notification-receiver.enable or false) (builtins.attrNames config.home-manager.users)) {
+        notification-receiver = {
+          serviceConfig = {
+            ProgramArguments = ["${localPackages.notification-receiver}/bin/notification-receiver"];
+            KeepAlive = true;
+            RunAtLoad = true;
+            ThrottleInterval = 10;
+            StandardOutPath = "/tmp/notification-receiver.log";
+            StandardErrorPath = "/tmp/notification-receiver.error.log";
+          };
+        };
+      })
+
       # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
       (lib.mkIf (pkgs.stdenv.isDarwin && builtins.any (user: config.home-manager.users.${user}.programs.arc-tab-archiver.enable or false) (builtins.attrNames config.home-manager.users)) (
         let
