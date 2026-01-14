@@ -33,9 +33,14 @@ in {
 
   programs.git = {
     enable = true;
-    userEmail = "bob.cotton@gmail.com";
-    userName = "Bob Cotton";
-    extraConfig = {
+    includes = [
+      {path = "${pkgs.delta}/share/themes.gitconfig";}
+    ];
+    settings = {
+      user = {
+        email = "bob.cotton@gmail.com";
+        name = "Bob Cotton";
+      };
       alias = {
         br = "branch";
         co = "checkout";
@@ -54,42 +59,32 @@ in {
       };
       init.defaultBranch = "main";
       pager.difftool = true;
-
       core = {
         whitespace = "trailing-space,space-before-tab";
-        # pager = "difftastic";
       };
-      # interactive.diffFilter = "difft";
       merge.conflictstyle = "diff3";
       diff = {
-        # tool = "difftastic";
         colorMoved = "default";
       };
-      # difftool."difftastic".cmd = "difft $LOCAL $REMOTE";
     };
-    difftastic = {
-      enable = false;
+  };
+
+  programs.difftastic = {
+    enable = false;
+    options = {
       background = "dark";
       display = "side-by-side";
     };
-    includes = [
-      {path = "${pkgs.delta}/share/themes.gitconfig";}
-    ];
-    delta = {
-      enable = true;
-      options = {
-        # decorations = {
-        #   commit-decoration-style = "bold yellow box ul";
-        #   file-decoration-style = "none";
-        #   file-style = "bold yellow ul";
-        # };
-        # features = "mellow-barbet";
-        features = "collared-trogon";
-        # whitespace-error-style = "22 reverse";
-        navigate = true;
-        light = false;
-        side-by-side = true;
-      };
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      features = "collared-trogon";
+      navigate = true;
+      light = false;
+      side-by-side = true;
     };
   };
 
@@ -241,7 +236,7 @@ in {
       # z = "zoxide";
     };
 
-    initExtra = ''
+    initContent = ''
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
@@ -282,16 +277,18 @@ in {
 
   programs.ssh = {
     enable = true;
-    extraConfig = ''
-      Host *
-        StrictHostKeyChecking no
-        ForwardAgent yes
-
-      Host github.com
-        Hostname ssh.github.com
-        Port 443
-    '';
+    enableDefaultConfig = false;
     matchBlocks = {
+      "*" = {
+        extraOptions = {
+          StrictHostKeyChecking = "no";
+        };
+        forwardAgent = true;
+      };
+      "github.com" = {
+        hostname = "ssh.github.com";
+        port = 443;
+      };
     };
   };
 
