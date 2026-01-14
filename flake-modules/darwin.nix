@@ -27,7 +27,10 @@
           networking.hostName = hostName;
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
-          home-manager.users.${username}.imports = [../home/${username}.nix];
+          home-manager.users.${username} = {
+            imports = [../home/${username}.nix];
+            home.homeDirectory = "/Users/${username}";
+          };
           home-manager.extraSpecialArgs = {inherit unstablePkgs;};
         }
         ../hosts/common/common-packages.nix
