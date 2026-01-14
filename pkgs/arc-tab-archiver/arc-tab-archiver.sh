@@ -43,35 +43,55 @@ validate_archive_schema() {
     fi
 }
 
+# Find the container index that has spaces with titled objects
+# Arc has moved spaces between containers in different versions
+find_spaces_container_index() {
+    jq -r '
+        .sidebar.containers | to_entries |
+        map(select(
+            .value.spaces != null and
+            (.value.spaces | length > 1) and
+            (.value.spaces[0] | type == "string") and
+            (.value.spaces[1] | type == "object") and
+            (.value.spaces[1] | has("title"))
+        )) |
+        .[0].key // empty
+    ' "$ARC_SIDEBAR" 2>/dev/null
+}
+
 # Validate Arc sidebar schema
 validate_sidebar_schema() {
+    # First check basic structure
     if ! jq -e '
         (type == "object") and
         has("sidebar") and
         (.sidebar | has("containers")) and
-        (.sidebar.containers | type == "array") and
-        (.sidebar.containers | length > 1) and
-        (.sidebar.containers[1] | has("spaces")) and
-        (.sidebar.containers[1].spaces | type == "array") and
-        (.sidebar.containers[1].spaces | length > 1) and
-        (.sidebar.containers[1].spaces[0] | type == "string") and
-        (.sidebar.containers[1].spaces[1] | type == "object") and
-        (.sidebar.containers[1].spaces[1] | has("title"))
+        (.sidebar.containers | type == "array")
     ' "$ARC_SIDEBAR" > /dev/null 2>&1; then
         local msg="Arc sidebar schema validation failed. Arc may have changed their data format."
         echo "ERROR: $msg" >&2
-        echo "Expected structure in StorableSidebar.json:" >&2
-        echo '  { "sidebar": { "containers": [{...}, { "spaces": ["UUID", {title: "...", ...}, ...] }] } }' >&2
-        echo "Arc may have changed their format. Please report this issue." >&2
+        echo "Expected structure: { \"sidebar\": { \"containers\": [...] } }" >&2
         notify "Arc Tab Archiver" "$msg"
         return 1
     fi
+
+    # Find container with titled spaces
+    SPACES_CONTAINER_INDEX=$(find_spaces_container_index)
+    if [[ -z "$SPACES_CONTAINER_INDEX" ]]; then
+        local msg="Arc sidebar schema validation failed. No container with titled spaces found."
+        echo "ERROR: $msg" >&2
+        echo "Looking for container with spaces array containing [\"UUID\", {title: ...}, ...]" >&2
+        notify "Arc Tab Archiver" "$msg"
+        return 1
+    fi
+    export SPACES_CONTAINER_INDEX
 }
 
 # Build space ID to name mapping from Arc sidebar
+# Uses SPACES_CONTAINER_INDEX set by validate_sidebar_schema
 build_space_map() {
-    jq -r '
-        .sidebar.containers[1].spaces as $spaces |
+    jq -r --argjson idx "$SPACES_CONTAINER_INDEX" '
+        .sidebar.containers[$idx].spaces as $spaces |
         [range(0; $spaces | length; 2)] |
         map("\($spaces[.])|\($spaces[. + 1].title)") |
         .[]
