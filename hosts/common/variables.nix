@@ -34,4 +34,8 @@
 
   # Tailscale Configuration
   tailscaleEnable = true;
+
+  # Linux Builder (Darwin only)
+  # Enable nix.linux-builder for building Linux packages on macOS
+  linuxBuilderEnable = false;
 }

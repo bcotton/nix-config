@@ -5,8 +5,13 @@
   inputs,
   lib,
   localPackages,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ./lib.nix;
+  variables = commonLib.getHostVariables hostName;
+in {
   config = {
     system.stateVersion = 5;
 
@@ -30,6 +35,14 @@
         path = inputs.nixpkgs-unstable;
       };
     };
+
+    # Linux builder for building Linux packages on macOS
+    # Enable per-host via variables.nix: linuxBuilderEnable = true;
+    nix.linux-builder.enable = variables.linuxBuilderEnable;
+    nix.settings.system-features = lib.mkIf variables.linuxBuilderEnable [
+      "nixos-test"
+      "apple-virt"
+    ];
 
     # This can't be in home manager, so put in in the darwin config
     # it checks against the home-manager users to see if the daemon should be enabled
