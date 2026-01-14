@@ -4,9 +4,7 @@ A multi-host, multi-platform Nix flake template for managing NixOS and macOS (ni
 
 ## Prerequisites
 
-
 - [Nix](https://nixos.org/download.html) with flakes enabled
-- [just](https://github.com/casey/just) command runner (optional but recommended)
 
 ---
 
@@ -22,16 +20,11 @@ curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix 
 sh <(curl -L https://nixos.org/nix/install)
 ```
 
-After installation, ensure flakes are enabled. Add to `~/.config/nix/nix.conf`:
-
-```
-experimental-features = nix-command flakes
-```
-
 ### On Linux
 
 ```bash
-# Install Nix
+# Install Nix or use a NixOs distribution 
+
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
 # Enable flakes in ~/.config/nix/nix.conf
@@ -46,13 +39,16 @@ experimental-features = nix-command flakes
 
 1. Clone this repository
    1. git clone -b getting-started https://github.com/bcotton/nix-config
-2. Start a new shell with the basic needed packages -- `git` and `just`
+2. Install `niz` -- see abovea
+3. Start a new shell with the basic needed packages -- `git` and `just`
    1. nix-shell -p just git
-3. Add your user (see below)
-4. Add your machine (see below)
-5. If you want to boot a a test VM to experiment (Linux) or apply directly (macOS)
-6. Customize and apply to your real machines
-
+4. Add your user (see below)
+5. Add your machine (see below)
+6. Optional -- If you want to boot a a test VM to experiment (Linux) - see below
+7. Customize and apply to your real machines
+   1. cd nix-config
+   2. just build # test the build
+   3. sudo just  # switch to the new config
 ---
 
 ## Adding a New User
@@ -204,33 +200,51 @@ services.getty.autologinUser = "yourusername";
 
 2. **Create `hosts/darwin/your-mac/default.nix`:**
    ```nix
-   {
-     pkgs,
-     ...
-   }: {
-     # Enable Homebrew integration (optional)
-     homebrew = {
-       enable = true;
-       onActivation.autoUpdate = true;
-       casks = [
-         # "firefox"
-         # "iterm2"
-       ];
-     };
 
-     # macOS system preferences
-     system.defaults = {
-       dock.autohide = true;
-       finder.AppleShowAllExtensions = true;
-     };
+      {
+        pkgs,
+        unstablePkgs,
+        lib,
+        inputs,
+        ...
+      }: let
+        inherit (inputs) nixpkgs nixpkgs-unstable;
+      in {
+        nixpkgs.config.allowUnfree = true;
+        nixpkgs.config.overlays = [
+          (final: prev:
+            lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
+              # Add access to x86 packages system is running Apple Silicon
+              pkgs-x86 = import nixpkgs {
+                system = "x86_64-darwin";
+                config.allowUnfree = true;
+              };
+            })
+        ];
 
-     system.defaultUser = "<your username>";
+        # Enable Homebrew integration (optional)
+        homebrew = {
+          enable = false; # install homebrew first
+          onActivation.autoUpdate = true;
+          casks = [
+            # "firefox"
+            # "iterm2"
+          ];
+        };
 
-     # Required for nix-darwin
-       nix.settings.experimental-features = ["nix-command" "flakes"];
+        # macOS system preferences
+        system.defaults = {
+          dock.autohide = true;
+          finder.AppleShowAllExtensions = true;
+        };
 
-     system.stateVersion = 5;
-   }
+        system.primaryUser = "<your username>";
+
+        # Required for nix-darwin
+        nix.settings.experimental-features = ["nix-command" "flakes"];
+
+        system.stateVersion = 5;
+      }
    ```
 
 3. **Add to `flake-modules/darwin.nix`:**
@@ -248,7 +262,15 @@ services.getty.autologinUser = "yourusername";
    };
    ```
 
-4. **Build and apply:**
+4. Fix zsh files:
+
+You may get an error about overwriting /etc/zshenv. Do this
+
+    ```
+      sudo mv /etc/zshenv /etc/zshenv.before-nix-darwin
+    ```
+
+5. **Build and apply:**
    ```bash
    # First time - bootstrap nix-darwin
    nix build .#darwinConfigurations.your-mac.system

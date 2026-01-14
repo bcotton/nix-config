@@ -47,7 +47,7 @@ update:
   nix flake update
 
 fmt:
-  nix fmt
+  nix fmt .
 
 # Deploy to one or more remote NixOS hosts via SSH
 # Usage: just deploy nas-01
