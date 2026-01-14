@@ -6,11 +6,9 @@
   localPackages,
   ...
 }: {
-  options.programs.television = {
-    enable = lib.mkEnableOption "television fuzzy finder";
-  };
+  # Note: programs.television.enable is now provided by NixOS 25.11+
 
-  config.nixpkgs.overlays = [
+  nixpkgs.overlays = [
     # Create a single overlay function that composes all conditional overlays
     (final: prev:
       lib.foldl' lib.recursiveUpdate {} [
