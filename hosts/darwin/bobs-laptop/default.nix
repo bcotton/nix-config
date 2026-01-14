@@ -9,6 +9,8 @@
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
   config = {
+    # Required for homebrew and system.defaults options
+    system.primaryUser = "bcotton";
     users.users.bcotton.home = "/Users/bcotton";
 
     # These are packages are just for darwin systems
@@ -38,7 +40,7 @@ in {
     system.keyboard.remapCapsLockToEscape = false;
 
     # Add ability to used TouchID for sudo authentication
-    security.pam.enableSudoTouchIdAuth = true;
+    security.pam.services.sudo_local.touchIdAuth = true;
 
     programs.zsh = {
       enable = true;
@@ -159,10 +161,6 @@ in {
     };
 
     # macOS configuration
-    system.activationScripts.postUserActivation.text = ''
-      # Following line should allow us to avoid a logout/login cycle
-      /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
-    '';
     system.defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.AppleShowScrollBars = "Always";

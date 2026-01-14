@@ -4,6 +4,7 @@ A multi-host, multi-platform Nix flake template for managing NixOS and macOS (ni
 
 ## Prerequisites
 
+
 - [Nix](https://nixos.org/download.html) with flakes enabled
 - [just](https://github.com/casey/just) command runner (optional but recommended)
 
@@ -41,10 +42,16 @@ experimental-features = nix-command flakes
 
 ## Quick Start
 
+**Important** when working with flakes, you MUST `git add` new files before running `build` or `switch`
+
 1. Clone this repository
-2. Add your user (see below)
-3. Boot the test VM to experiment (Linux) or apply directly (macOS)
-4. Customize and apply to your real machines
+   1. git clone -b getting-started https://github.com/bcotton/nix-config
+2. Start a new shell with the basic needed packages -- `git` and `just`
+   1. nix-shell -p just git
+3. Add your user (see below)
+4. Add your machine (see below)
+5. If you want to boot a a test VM to experiment (Linux) or apply directly (macOS)
+6. Customize and apply to your real machines
 
 ---
 
@@ -226,6 +233,9 @@ services.getty.autologinUser = "yourusername";
    ```
 
 3. **Add to `flake-modules/darwin.nix`:**
+
+**Important** The hostname must match!
+
    ```nix
    flake.darwinConfigurations = {
      # ... existing hosts ...
@@ -265,6 +275,11 @@ just run-test-vm
 ```
 
 ### On macOS (M-series Macs)
+
+> as of today, 2026-01-14 this is not enabled by default on the Determinate Nix installer
+> See https://determinate.systems/blog/changelog-determinate-nix-384/ 
+> run 'determinate-nixd --version' to check for the feature
+> If you see the message The feature native-linux-builder is enabled then this should work
 
 The test VM runs as an aarch64-linux guest. Enable Determinate Nix's native Linux builder first:
 
