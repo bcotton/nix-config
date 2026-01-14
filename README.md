@@ -2,6 +2,37 @@
 
 A multi-host, multi-platform Nix flake template for managing NixOS and macOS (nix-darwin) systems. Use this as a starting point for your own configuration.
 
+## Table of Contents
+
+- [Nix Flake Starter](#nix-flake-starter)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Installing Nix](#installing-nix)
+    - [On macOS (Darwin)](#on-macos-darwin)
+    - [On Linux](#on-linux)
+  - [Quick Start](#quick-start)
+  - [Adding a New User](#adding-a-new-user)
+    - [Step 1: Create the system user file](#step-1-create-the-system-user-file)
+    - [Step 2: Create the home-manager file](#step-2-create-the-home-manager-file)
+    - [Step 3: Update host configuration](#step-3-update-host-configuration)
+  - [Adding New Hosts](#adding-new-hosts)
+    - [Adding a NixOS Host](#adding-a-nixos-host)
+    - [Adding a Darwin (macOS) Host](#adding-a-darwin-macos-host)
+  - [Booting the Test VM](#booting-the-test-vm)
+    - [On Linux](#on-linux-1)
+    - [On macOS (M-series Macs)](#on-macos-m-series-macs)
+    - [What happens](#what-happens)
+    - [Exiting the VM](#exiting-the-vm)
+  - [Applying Changes Inside the VM](#applying-changes-inside-the-vm)
+    - [Workflow](#workflow)
+    - [What you can test](#what-you-can-test)
+    - [Tips](#tips)
+  - [Project Structure](#project-structure)
+  - [Common Commands](#common-commands)
+  - [Next Steps](#next-steps)
+
+---
+
 ## Prerequisites
 
 - [Nix](https://nixos.org/download.html) with flakes enabled
@@ -23,8 +54,7 @@ sh <(curl -L https://nixos.org/nix/install)
 ### On Linux
 
 ```bash
-# Install Nix or use a NixOs distribution 
-
+# Install Nix or use a NixOS distribution
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
 # Enable flakes in ~/.config/nix/nix.conf
@@ -35,20 +65,26 @@ experimental-features = nix-command flakes
 
 ## Quick Start
 
-**Important** when working with flakes, you MUST `git add` new files before running `build` or `switch`
+**Important**: When working with flakes, you MUST `git add` new files before running `build` or `switch`.
 
 1. Clone this repository
-   1. git clone -b getting-started https://github.com/bcotton/nix-config
-2. Install `niz` -- see abovea
-3. Start a new shell with the basic needed packages -- `git` and `just`
-   1. nix-shell -p just git
-4. Add your user (see below)
-5. Add your machine (see below)
-6. Optional -- If you want to boot a a test VM to experiment (Linux) - see below
-7. Customize and apply to your real machines
-   1. cd nix-config
-   2. just build # test the build
-   3. sudo just  # switch to the new config
+   ```bash
+   git clone -b getting-started https://github.com/bcotton/nix-config
+   cd nix-config
+   ```
+2. Install Nix (see above)
+3. Start a shell with required packages
+   ```bash
+   nix-shell -p just git
+   ```
+4. Add your user (see [Adding a New User](#adding-a-new-user))
+5. Add your machine (see [Adding New Hosts](#adding-new-hosts))
+6. Build and apply
+   ```bash
+   just build    # Test the build
+   sudo just switch  # Apply the configuration (NixOS)
+   ```
+
 ---
 
 ## Adding a New User
@@ -118,9 +154,9 @@ Edit the appropriate flake module to use your username:
 
 **For NixOS hosts** - Edit `flake-modules/nixos.nix`:
 ```nix
-test-vm = mkNixosSystem {
+your-hostname = mkNixosSystem {
   system = "x86_64-linux";
-  hostName = "test-vm";
+  hostName = "your-hostname";
   usernames = ["yourusername"];  # Change this
 };
 ```
@@ -132,14 +168,6 @@ your-mac = mkDarwinSystem {
   hostName = "your-mac";
   username = "yourusername";  # Change this
 };
-```
-
-### Step 4: Update the test-vm auto-login (NixOS only)
-
-Edit `hosts/nixos/test-vm/default.nix` and change the auto-login user:
-
-```nix
-services.getty.autologinUser = "yourusername";
 ```
 
 ---
@@ -188,7 +216,7 @@ services.getty.autologinUser = "yourusername";
 
 4. **Build and apply:**
    ```bash
-   just switch your-hostname
+   sudo just switch
    ```
 
 ### Adding a Darwin (macOS) Host
@@ -200,56 +228,46 @@ services.getty.autologinUser = "yourusername";
 
 2. **Create `hosts/darwin/your-mac/default.nix`:**
    ```nix
+   {
+     pkgs,
+     unstablePkgs,
+     lib,
+     inputs,
+     ...
+   }: let
+     inherit (inputs) nixpkgs nixpkgs-unstable;
+   in {
+     config = {
+       # Required for homebrew and system.defaults options
+       system.primaryUser = "yourusername";
+       users.users.yourusername.home = "/Users/yourusername";
 
-      {
-        pkgs,
-        unstablePkgs,
-        lib,
-        inputs,
-        ...
-      }: let
-        inherit (inputs) nixpkgs nixpkgs-unstable;
-      in {
-        nixpkgs.config.allowUnfree = true;
-        nixpkgs.config.overlays = [
-          (final: prev:
-            lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
-              # Add access to x86 packages system is running Apple Silicon
-              pkgs-x86 = import nixpkgs {
-                system = "x86_64-darwin";
-                config.allowUnfree = true;
-              };
-            })
-        ];
+       nixpkgs.config.allowUnfree = true;
 
-        # Enable Homebrew integration (optional)
-        homebrew = {
-          enable = false; # install homebrew first
-          onActivation.autoUpdate = true;
-          casks = [
-            # "firefox"
-            # "iterm2"
-          ];
-        };
+       # Enable Homebrew integration (optional - install homebrew first)
+       homebrew = {
+         enable = false;
+         onActivation.autoUpdate = true;
+         casks = [
+           # "firefox"
+           # "iterm2"
+         ];
+       };
 
-        # macOS system preferences
-        system.defaults = {
-          dock.autohide = true;
-          finder.AppleShowAllExtensions = true;
-        };
+       # macOS system preferences
+       system.defaults = {
+         dock.autohide = true;
+         finder.AppleShowAllExtensions = true;
+       };
 
-        system.primaryUser = "<your username>";
-
-        # Required for nix-darwin
-        nix.settings.experimental-features = ["nix-command" "flakes"];
-
-        system.stateVersion = 5;
-      }
+       system.stateVersion = 5;
+     };
+   }
    ```
 
 3. **Add to `flake-modules/darwin.nix`:**
 
-**Important** The hostname must match!
+   **Important**: The hostname must match your Mac's hostname!
 
    ```nix
    flake.darwinConfigurations = {
@@ -266,18 +284,18 @@ services.getty.autologinUser = "yourusername";
 
 You may get an error about overwriting /etc/zshenv. Do this
 
-    ```
+    ```bash
       sudo mv /etc/zshenv /etc/zshenv.before-nix-darwin
     ```
 
 5. **Build and apply:**
    ```bash
    # First time - bootstrap nix-darwin
-   nix build .#darwinConfigurations.your-mac.system
-   ./result/sw/bin/darwin-rebuild switch --flake .#your-mac
+   just build
+   just switch
 
    # Subsequent updates
-   just switch your-mac
+   just switch
    ```
 
 ---
@@ -299,12 +317,11 @@ just run-test-vm
 
 ### On macOS (M-series Macs)
 
-> as of today, 2026-01-14 this is not enabled by default on the Determinate Nix installer
-> See https://determinate.systems/blog/changelog-determinate-nix-384/ 
-> run 'determinate-nixd --version' to check for the feature
-> If you see the message The feature native-linux-builder is enabled then this should work
+The test VM runs as an aarch64-linux guest. You need Determinate Nix's native Linux builder.
 
-The test VM runs as an aarch64-linux guest. Enable Determinate Nix's native Linux builder first:
+> **Note**: As of 2026-01-14, this feature may not be enabled by default.
+> See https://determinate.systems/blog/changelog-determinate-nix-384/
+> Run `determinate-nixd --version` to check. If you see "The feature native-linux-builder is enabled" then this should work.
 
 1. Add to `/etc/nix/nix.conf`:
    ```
@@ -409,15 +426,17 @@ Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` f
 
 | Command | Description |
 |---------|-------------|
+| `just build` | Build without switching |
+| `just switch` | Build and apply configuration |
+| `just build-test-vm` | Build the test VM |
 | `just run-test-vm` | Build and run the test VM |
 | `just clean-test-vm` | Remove VM disk and build artifacts |
-| `just build test-vm` | Build without running |
-| `just switch <host>` | Build and apply configuration |
 | `just vm-switch <host>` | Switch inside VM (workaround for git worktrees) |
 | `just deploy <host>` | Deploy to remote NixOS host via SSH |
 | `just fmt` | Format all nix files |
 | `just update` | Update flake inputs |
 | `just repl` | Open nix repl with flake loaded |
+| `just gc` | Garbage collect old generations |
 
 ---
 
