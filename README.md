@@ -136,15 +136,10 @@ The real power of this setup is iterating quickly: edit files on your host, then
 
 ```bash
 cd /tmp/shared
-sudo nixos-rebuild switch --flake .#test-vm
+just vm-switch test-vm
 ```
 
-Or use the just command:
-
-```bash
-cd /tmp/shared
-just switch test-vm
-```
+Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` flake prefix to work around git worktree issues with shared folders.
 
 ### What you can test
 
@@ -202,6 +197,7 @@ just switch test-vm
 | `just clean-test-vm` | Remove VM disk and build artifacts |
 | `just build test-vm` | Build without running |
 | `just switch <host>` | Build and apply configuration |
+| `just vm-switch <host>` | Switch inside VM (workaround for git worktrees) |
 | `just fmt` | Format all nix files |
 | `just update` | Update flake inputs |
 | `just repl` | Open nix repl with flake loaded |

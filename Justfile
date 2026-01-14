@@ -36,6 +36,12 @@ trace target_host=hostname: (build target_host "--show-trace")
 switch target_host=hostname:
   sudo nixos-rebuild switch --flake .#{{target_host}}
 
+# Switch inside VM (workaround for git worktree issues with shared folders)
+# Uses path: prefix to bypass git detection
+[linux]
+vm-switch target_host=hostname:
+  sudo nixos-rebuild switch --flake "path:$(pwd)#{{target_host}}"
+
 # Update flake inputs to their latest revisions
 update:
   nix flake update
