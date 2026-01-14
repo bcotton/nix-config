@@ -1,7 +1,6 @@
 {
   inputs = {
     agenix.url = "github:ryantm/agenix";
-    nixinate.url = "github:matthewcroughan/nixinate";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
@@ -22,7 +21,6 @@
   outputs = inputs @ {
     self,
     agenix,
-    nixinate,
     nixpkgs,
     nixpkgs-unstable,
     nix-darwin,
@@ -38,7 +36,7 @@
       };
     in {};
 
-    inputs = {inherit agenix disko nixinate nix-darwin home-manager nixpkgs nixpkgs-unstable;};
+    inputs = {inherit agenix disko nix-darwin home-manager nixpkgs nixpkgs-unstable;};
 
     # creates correct package sets for specified arch
     genPkgs = system:
@@ -79,15 +77,6 @@
                 localPackages = localPackages;
               };
             }
-            ({config, ...}: {
-              _module.args.nixinate = {
-                host = hostName;
-                sshUser = "root";
-                buildOn = "remote";
-                hermetic = false;
-              };
-            })
-
             ./overlays.nix
 
             disko.nixosModules.disko
@@ -151,8 +140,6 @@
         ];
       };
   in {
-    apps.nixinate = (nixinate.nixinate.x86_64-linux self).nixinate;
-
     packages.x86_64-linux = let
       pkgs = import nixpkgs {
         system = "x86_64-linux";

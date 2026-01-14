@@ -43,15 +43,33 @@ update:
 fmt:
   nix fmt
 
-  # Run nixinate for a specific host
-nixinate hostname:
-  nix run ".#apps.nixinate.{{hostname}}"
+# Deploy to one or more remote NixOS hosts via SSH
+# Usage: just deploy nas-01
+#        just deploy nas-01 nix-01 nix-02
+deploy +hostnames:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  for hostname in {{hostnames}}; do
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Deploying $hostname..."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#$hostname \
+      --target-host root@$hostname || echo "⚠ Failed to deploy $hostname"
+  done
+  echo ""
+  echo "✓ Deployment complete"
+
+# Deploy to all NixOS hosts
+deploy-all:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  for host in $(nix eval --json '.#nixosConfigurations' --apply builtins.attrNames | jq -r '.[]'); do
+    echo "Deploying $host..."
+    just deploy "$host" || echo "Failed to deploy $host"
+  done
 
 build-host hostname:
   nix build '.#nixosConfigurations.{{hostname}}.config.system.build.toplevel'
-
-nix-all:
-  for i in `(nix flake show --json | jq -r '.nixosConfigurations |keys[]' | grep -v admin ) 2>/dev/null `; do nix run ".#apps.nixinate.$i" ; done
 
 build-all:
   for i in `(nix flake show --json | jq -r '.nixosConfigurations |keys[]' | grep -v admin ) 2>/dev/null `; do echo $i; nix build ".#nixosConfigurations.$i.config.system.build.toplevel"; done
