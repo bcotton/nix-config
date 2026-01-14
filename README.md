@@ -224,9 +224,10 @@ services.getty.autologinUser = "yourusername";
        finder.AppleShowAllExtensions = true;
      };
 
+     system.defaultUser = "<your username>";
+
      # Required for nix-darwin
-     services.nix-daemon.enable = true;
-     nix.settings.experimental-features = ["nix-command" "flakes"];
+       nix.settings.experimental-features = ["nix-command" "flakes"];
 
      system.stateVersion = 5;
    }
