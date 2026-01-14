@@ -7,11 +7,43 @@ A multi-host, multi-platform Nix flake template for managing NixOS and macOS (ni
 - [Nix](https://nixos.org/download.html) with flakes enabled
 - [just](https://github.com/casey/just) command runner (optional but recommended)
 
+---
+
+## Installing Nix
+
+### On macOS (Darwin)
+
+```bash
+# Install Nix using the Determinate Systems installer (recommended)
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+
+# Or use the official installer
+sh <(curl -L https://nixos.org/nix/install)
+```
+
+After installation, ensure flakes are enabled. Add to `~/.config/nix/nix.conf`:
+
+```
+experimental-features = nix-command flakes
+```
+
+### On Linux
+
+```bash
+# Install Nix
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+# Enable flakes in ~/.config/nix/nix.conf
+experimental-features = nix-command flakes
+```
+
+---
+
 ## Quick Start
 
 1. Clone this repository
 2. Add your user (see below)
-3. Boot the test VM to experiment
+3. Boot the test VM to experiment (Linux) or apply directly (macOS)
 4. Customize and apply to your real machines
 
 ---
@@ -56,12 +88,14 @@ Create `home/yourusername.nix`:
   pkgs,
   ...
 }: {
-  home.stateVersion = "24.11";
+  home.stateVersion = "25.11";
 
   programs.git = {
     enable = true;
-    userName = "Your Name";
-    userEmail = "your@email.com";
+    settings.user = {
+      name = "Your Name";
+      email = "your@email.com";
+    };
   };
 
   programs.home-manager.enable = true;
@@ -75,24 +109,143 @@ Create `home/yourusername.nix`:
 }
 ```
 
-### Step 3: Update flake.nix
+### Step 3: Update host configuration
 
-Edit the `nixosConfigurations` section in `flake.nix` to use your username:
+Edit the appropriate flake module to use your username:
 
+**For NixOS hosts** - Edit `flake-modules/nixos.nix`:
 ```nix
-nixosConfigurations = {
-  # Change ["bcotton"] to ["yourusername"]
-  test-vm = nixosSystem "x86_64-linux" "test-vm" ["yourusername"];
+test-vm = mkNixosSystem {
+  system = "x86_64-linux";
+  hostName = "test-vm";
+  usernames = ["yourusername"];  # Change this
 };
 ```
 
-### Step 4: Update the test-vm auto-login
+**For Darwin hosts** - Edit `flake-modules/darwin.nix`:
+```nix
+your-mac = mkDarwinSystem {
+  system = "aarch64-darwin";
+  hostName = "your-mac";
+  username = "yourusername";  # Change this
+};
+```
+
+### Step 4: Update the test-vm auto-login (NixOS only)
 
 Edit `hosts/nixos/test-vm/default.nix` and change the auto-login user:
 
 ```nix
 services.getty.autologinUser = "yourusername";
 ```
+
+---
+
+## Adding New Hosts
+
+### Adding a NixOS Host
+
+1. **Create the host directory:**
+   ```bash
+   mkdir -p hosts/nixos/your-hostname
+   ```
+
+2. **Create `hosts/nixos/your-hostname/default.nix`:**
+   ```nix
+   {
+     pkgs,
+     lib,
+     ...
+   }: {
+     # Import hardware configuration (generate with nixos-generate-config)
+     imports = [./hardware-configuration.nix];
+
+     boot.loader.systemd-boot.enable = true;
+     boot.loader.efi.canTouchEfiVariables = true;
+
+     networking.useDHCP = true;
+
+     # Add host-specific configuration here
+
+     system.stateVersion = "25.11";
+   }
+   ```
+
+3. **Add to `flake-modules/nixos.nix`:**
+   ```nix
+   flake.nixosConfigurations = {
+     # ... existing hosts ...
+     your-hostname = mkNixosSystem {
+       system = "x86_64-linux";
+       hostName = "your-hostname";
+       usernames = ["yourusername"];
+     };
+   };
+   ```
+
+4. **Build and apply:**
+   ```bash
+   just switch your-hostname
+   ```
+
+### Adding a Darwin (macOS) Host
+
+1. **Create the host directory:**
+   ```bash
+   mkdir -p hosts/darwin/your-mac
+   ```
+
+2. **Create `hosts/darwin/your-mac/default.nix`:**
+   ```nix
+   {
+     pkgs,
+     ...
+   }: {
+     # Enable Homebrew integration (optional)
+     homebrew = {
+       enable = true;
+       onActivation.autoUpdate = true;
+       casks = [
+         # "firefox"
+         # "iterm2"
+       ];
+     };
+
+     # macOS system preferences
+     system.defaults = {
+       dock.autohide = true;
+       finder.AppleShowAllExtensions = true;
+     };
+
+     # Required for nix-darwin
+     services.nix-daemon.enable = true;
+     nix.settings.experimental-features = ["nix-command" "flakes"];
+
+     system.stateVersion = 5;
+   }
+   ```
+
+3. **Add to `flake-modules/darwin.nix`:**
+   ```nix
+   flake.darwinConfigurations = {
+     # ... existing hosts ...
+     your-mac = mkDarwinSystem {
+       system = "aarch64-darwin";  # or "x86_64-darwin" for Intel
+       hostName = "your-mac";
+       username = "yourusername";
+     };
+   };
+   ```
+
+4. **Build and apply:**
+   ```bash
+   # First time - bootstrap nix-darwin
+   nix build .#darwinConfigurations.your-mac.system
+   ./result/sw/bin/darwin-rebuild switch --flake .#your-mac
+
+   # Subsequent updates
+   just switch your-mac
+   ```
 
 ---
 
@@ -162,9 +315,13 @@ Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` f
 
 ```
 .
-├── flake.nix                 # Main flake - defines all systems
+├── flake.nix                 # Main flake entry point
 ├── flake.lock                # Locked dependency versions
 ├── Justfile                  # Build commands
+│
+├── flake-modules/            # Flake-parts modules
+│   ├── nixos.nix             # NixOS host definitions
+│   └── darwin.nix            # Darwin host definitions
 │
 ├── hosts/
 │   ├── common/
@@ -172,7 +329,8 @@ Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` f
 │   │   ├── nixos-common.nix      # NixOS-specific settings
 │   │   └── darwin-common.nix     # macOS-specific settings
 │   ├── nixos/
-│   │   └── test-vm/              # Test VM configuration
+│   │   ├── test-vm/              # Test VM configuration
+│   │   └── nixhost/              # Example NixOS host
 │   └── darwin/
 │       └── bobs-laptop/          # Example macOS host
 │
@@ -198,6 +356,7 @@ Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` f
 | `just build test-vm` | Build without running |
 | `just switch <host>` | Build and apply configuration |
 | `just vm-switch <host>` | Switch inside VM (workaround for git worktrees) |
+| `just deploy <host>` | Deploy to remote NixOS host via SSH |
 | `just fmt` | Format all nix files |
 | `just update` | Update flake inputs |
 | `just repl` | Open nix repl with flake loaded |
@@ -208,7 +367,7 @@ Note: Use `vm-switch` instead of `switch` inside the VM. This uses the `path:` f
 
 Once you're comfortable with the test VM:
 
-1. **Add a real host**: Copy `hosts/nixos/test-vm/` to create a new host configuration
+1. **Add a real host**: Follow the "Adding New Hosts" section above
 2. **Customize packages**: Edit `hosts/common/common-packages.nix`
-3. **Add macOS support**: See `hosts/darwin/bobs-laptop/` for an example
-4. **Set up secrets**: The flake includes [agenix](https://github.com/ryantm/agenix) for encrypted secrets
+3. **Set up secrets**: The flake includes [agenix](https://github.com/ryantm/agenix) for encrypted secrets
+4. **Remote deployment**: Use `just deploy <hostname>` to deploy to remote NixOS machines
