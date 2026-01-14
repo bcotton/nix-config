@@ -51,7 +51,6 @@
     ];
   };
 in {
-
   # Functions for working with exporters
   inherit monitoredExporters enabledExportersF mkScrapeConfigExporterF;
   /*

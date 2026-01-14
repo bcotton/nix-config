@@ -253,7 +253,7 @@ services.getty.autologinUser = "yourusername";
 
 The test VM lets you experiment with the flake without affecting your real system. It mounts this directory at `/tmp/shared` so you can edit files on your host and test changes inside the VM.
 
-### Build and run the VM
+### On Linux
 
 ```bash
 # First time (or after changes to VM config)
@@ -263,6 +263,26 @@ just run-test-vm
 just clean-test-vm
 just run-test-vm
 ```
+
+### On macOS (M-series Macs)
+
+The test VM runs as an aarch64-linux guest. Enable Determinate Nix's native Linux builder first:
+
+1. Add to `/etc/nix/nix.conf`:
+   ```
+   extra-experimental-features = external-builders
+   ```
+
+2. Restart the Nix daemon:
+   ```bash
+   sudo launchctl kickstart -k system/org.nixos.nix-daemon
+   ```
+
+3. Build and run:
+   ```bash
+   just build-test-vm
+   just run-test-vm
+   ```
 
 ### What happens
 

@@ -3,9 +3,11 @@
   unstablePkgs,
   lib,
   inputs,
+  system,
   ...
 }: let
   inherit (inputs) nixpkgs nixpkgs-unstable;
+  isX86 = system == "x86_64-linux";
 in {
   time.timeZone = "America/Denver";
 
@@ -24,20 +26,23 @@ in {
 
   nixpkgs.config.allowUnfree = true;
 
-  environment.systemPackages = with pkgs; [
-    alsa-utils
-    intel-gpu-tools
-    libva-utils
-    file
-    intel-media-driver
-    jellyfin-ffmpeg
-    hddtemp
-    nil
-    synergy
-    television
-    qemu
-    quickemu
-  ];
+  environment.systemPackages = with pkgs;
+    [
+      alsa-utils
+      file
+      hddtemp
+      nil
+      synergy
+      television
+      qemu
+      quickemu
+    ]
+    ++ lib.optionals isX86 [
+      intel-gpu-tools
+      intel-media-driver
+      libva-utils
+      jellyfin-ffmpeg
+    ];
 
   ## pins to stable as unstable updates very often
   # nix.registry.nixpkgs.flake = inputs.nixpkgs;

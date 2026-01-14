@@ -37,7 +37,13 @@
     cores = 2;
     diskSize = 10240;
     graphics = false;
-    forwardPorts = [{from = "host"; host.port = 2222; guest.port = 22;}];
+    forwardPorts = [
+      {
+        from = "host";
+        host.port = 2222;
+        guest.port = 22;
+      }
+    ];
   };
 
   system.stateVersion = "24.11";

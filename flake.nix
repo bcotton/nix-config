@@ -28,11 +28,19 @@
         ./flake-modules/darwin.nix
       ];
 
-      perSystem = {pkgs, system, ...}: {
+      perSystem = {
+        pkgs,
+        system,
+        ...
+      }: {
         formatter = pkgs.alejandra;
 
         packages = {
-          test-vm = inputs.self.nixosConfigurations.test-vm.config.system.build.vm;
+          # Select the appropriate VM architecture based on host system
+          test-vm =
+            if system == "aarch64-darwin" || system == "aarch64-linux"
+            then inputs.self.nixosConfigurations.test-vm-arm.config.system.build.vm
+            else inputs.self.nixosConfigurations.test-vm.config.system.build.vm;
         };
       };
     };

@@ -106,3 +106,22 @@ run-test-vm:
 clean-test-vm:
   rm -f test-vm.qcow2 *.qcow2
   rm -rf result
+
+# Build the test VM (aarch64-linux for M-series Macs)
+[macos]
+build-test-vm:
+  nix build .#test-vm
+
+# Run the test VM with shared folder mounting this directory to /mnt/flake
+[macos]
+run-test-vm:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  nix build .#test-vm
+  SHARED_DIR="$(pwd)" ./result/bin/run-test-vm-vm
+
+# Clean up test VM artifacts
+[macos]
+clean-test-vm:
+  rm -f test-vm.qcow2 *.qcow2
+  rm -rf result
