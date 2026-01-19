@@ -653,6 +653,9 @@
 
       # tmux (cross-platform)
       tmux
+
+      # Fonts
+      nerd-fonts.jetbrains-mono
     ]
     ++ lib.optionals stdenv.isDarwin [
       # macOS-only: tmux clipboard integration

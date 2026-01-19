@@ -37,17 +37,24 @@ function bdl() {
     bd_args=("$@")
 
     # Build the preview command - ID is prepended as first field
-    preview_cmd='bd show {1}'
+    # Use expect for color output in preview pane
+    preview_cmd="expect -c 'spawn -noecho bd show {1}; expect eof' 2>&1 | sed 's/\r\$//'"
 
     # Preprocessing: prepend ID to each line for consistent {1} access
     # awk extracts ID (matches namespace-shortcode pattern) and prepends it
-    local preprocess='awk '\''{for(i=1;i<=NF;i++) if($i ~ /^[a-z]+-[a-z0-9.]+$/) {print $i, $0; next}} {print "", $0}'\'''
-    local reload_cmd="bd list --pretty ${bd_args[*]} | $preprocess"
+    # Only output lines that have a valid ID (filters out summary/legend lines)
+    local preprocess='awk '\''{for(i=1;i<=NF;i++) if($i ~ /^[a-z]+-[a-z0-9.]+$/) {print $i, $0; next}}'\'''
+
+    # Use expect to force TTY for color output, strip carriage returns
+    local list_cmd="expect -c 'spawn -noecho bd list --pretty ${bd_args[*]}; expect eof' 2>&1 | sed 's/\r\$//'"
+    local reload_cmd="$list_cmd | $preprocess"
 
     # Main fzf command with preview
+    # --ansi: render ANSI color codes
     # --with-nth=2.. hides the prepended ID from display but {1} still accesses it
-    issue_id=$(bd list --pretty ${bd_args[*]} | eval "$preprocess" | \
-        fzf --layout=reverse \
+    issue_id=$(eval "$list_cmd" | eval "$preprocess" | \
+        fzf --ansi \
+            --layout=reverse \
             --border \
             --with-nth=2.. \
             --prompt="Select issue > " \
@@ -58,7 +65,9 @@ function bdl() {
             --bind 'ctrl-d:execute-silent(bd delete {1})+reload('"$reload_cmd"')' \
             --bind 'ctrl-w:execute(zsh -ic "_bdl_worktree {1}")+abort' \
             --bind 'ctrl-p:execute(zsh -ic "_bdl_worktree_plan {1}")+abort' \
-            --header 'ctrl-r: refresh | ctrl-s: claude | d: delete | w: work | p: plan' | \
+            --bind 'ctrl-e:execute(bd edit {1})+reload('"$reload_cmd"')' \
+            --bind 'ctrl-y:execute-silent(echo -n {1} | pbcopy)' \
+            --header 'ctrl-r: refresh | ctrl-s: claude | ctrl-d: delete | ctrl-w: work | ctrl-p: plan | ctrl-e: edit | ctrl-y: copy' | \
         awk '{print $1}')
 
     # If an issue was selected, show it
