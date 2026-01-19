@@ -9,6 +9,8 @@ rgf() {
         --border \
         --ansi \
         --delimiter : \
-        --preview 'bat --color=always --theme=1337 --highlight-line {2} {1}' \
-        --preview-window 'right,60%,wrap'
+        --preview 'line={2}; start=$((line > 10 ? line - 10 : 1)); bat --color=always --theme=1337 --highlight-line $line --line-range $start: {1}' \
+        --preview-window 'right,60%'
 }
+
+alias frg=rgf
