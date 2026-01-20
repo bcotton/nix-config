@@ -30,11 +30,15 @@ _bdl_worktree_plan() {
 }
 
 function bdl() {
-    local preview_cmd issue_id
+    local preview_cmd issue_id preview_pos
     local -a bd_args
 
     # Store arguments to pass to bd list
     bd_args=("$@")
+
+    # Use top/bottom layout if terminal is taller than wide
+    preview_pos='right:60%:wrap'
+    [[ $(tput lines) -gt $(tput cols) ]] && preview_pos='up:50%:wrap'
 
     # Build the preview command - ID is prepended as first field
     # Use expect for color output in preview pane
@@ -58,7 +62,7 @@ function bdl() {
             --border \
             --with-nth=2.. \
             --prompt="Select issue > " \
-            --preview-window=right:60%:wrap \
+            --preview-window="$preview_pos" \
             --preview "$preview_cmd" \
             --bind "ctrl-r:reload($reload_cmd)" \
             --bind 'ctrl-s:execute-silent(tmux send-keys -t :.1 "please start work on bead {1}" Enter)+abort' \
