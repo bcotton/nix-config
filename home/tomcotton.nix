@@ -316,7 +316,9 @@ in {
         # This property will be used to generate settings.json:
         # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
         "editor.formatOnSave" = true;
-        "editor.fontSize" = 14;
+        "editor.fontSize" = 12;
+        "editor.insertSpaces" = true;
+        "editor.detectIndentation" = true;
         "files.autoSave" = "onFocusChange";
         # "extensions.autoCheckUpdates" = false;
         "extensions.autoUpdate" = false;
@@ -343,6 +345,7 @@ in {
         "workbench.colorTheme" = "Gruvbox Material Dark";
         "gruvboxMaterial.darkContrast" = "medium";
         "gruvboxMaterial.highContrast" = true;
+        "makefile.configureOnOpen" = true;
         # "gruvboxMaterial.darkPalette" = "original";
         # "gruvboxMaterial.darkWorkbench" = "original";
       };
@@ -466,6 +469,12 @@ in {
 
         # For some reason this was aliased to vi, seems regresive
         unalias nvim
+
+        # Set these in your shell (e.g., ~/.bashrc, ~/.zshrc)
+        export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+        export ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY"
+        export ANTHROPIC_API_KEY="" # Important: Must be explicitly empty
+
       '';
       plugins = [
         "brew"

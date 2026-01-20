@@ -68,7 +68,7 @@ in {
       "nixos-test"
       "apple-virt"
     ];
-    nix.settings.trusted-users = [ 
+    nix.settings.trusted-users = [
       "root"
       "tomcotton"
     ];
@@ -108,6 +108,7 @@ in {
         "cabal-install"
       ];
       casks = [
+        "claude-code"
         "hiddenbar"
         "plugdata"
         "font-hack-nerd-font"
@@ -125,7 +126,6 @@ in {
         "firefox"
         "istat-menus"
         "iterm2"
-        "nextcloud"
         "obsidian"
         "openscad"
         "nuage"
@@ -135,7 +135,6 @@ in {
         "zoom"
         # "unity-hub"
         # "epic-games"
-        "bitwarden"
         "steam"
         "tailscale"
         "qmk-toolbox"
@@ -145,7 +144,7 @@ in {
         "arduino-ide"
         "utm" # Virtualization based on QEMU
         "wine-stable"
-        "xcodes-app" # Manages downloads enabling of xcode versions
+        # "xcodes-app" # Manages downloads enabling of xcode versions
         "cryptomator" # encrypts files, used to back up bitwarden
         "zen" # zen browser
         "nikitabobko/tap/aerospace"
@@ -197,11 +196,10 @@ in {
 
     # macOS configuration
     # Blocks mac from storing window presence and location. Results in only startup apps at startup.
-    system.activationScripts.blockWindowLogging.text = "" "
-      sudo chown root ~/Library/Preferences/ByHost/com.apple.loginwindow.*
-      sudo chmod 000 ~/Library/Preferences/ByHost/com.apple.loginwindow.*
-      echo 'blocking access to ~/Library/Preferences/ByHost/com.apple.loginwindow.*'
-    " "";
+    #   sudo chown root ~/Library/Preferences/ByHost/com.apple.loginwindow.*
+    #   sudo chmod 000 ~/Library/Preferences/ByHost/com.apple.loginwindow.*
+    #   echo 'blocking access to ~/Library/Preferences/ByHost/com.apple.loginwindow.*'
+    # " "";
     system.defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.AppleShowScrollBars = "Always";

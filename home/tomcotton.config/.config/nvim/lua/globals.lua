@@ -21,10 +21,10 @@ vim.opt.cursorline = true
 vim.opt.cursorcolumn = true
 
 -- Set shift width to 4 spaces.
-vim.opt.shiftwidth = 4
+-- vim.opt.shiftwidth = 4
 
 -- Set tab width to 4 columns.
-vim.opt.tabstop = 4
+-- vim.opt.tabstop = 4
 
 vim.opt.termguicolors = true
 vim.cmd([[
@@ -81,4 +81,3 @@ vim.opt.wildignore = '*.docx,*.jpg,*.png,*.gif,*.pdf,*.pyc,*.exe,*.flv,*.img,*.x
 
 -- Use system clipboard
 vim.opt.clipboard:append('unnamedplus')
-
