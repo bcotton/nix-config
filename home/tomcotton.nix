@@ -74,13 +74,20 @@ in {
   home.file."dotfiles" = {
     enable = true;
     recursive = true;
-    source = ./tomcotton.config;
+    source = ./tomcotton/config;
     target = "tmp/..";
   };
   home.file."dummy" = {
     enable = true;
-    source = ./tomcotton.config/tmp/dummy;
+    source = ./tomcotton/config/tmp/dummy;
     target = "tmp/dummy";
+  };
+  home.file."scripts" = {
+    enable = true;
+    recursive = true;
+    executable = true;
+    source = ./tomcotton/scripts;
+    target = "bin/";
   };
 
   programs.direnv = {
@@ -372,18 +379,18 @@ in {
     };
   };
 
-  xdg = {
-    enable = true;
-    configFile."containers/registries.conf" = {
-      source = ./dot.config/containers/registries.conf;
-    };
-    configFile."atuin/config.toml" = {
-      source = ./tomcotton.config/.config/atuin/config.toml;
-    };
-    configFile."ghostty/config" = {
-      source = ./tomcotton.config/.config/ghostty/config;
-    };
-  };
+  # xdg = {
+  #   enable = true;
+  #   configFile."containers/registries.conf" = {
+  #     source = ./dot.config/containers/registries.conf;
+  #   };
+  #   configFile."atuin/config.toml" = {
+  #     source = ./tomcotton/config/.config/atuin/config.toml;
+  #   };
+  #   configFile."ghostty/config" = {
+  #     source = ./tomcotton/config/.config/ghostty/config;
+  #   };
+  # };
 
   programs.zsh = {
     enable = true;

@@ -19,7 +19,7 @@ set ifs "\n"
 
 # === Low Level Changes ===
 
-# Use bat to color pager 
+# Use bat to color pager
 # map i $bat $f --pager="less -R"
 
 # use enter for shell commands
@@ -46,6 +46,14 @@ cmd open &{{
         *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
     esac
 }}
+
+# Shows filter results as you type
+set incfilter true
+# Clears fileter and prompts
+cmd refilter :setfilter; filter
+map f refilter
+# Clears filter
+map F :setfilter
 
 # === Visual Changes ===
 
@@ -211,7 +219,7 @@ map gp $clear; git pull --rebase || true; echo "press ENTER"; read ENTER
 map gs $clear; git status; echo "press ENTER"; read ENTER
 map gl $clear; git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
 
-# mac quick look 
+# mac quick look
 # map <space> &qlmanage -p "$f" 2>/dev/null 1>/dev/null
 
 # copy file names stuff
@@ -270,7 +278,7 @@ map r
 map rr rename
 map ra bulk-rename
 
-map . push :cd<space>  
+map . push :cd<space>
 
 # Use ripgrep to search and select a file
 cmd fzf_search ${{
