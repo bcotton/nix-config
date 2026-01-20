@@ -277,7 +277,7 @@
         export PAGER=less
         # Variable-dependent PATH additions (static paths are in home.sessionPath)
         export PNPM_HOME="$HOME/.local/share/pnpm"
-        export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
+        export PATH="$HOME/.orbstack/bin:$PNPM_HOME:$GOPATH/bin:$PATH"
         export QMK_HOME=~/projects/qmk_firmware
         export TILT_HOST=0.0.0.0
         export TMPDIR=/tmp/
@@ -459,7 +459,10 @@
         if [[ "$BUFFER" =~ '(--help|-h|[[:space:]]help)$' ]]; then
           # Don't double-pipe if already piped
           if [[ "$BUFFER" != *"|"* ]]; then
-            BUFFER="$BUFFER 2>&1 | ''${PAGER:-less}"
+            # Save original command to history
+            print -s "$BUFFER"
+            # Prepend space so modified version isn't saved (HIST_IGNORE_SPACE)
+            BUFFER=" $BUFFER 2>&1 | ''${PAGER:-less}"
           fi
         fi
         zle .accept-line
