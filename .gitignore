@@ -4,5 +4,4 @@ nixos.qcow2
 .nixos-test-history
 .aider*
 .DS_Store
-tmp/
 Session.vim

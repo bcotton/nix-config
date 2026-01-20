@@ -47,6 +47,7 @@ cmd open &{{
     esac
 }}
 
+# == Filtering and automatic filter clearing ==
 # Shows filter results as you type
 set incfilter true
 # Clears fileter and prompts
@@ -54,6 +55,17 @@ cmd refilter :setfilter; filter
 map f refilter
 # Clears filter
 map F :setfilter
+
+cmd UnfilterOpen :setfilter; open
+map l UnfilterOpen
+map <right> UnfilterOpen
+
+cmd UnfilterUpdir :setfilter; updir
+map h UnfilterUpdir
+map <left> UnfilterUpdir
+
+set previewer ~/bin/lf_pv.sh
+set preview true
 
 # === Visual Changes ===
 
