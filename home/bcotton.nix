@@ -358,6 +358,7 @@
       batj = "bat -l json";
       batly = "bat -l yaml";
       batmd = "bat -l md";
+      y = "yazi";
       dir = "exa -l --icons --no-user --group-directories-first  --time-style long-iso --color=always";
       tree = "exa -Tl --color=always";
       ltr = "ll -snew";
@@ -643,6 +644,7 @@
       etcd
       fswatch
       git-absorb
+      yazi
       glances
       hwatch
       # jd  # not in nixpkgs - keep in Homebrew
