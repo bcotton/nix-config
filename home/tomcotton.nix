@@ -379,13 +379,13 @@ in {
       keybindings = [
         # See https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
         {
-            key = "ctrl+t";
-            command = "workbench.action.terminal.focus";
+          key = "ctrl+t";
+          command = "workbench.action.terminal.focus";
         }
         {
-            key = "ctrl+t";
-            command = "workbench.action.focusActiveEditorGroup";
-            when = "terminalFocus";
+          key = "ctrl+t";
+          command = "workbench.action.focusActiveEditorGroup";
+          when = "terminalFocus";
         }
         # {
         #   key = "ctrl+alt+shift+cmd+[";
@@ -571,7 +571,8 @@ in {
   programs.nix-index.enable = true;
   #  programs.zoxide.enable = true;
 
-  programs.neovim = { # https://nixos.wiki/wiki/Neovim
+  programs.neovim = {
+    # https://nixos.wiki/wiki/Neovim
     plugins = [
       # (pkgs.vimPlugins.nvim-treesitter.withPlugins (p: [
       #   p.c
@@ -586,7 +587,7 @@ in {
       #   p.latex
       # ]))
       pkgs.vimPlugins.LazyVim
-   ];
+    ];
   };
 
   programs.ssh = {

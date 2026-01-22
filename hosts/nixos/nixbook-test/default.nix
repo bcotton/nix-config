@@ -26,7 +26,7 @@
 
   # === Audio Friendly Kernel Mods ===
   musnix.enable = true;
-  users.users.tomcotton.extraGroups = [ "audio" ];
+  users.users.tomcotton.extraGroups = ["audio"];
   boot.kernelPackages = pkgs.linuxPackages-rt_latest;
 
   # services.kmonad = {
@@ -65,13 +65,12 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-	nixpkgs.config.permittedInsecurePackages = [
+  nixpkgs.config.permittedInsecurePackages = [
     "broadcom-sta-6.30.223.271-57-6.12.40"
     "broadcom-sta-6.30.223.271-57-6.6.30-rt30"
     "broadcom-sta-6.30.223.271-57-5.15.183-rt85"
     "broadcom-sta-6.30.223.271-57-6.6.87-rt54"
   ];
-
 
   networking = {
     hostName = "nixbook-test";

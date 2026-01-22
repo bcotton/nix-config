@@ -56,6 +56,11 @@
       url = "git+http://nas-01.lan:3000/bcotton/nix-builder-config";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    musnix = {
+      url = "github:musnix/musnix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {flake-parts, ...}:

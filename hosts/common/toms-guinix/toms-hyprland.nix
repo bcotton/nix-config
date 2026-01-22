@@ -49,15 +49,15 @@ in {
     wl-clipboard
 
     # Desktop Applications
-    blanket          # Background sounds
-    celluloid        # Video player
-    dialect          # Translation app
-    drawing          # Drawing app
-    eog             # Image viewer
-    evince          # Document viewer
-    file-roller     # Archive manager
-    foliate         # Ebook reader
-    fragments       # Torrent client
+    blanket # Background sounds
+    celluloid # Video player
+    dialect # Translation app
+    drawing # Drawing app
+    eog # Image viewer
+    evince # Document viewer
+    file-roller # Archive manager
+    foliate # Ebook reader
+    fragments # Torrent client
     gnome-calculator
     gnome-calendar
     kdePackages.kate
@@ -73,11 +73,11 @@ in {
   fonts.packages = with pkgs; [
     font-awesome
     font-awesome_5
-    nerd-fonts.fira-code           # Popular monospace font with good symbol support
-    nerd-fonts.jetbrains-mono     # Clear monospace font with excellent readability
-    nerd-fonts.noto               # Clean sans-serif font with extensive unicode support
-    nerd-fonts.roboto-mono        # Google's monospace font with added symbols
-    nerd-fonts.ubuntu-mono        # Ubuntu's monospace font with added symbols
+    nerd-fonts.fira-code # Popular monospace font with good symbol support
+    nerd-fonts.jetbrains-mono # Clear monospace font with excellent readability
+    nerd-fonts.noto # Clean sans-serif font with extensive unicode support
+    nerd-fonts.roboto-mono # Google's monospace font with added symbols
+    nerd-fonts.ubuntu-mono # Ubuntu's monospace font with added symbols
     papirus-icon-theme
   ];
 
