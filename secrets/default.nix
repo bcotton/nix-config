@@ -155,7 +155,9 @@
     group = "paperless";
   };
 
-  age.secrets."bcotton-atuin-key" = lib.mkIf config.services.clubcotton.atuin.enable {
+  # Atuin client key - needed on all machines where bcotton uses atuin
+  # (not just where the atuin server runs)
+  age.secrets."bcotton-atuin-key" = lib.mkIf (config.users.users ? bcotton) {
     file = ./bcotton-atuin-key.age;
     owner = "bcotton";
     group = "users";
