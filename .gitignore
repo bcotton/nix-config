@@ -1,3 +1,10 @@
 .claude/settings.local.json
 result*
 .playwright-mcp
+result
+com.googlecode.iterm2.plist
+nixos.qcow2
+.nixos-test-history
+.aider*
+.DS_Store
+Session.vim

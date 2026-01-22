@@ -1,0 +1,311 @@
+# interpreter for shell commands
+set shell sh
+
+# set '-eu' options for shell commands
+# These options are used to have safer shell commands. Option '-e' is used to
+# exit on error and option '-u' is used to give error for unset variables.
+# Option '-f' disables pathname expansion which can be useful when $f, $fs, and
+# $fx variables contain names with '*' or '?' characters. However, this option
+# is used selectively within individual commands as it can be limiting at
+# times.
+set shellopts '-eu'
+
+# set internal field separator (IFS) to "\n" for shell commands
+# This is useful to automatically split file names in $fs and $fx properly
+# since default file separator used in these variables (i.e. 'filesep' option)
+# is newline. You need to consider the values of these options and create your
+# commands accordingly.
+set ifs "\n"
+
+# === Low Level Changes ===
+
+# Use bat to color pager
+# map i $bat $f --pager="less -R"
+
+# use enter for shell commands
+map <enter> shell-pipe
+
+# show the result of execution of previous commands
+map ` !true
+
+# execute current file (must be executable)
+map x $$f
+map X !$f
+
+# dedicated keys for file opener actions
+# map o &mimeopen $f
+map O $mimeopen --ask $f
+
+# define a custom 'open' command
+# This command is called when current file is not a directory. You may want to
+# use either file extensions and/or mime types here. Below uses an editor for
+# text files and a file opener for the rest.
+cmd open &{{
+    case $(file --mime-type -Lb $f) in
+        text/*) lf -remote "send $id \$$EDITOR \$fx";;
+        *) for f in $fx; do $OPENER $f > /dev/null 2> /dev/null & done;;
+    esac
+}}
+
+# == Filtering and automatic filter clearing ==
+# Shows filter results as you type
+set incfilter true
+# Clears fileter and prompts
+cmd refilter :setfilter; filter
+map f refilter
+# Clears filter
+map F :setfilter
+
+# Clear filter when moving left or right
+cmd UnfilterOpen :setfilter; open
+map l UnfilterOpen
+map <right> UnfilterOpen
+
+cmd UnfilterUpdir :setfilter; updir
+map h UnfilterUpdir
+map <left> UnfilterUpdir
+
+set previewer ~/bin/lf_pv.sh
+set preview true
+
+# === Visual Changes ===
+
+set relativenumber true
+
+# mkdir command. See wiki if you want it to select created dir
+map a :push %mkdir<space>
+
+# leave some space at the top and the bottom of the screen
+set scrolloff 10
+
+# Use the `dim` attribute instead of underline for the cursor in the preview pane
+set cursorpreviewfmt "\033[7;2m"
+
+# Enable Borders
+set drawbox
+
+set icons "true"
+
+# Veiw hidden files
+set hidden "true"
+
+set mouse "true"
+
+map c :clear
+
+# Dynamically set column amount
+cmd on-init :{{
+    cmd on-redraw %{{
+        if [ "$lf_width" -le 80 ]; then
+            lf -remote "send $id set ratios 1:2"
+        elif [ "$lf_width" -le 160 ]; then
+            lf -remote "send $id set ratios 1:2:3"
+        else
+            lf -remote "send $id set ratios 1:2:3:5"
+        fi
+    }}
+
+    on-redraw
+}}
+
+# Disable preview cursor
+set cursorpreviewfmt ""
+
+# Set active cursor color
+set cursoractivefmt "\033[38;2;0;0;0;48;2;255;218;185m"
+
+# === File Operations ===
+
+# eza file information
+cmd on-select &{{
+    lf -remote "send $id set statfmt \"$(eza -ld --color=always "$f" | sed 's/\\/\\\\/g;s/"/\\"/g')\""
+}}
+
+set info custom
+
+cmd on-load &{{
+    cd "$(dirname "$1")" || exit 1
+    [ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" = false ] || exit 0
+
+    cmds=""
+
+    for file in "$@"; do
+        case "$file" in
+            */.git|*/.git/*) continue;;
+        esac
+
+        status=$(git status --porcelain --ignored -- "$file" | cut -c1-2 | head -n1)
+
+        if [ -n "$status" ]; then
+            cmds="${cmds}addcustominfo ${file} \"$status\"; "
+        else
+            cmds="${cmds}addcustominfo ${file} ''; "
+        fi
+    done
+
+    lf -remote "send $id :$cmds"
+}}
+
+cmd on-cd &{{
+    # display repository status in your prompt
+    if [ -d .git ] || [ -f .git ]; then
+        branch="$(git branch --show-current 2>/dev/null)" || true
+        remote="$(git config --get "branch.$branch.remote" 2>/dev/null)" || true
+        url="$(git remote get-url "$remote" 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [GIT BRANCH:> $branch >> $url]\033[0m"
+    elif [ -d .hg ]; then
+        hg="$(hg branch 2>/dev/null)" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [HG BRANCH:> $hg]\033[0m"
+    elif [ -d .svn ]; then
+        svn="$(svn info 2>/dev/null | awk '/^URL: /{print $2}')" || true
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%w\033[0m\033[33;1m [SVN URL:> $svn]\033[0m"
+    else
+        fmt="\033[32;1m%u@%h\033[0m:\033[34;1m%d\033[0m\033[1m%f\033[0m"
+    fi
+    lf -remote "send $id set promptfmt \"$fmt\""
+}}
+
+# define a custom 'rename' command without prompt for overwrite
+# cmd rename %[ -e $1 ] && printf "file exists" || mv $f $1
+# map r push :rename<space>
+
+# make sure trash folder exists
+%mkdir -p ~/.trash
+
+# move current file or selected files to trash folder
+# (also see 'man mv' for backup/overwrite options)
+cmd trash %set -f; mv -t ~/.trash $fx
+
+# define a custom 'delete' command
+# cmd delete ${{
+#     set -f
+#     printf "$fx\n"
+#     printf "delete?[y/n]"
+#     read ans
+#     [ "$ans" = "y" ] && rm -rf $fx
+# }}
+
+# use '<delete>' key for either 'trash' or 'delete' command
+map <delete> trash
+# map <delete> delete
+
+# extract the current file with the right command
+# (xkcd link: https://xkcd.com/1168/)
+cmd extract ${{
+    set -f
+    case $f in
+        *.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar xjvf $f;;
+        *.tar.gz|*.tgz) tar xzvf $f;;
+        *.tar.xz|*.txz) tar xJvf $f;;
+        *.zip) unzip $f;;
+        *.rar) unrar x $f;;
+        *.7z) 7z x $f;;
+    esac
+}}
+
+# compress current file or selected files with tar and gunzip
+cmd tar ${{
+    set -f
+    mkdir $1
+    cp -r $fx $1
+    tar czf $1.tar.gz $1
+    rm -rf $1
+}}
+
+# compress current file or selected files with zip
+cmd zip ${{
+    set -f
+    mkdir $1
+    cp -r $fx $1
+    zip -r $1.zip $1
+    rm -rf $1
+}}
+
+# git stuff
+cmd git_branch ${{
+    git branch | fzf | xargs git checkout
+    pwd_shell="$(pwd | sed 's/\\/\\\\/g;s/"/\\"/g')"
+    lf -remote "send $id updir; cd \"$pwd_shell\""
+}}
+map gb :git_branch
+map gp $clear; git pull --rebase || true; echo "press ENTER"; read ENTER
+map gs $clear; git status; echo "press ENTER"; read ENTER
+map gl $clear; git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+# mac quick look
+# map <space> &qlmanage -p "$f" 2>/dev/null 1>/dev/null
+
+# copy file names stuff
+cmd yank-file %{{
+    if [ "$(uname -s)" = Darwin ]; then
+        printf '%s' "$f" | pbcopy
+    else
+        printf '%s' "$f" | xclip -i -selection clipboard
+    fi
+    echo "Copied $f"
+}}
+cmd yank-paths %{{
+    if [ "$(uname -s)" = Darwin ]; then
+        printf '%s' "$fx" | pbcopy
+    else
+        printf '%s' "$fx" | xclip -i -selection clipboard
+    fi
+    echo "Copied $fx"
+}}
+cmd yank-dirname %{{
+    if [ "$(uname -s)" = Darwin ]; then
+        printf '%s' "$PWD" | pbcopy
+    else
+        printf '%s' "$PWD" | xclip -i -selection clipboard
+    fi
+    echo "Copied $PWD"
+}}
+cmd yank-basename %{{
+    if [ "$(uname -s)" = Darwin ]; then
+        basename -a -- $fx | head -c-1 | pbcopy
+    else
+        basename -a -- $fx | head -c-1 | xclip -i -selection clipboard
+    fi
+    echo "Copied $fx"
+}}
+cmd yank-basename-without-extension %{{
+    if [ "$(uname -s)" = Darwin ]; then
+        basename -a -- $fx | sed -E 's/\.[^.]+$//' | head -c-1 | pbcopy
+    else
+        basename -a -- $fx | sed -E 's/\.[^.]+$//' | head -c-1 | xclip -i -selection clipboard
+    fi
+    echo "Copied $fx"
+}}
+
+map bc yank-paths
+
+# vimv opens files in an editor, allows you to edit them, then renames the files
+cmd bulk-rename ${{
+    vimv -- $(basename -a -- $fx)
+    lf -remote "send $id :load; unselect"
+}}
+
+# Unmap default rename
+map r
+# Map default and bulk renames
+map rr rename
+map ra bulk-rename
+
+map . push :cd<space>
+
+# Use ripgrep to search and select a file
+cmd fzf_search ${{
+    cmd="rg --column --line-number --no-heading --color=always --smart-case"
+    fzf --ansi --disabled --layout=reverse --header="Search in files" --delimiter=: \
+        --bind="start:reload([ -n {q} ] && $cmd -- {q} || true)" \
+        --bind="change:reload([ -n {q} ] && $cmd -- {q} || true)" \
+        --bind='enter:become(lf -remote "send $id select \"$(printf "%s" {1} | sed '\''s/\\/\\\\/g;s/"/\\"/g'\'')\"")' \
+        --preview='cat -- {1}' # Use your favorite previewer here (bat, source-highlight, etc.), for example:
+        #--preview-window='+{2}-/2' \
+        #--preview='bat --color=always --highlight-line={2} -- {1}'
+        # Alternatively you can even use the same previewer you've configured for lf
+        #--preview='~/.config/lf/cleaner; ~/.config/lf/previewer {1} "$FZF_PREVIEW_COLUMNS" "$FZF_PREVIEW_LINES" "$FZF_PREVIEW_LEFT" "$FZF_PREVIEW_TOP"'
+}}
+
+# map rg
+map bg :fzf_search

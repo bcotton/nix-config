@@ -4,7 +4,7 @@
   ...
 }: {
   flake = let
-    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko tsnsrv vscode-server nixos-generators nix-builder-config;
+    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko tsnsrv vscode-server nixos-generators nix-builder-config musnix;
 
     # Package set generators
     genPkgs = system:
@@ -55,6 +55,7 @@
       inputs.vscode-server.nixosModules.default
       inputs.home-manager.nixosModules.home-manager
       inputs.agenix.nixosModules.default
+      inputs.musnix.nixosModules.musnix
     ];
 
     # Internal modules
@@ -126,6 +127,10 @@
       frigate-host = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+      };
+      nixbook-test = {
+        system = "x86_64-linux";
+        usernames = ["tomcotton"];
       };
     };
 

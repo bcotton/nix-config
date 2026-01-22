@@ -69,8 +69,15 @@
     url = "https://github.com/msteen/nixos-vscode-server/tarball/master";
     sha256 = "sha256:1rdn70jrg5mxmkkrpy2xk8lydmlc707sk0zb35426v1yxxka10by";
   };
+
+  rose-pine-hyprcursor = pkgs.fetchFromGitHub {
+    owner = "ndom91";
+    repo = "rose-pine-hyprcursor";
+    rev = "4b02963d0baf0bee18725cf7c5762b3b3c1392f1";
+    sha256 = "sha256-ouuA8LVBXzrbYwPW2vNjh7fC9H2UBud/1tUiIM5vPvM="; # Replace with the correct SHA256
+  };
 in {
-  home.stateVersion = "24.05";
+  home.stateVersion = "25.05";
 
   imports = [
     "${nixVsCodeServer}/modules/vscode-server/home.nix"
@@ -86,6 +93,23 @@ in {
   # list of programs
   # https://mipmip.github.io/home-manager-option-search
 
+  home.file."dotfiles" = {
+    enable = true;
+    recursive = true;
+    source = ./tomcotton/config;
+    target = "tmp/..";
+  };
+  home.file."dummy" = {
+    enable = true;
+    source = ./tomcotton/config/tmp/dummy;
+    target = "tmp/dummy";
+  };
+  home.activation.installScripts = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    $DRY_RUN_CMD mkdir -p $HOME/bin
+    $DRY_RUN_CMD cp -f ${./tomcotton/scripts}/* $HOME/bin/
+    $DRY_RUN_CMD chmod 554 $HOME/bin/*.sh
+  '';
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
@@ -100,7 +124,7 @@ in {
   programs.git = {
     enable = true;
     userEmail = "thomaswileycotton@gmail.com";
-    userName = "wileycotton";
+    userName = "5wiley";
     extraConfig = {
       alias = {
         # br = "branch";
@@ -260,20 +284,119 @@ in {
   services.vscode-server.enable = true;
   services.vscode-server.installPath = "$HOME/.vscode-server";
 
-  # TODO: add ~/bin
-  # code --remote ssh-remote+<remoteHost> <remotePath>
-
-  home.file."oh-my-zsh-custom" = {
+  programs.vscode = {
     enable = true;
-    source = ./oh-my-zsh-custom;
-    target = ".oh-my-zsh-custom";
-  };
-
-  home.file.".config/karabiner" = {
-    enable = true;
-    force = true;
-    source = tomcotton.config/karabiner.json;
-    target = ".config/karabiner/karabiner.json";
+    # mutableExtensionsDir = true;
+    # extensions = with pkgs.vscode-extensions; [
+    #   asvetliakov.vscode-neovim
+    #   # ms-vscode.cpptools
+    #   bbenoist.nix
+    #   ms-vscode.cpptools-extension-pack
+    #   xaver.clang-format
+    #   twxs.cmake
+    #   ms-vscode.cmake-tools
+    #   james-yu.latex-workshop
+    #   ms-dotnettools.csharp
+    #   ms-dotnettools.csdevkit
+    #   saoudrizwan.claude-dev
+    #   ms-dotnettools.vscode-dotnet-runtime
+    #   mechatroner.rainbow-csv
+    #   ms-python.vscode-pylance
+    #   ms-python.python
+    #   ms-python.debugpy
+    #   antyos.openscad
+    #   ms-vscode.makefile-tools
+    #   valentjn.vscode-ltex
+    #   vadimcn.vscode-lldb
+    #   justusadam.language-haskell
+    #   sainnhe.gruvbox-material
+    #   mkhl.direnv
+    #   # jdinhlife.gruvbox
+    #   ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+    #   {
+    #     name = "chuck";
+    #     publisher = "forrcaho";
+    #     version = "1.0.1";
+    #     sha256 = "sha256-gqcN7eam0YnBNQ2z7tA7Fo7PbXnJV0lX9TqcEbnMDL8=";
+    #   }
+    #   {
+    #     name = "vscode-tidalcycles";
+    #     publisher = "tidalcycles";
+    #     version = "2.0.2";
+    #     sha256 = "sha256-TfRLJZcMpoBJuXitbRmacbglJABZrMGtSNXAbjSfLaQ=";
+    #   }
+    #   {
+    #     name = "cpptools";
+    #     publisher = "ms-vscode";
+    #     version = "1.27.7";
+    #     sha256 = "sha256-/usZ8oaelNF2jdYWSKLEcFVPAxMk8T/7u3xR4t4NCjM=";
+    #   }
+    #   {
+    #     name = "fzf-quick-open";
+    #     publisher = "rlivings39";
+    #     version = "0.5.1";
+    #     sha256 = "sha256-xGcBl3mmyy+Zsn9OncDDbJViMxEgvsRjkzy89NPJpS8=";
+    #   }
+    # ];
+    profiles.default = {
+      userSettings = {
+        # This property will be used to generate settings.json:
+        # https://code.visualstudio.com/docs/getstarted/settings#_settingsjson
+        "editor.formatOnSave" = true;
+        "editor.fontSize" = 12;
+        "editor.insertSpaces" = true;
+        "editor.detectIndentation" = true;
+        "files.autoSave" = "onFocusChange";
+        # "extensions.autoCheckUpdates" = false;
+        "extensions.autoUpdate" = false;
+        "extensions.experimental.affinity" = {
+          "asvetliakov.vscode-neovim" = 1;
+        };
+        "files.trimFinalNewlines" = true;
+        "files.trimTrailingWhitespace" = true;
+        "editor.lineNumbers" = "relative";
+        "[latex]" = {
+          "editor.wordWrap" = "on";
+        };
+        "[markdown]" = {
+          "editor.quickSuggestions" = {
+            "other" = true;
+            "comments" = true;
+            "strings" = true;
+          };
+        };
+        "files.associations" = {
+          "*.tidal" = "haskell";
+        };
+        "tidalcycles.bootTidalPath" = "/Users/tomcotton/tidal-cycles/BootFiles/BootTidal.hs";
+        "workbench.colorTheme" = "Gruvbox Material Dark";
+        "gruvboxMaterial.darkContrast" = "medium";
+        "gruvboxMaterial.highContrast" = true;
+        "makefile.configureOnOpen" = true;
+        # "gruvboxMaterial.darkPalette" = "original";
+        # "gruvboxMaterial.darkWorkbench" = "original";
+      };
+      keybindings = [
+        # See https://code.visualstudio.com/docs/getstarted/keybindings#_advanced-customization
+        {
+          key = "ctrl+t";
+          command = "workbench.action.terminal.focus";
+        }
+        {
+          key = "ctrl+t";
+          command = "workbench.action.focusActiveEditorGroup";
+          when = "terminalFocus";
+        }
+        # {
+        #   key = "ctrl+alt+shift+cmd+[";
+        #   command = "workbench.action.previousEditor";
+        # }
+        # {
+        #   key = "ctrl+alt+shift+cmd+]";
+        #   command = "workbench.action.nextEditor";
+        # }
+      ];
+    };
   };
 
   xdg = {
@@ -282,7 +405,10 @@ in {
       source = ./dot.config/containers/registries.conf;
     };
     configFile."atuin/config.toml" = {
-      source = ./tomcotton.config/atuin/config.toml;
+      source = ./tomcotton/config/.config/atuin/config.toml;
+    };
+    configFile."ghostty/config" = {
+      source = ./tomcotton/config/.config/ghostty/config;
     };
   };
 
@@ -313,11 +439,12 @@ in {
       export XDG_CONFIG_HOME="$HOME/.config"
       export LESS="-iMSx4 -FXR"
       export PAGER=less
-      export EDITOR=nano
       export FULLNAME='Thomas Wiley Cotton'
+      export EDITOR=nvim
       export EMAIL=thomaswileycotton@gmail.com
       export GOPATH=$HOME/go
       export PATH=$GOPATH/bin:$PATH
+      export PATH=$HOME/.local/bin:$PATH
 
       export EXA_COLORS="da=1;35"
       export BAT_THEME="Visual Studio Dark+"
@@ -345,6 +472,36 @@ in {
           zstyle :omz:plugins:ssh-agent ssh-add-args --apple-load-keychain
         fi
         source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+        # Change working dir in shell to last dir in lf on exit (adapted from ranger).
+        #
+        # You need to either copy the content of this file to your shell rc file
+        # (e.g. ~/.bashrc) or source this file directly:
+        #
+        #     LFCD="/path/to/lfcd.sh"
+        #     if [ -f "$LFCD" ]; then
+        #         source "$LFCD"
+        #     fi
+        #
+        # You may also like to assign a key (Ctrl-O) to this command:
+        #
+        #     bind '"\C-o":"lfcd\C-m"'  # bash
+        bindkey -s '^o' 'lfcd\n'  # zsh
+        #
+
+        lfcd () {
+            # `command` is needed in case `lfcd` is aliased to `lf`
+            cd "$(command lf -print-last-dir "$@")"
+        }
+
+        # For some reason this was aliased to vi, seems regresive
+        unalias nvim
+
+        # Set these in your shell (e.g., ~/.bashrc, ~/.zshrc)
+        export ANTHROPIC_BASE_URL="https://openrouter.ai/api"
+        export ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY"
+        export ANTHROPIC_API_KEY="" # Important: Must be explicitly empty
+
       '';
       plugins = [
         "brew"
@@ -373,6 +530,7 @@ in {
       watch = "viddy ";
       # Automatically run `go test` for a package when files change.
       py3 = "python3";
+      vi = "nvim";
     };
 
     initContent = ''
@@ -399,6 +557,9 @@ in {
       unsetopt bgnice
 
 
+      export PATH=$PATH:/Library/TeX/texbin
+
+
     '';
 
     #initContent = (builtins.readFile ../mac-dot-zshrc);
@@ -406,9 +567,28 @@ in {
 
   programs.eza.enable = true;
   programs.home-manager.enable = true;
-  #  programs.neovim.enable = true;
+  programs.neovim.enable = true;
   programs.nix-index.enable = true;
   #  programs.zoxide.enable = true;
+
+  programs.neovim = {
+    # https://nixos.wiki/wiki/Neovim
+    plugins = [
+      # (pkgs.vimPlugins.nvim-treesitter.withPlugins (p: [
+      #   p.c
+      #   p.cpp
+      #   p.lua
+      #   p.nix
+      #   p.json
+      #   p.python
+      #   p.bash
+      #   p.markdown
+      #   p.markdown-inline
+      #   p.latex
+      # ]))
+      pkgs.vimPlugins.LazyVim
+    ];
+  };
 
   programs.ssh = {
     enable = true;
@@ -426,6 +606,7 @@ in {
   };
 
   home.packages = with pkgs; [
+    # unstablePkgs.ghostty
     (pkgs.python311.withPackages (ppkgs: [
       ppkgs.numpy
       ppkgs.libtmux
@@ -434,6 +615,12 @@ in {
     rsync
     rhash
     restic
+    lf
+    vimv
+    subversion
+    devenv
+    arduino-cli
+    # claude-code
     # python3Packages.libtmux
     # kubernetes-helm
     # kubectx

@@ -27,7 +27,6 @@ in {
 
   config = {
     # Apply Optional Configuration
-
     nixpkgs.overlays = let
       p11KitOverlay = final: prev: {
         p11-kit = prev.p11-kit.overrideAttrs (oldAttrs: {
@@ -58,18 +57,23 @@ in {
     # These are packages are just for darwin systems
     environment.systemPackages = [
       pkgs.kind
+      pkgs.xcode-install
     ];
 
     nixpkgs.config.allowUnfree = true;
 
     # Run the linux-builder as a background service
-    nix.linux-builder.enable = true;
+    # nix.linux-builder.enable = true;
 
     # Add needed system-features to the nix daemon
     # Starting with Nix 2.19, this will be automatic
     nix.settings.system-features = [
       "nixos-test"
       "apple-virt"
+    ];
+    nix.settings.trusted-users = [
+      "root"
+      "tomcotton"
     ];
 
     # Keyboard
@@ -96,24 +100,18 @@ in {
         #
       ];
       brews = [
-        # home.nix
-        # home.packages
-        # "argocd"
-        # "doctl"
-        # "helm"
-        # "flyctl"
-        #"azure-cli"
-        # "npm"
-        # "node"
-        "tailscale"
+        # "tailscale"
         "pandoc"
         "trash"
         "yt-dlp"
         "pkgconf"
         "openjdk"
         "docker-compose"
+        "ghcup"
+        "cabal-install"
       ];
       casks = [
+        "claude-code"
         "hiddenbar"
         "plugdata"
         "font-hack-nerd-font"
@@ -124,64 +122,38 @@ in {
         "ollama"
         "bambu-studio"
         "fork"
-        #"alfred" # you are on alfred4 not 5
-        #      "autodesk-fusion360"
-        #      "audacity"
-        # "1password-cli"
-        # "1password"
         "alfred"
-        # "amethyst"
-        # "balenaetcher"
-        # "bartender"
-        #      "bambu-studio"
-        #"canon-eos-utility" #old version and v3 not in repo
+        "balenaetcher"
         "discord"
         "docker"
-        # "dropbox"
-        # "element"
-        #      "firefox"
-        # "google-chrome"
-        # "google-cloud-sdk"
+        "firefox"
         "istat-menus"
         "iterm2"
-        #"lingon-x"
-        # "little-snitch"
-        #      "logitech-options"
-        # "macwhisper"
-        # "monitorcontrol"
-        # "mqtt-explorer"
-        #      "nextcloud"
-        #      "notion"
-        #      "obs"
         "obsidian"
-        # "omnidisksweeper"
         "openscad"
         "nuage"
-        # "orbstack"
-        #      "plexamp"
-        # "prusaslicer"
-        # "rectangle"
-        # "signal"
-        # "slack"
         "spotify"
-        # "telegram"
-        # "swinsian"
-        #      "steam"
-        #      "thunderbird"
-        #      "viscosity"
         "visual-studio-code"
         "vlc"
-        # "wireshark"
         "zoom"
-        #      "yubico-yubikey-manager"
-
-        # rogue amoeba
-        # "audio-hijack"
-        # "farrago"
-        # "loopback"
-        # "soundsource"
+        # "unity-hub"
+        # "epic-games"
+        "steam"
+        "tailscale"
+        "qmk-toolbox"
+        "ghostty"
+        "sonic-visualiser"
+        "blackhole-16ch"
+        "arduino-ide"
+        "utm" # Virtualization based on QEMU
+        "wine-stable"
+        # "xcodes-app" # Manages downloads enabling of xcode versions
+        "cryptomator" # encrypts files, used to back up bitwarden
+        "zen" # zen browser
+        "nikitabobko/tap/aerospace"
       ];
       masApps = {
+        # "Xcode" = 497799835;
         #   "Amphetamine" = 937984704;
         # "Bitwarden" = 1352778147;
         #   "Creator's Best Friend" = 1524172135;
@@ -191,7 +163,10 @@ in {
         #   "Reeder" = 1529448980;
         #   "Resize Master" = 1025306797;
         #   # "Steam Link" = 123;
-        "Tailscale" = 1475387142;
+        # "Tailscale" = 1475387142;
+        # "Adobe Photoshop" = 1457771281;
+        "Flow - Focus & Pomodoro Timer" = 1423210932;
+        # "iStat Menus 7" = 6499559693;
         # "BookPlayer" = 1138219998;
 
         #   "Telegram" = 747648890;
@@ -214,13 +189,20 @@ in {
       };
     };
 
+    /*
+       Nonmanaged Apps
+    Wwise Launcher: https://www.audiokinetic.com/en/download/
+    Epic Games Launcher: https://store.epicgames.com/en-US/download
+
+
+    */
+
     # macOS configuration
     # Blocks mac from storing window presence and location. Results in only startup apps at startup.
-    system.activationScripts.blockWindowLogging.text = "" "
-      sudo chown root ~/Library/Preferences/ByHost/com.apple.loginwindow.*
-      sudo chmod 000 ~/Library/Preferences/ByHost/com.apple.loginwindow.*
-      echo 'blocking access to ~/Library/Preferences/ByHost/com.apple.loginwindow.*'
-    " "";
+    #   sudo chown root ~/Library/Preferences/ByHost/com.apple.loginwindow.*
+    #   sudo chmod 000 ~/Library/Preferences/ByHost/com.apple.loginwindow.*
+    #   echo 'blocking access to ~/Library/Preferences/ByHost/com.apple.loginwindow.*'
+    # " "";
     system.defaults = {
       NSGlobalDomain.AppleShowAllExtensions = true;
       NSGlobalDomain.AppleShowScrollBars = "Always";
@@ -231,8 +213,8 @@ in {
       NSGlobalDomain.PMPrintingExpandedStateForPrint2 = true;
       NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false;
       NSGlobalDomain.ApplePressAndHoldEnabled = false;
-      NSGlobalDomain.InitialKeyRepeat = 25;
-      NSGlobalDomain.KeyRepeat = 4;
+      NSGlobalDomain.InitialKeyRepeat = 20;
+      NSGlobalDomain.KeyRepeat = 2;
       NSGlobalDomain."com.apple.mouse.tapBehavior" = 1;
       LaunchServices.LSQuarantine = false; # disables "Are you sure?" for new apps
       loginwindow.GuestEnabled = false;
@@ -279,7 +261,7 @@ in {
         SortDirection = 0;
       };
       # "com.apple.Safari" = {
-      #   # Privacy: don’t send search queries to Apple
+      #   # Privacy: don???t send search queries to Apple
       #   UniversalSearchEnabled = false;
       #   SuppressSearchSuggestions = true;
       # };

@@ -94,7 +94,7 @@ build-host hostname:
 
 build-all:
   for i in `(nix flake show --json | jq -r '.nixosConfigurations |keys[]' | grep -v admin ) 2>/dev/null `; do echo $i; nix build ".#nixosConfigurations.$i.config.system.build.toplevel" || exit; done
-  
+
 
 vm:
   nix run '.#nixosConfigurations.nixos.config.system.build.nixos-shell'
@@ -129,3 +129,8 @@ nas-01-console:
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
   ssh -N -L 8443:192.168.5.143:443 admin
+
+w-dconfdump:
+  dconf dump / > tmp/w-dconf
+w-dconf2nix:
+  dconf2nix -i tmp/w-dconf -o tmp/w-dconf.nix

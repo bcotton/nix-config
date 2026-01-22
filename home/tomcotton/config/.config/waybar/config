@@ -1,0 +1,95 @@
+{
+    "font-family": ["JetBrainsMono Nerd Font", "Font Awesome", "Roboto"],
+    "position": "bottom",
+    "modules-left": ["custom/menu", "hyprland/workspaces"],
+    "modules-center": ["clock", "idle_inhibitor"],
+    "modules-right": ["custom/notifications", "custom/copyq", "tray", "custom/scratchpad-indicator", "pulseaudio", "cpu", "memory", "battery", "custom/power"],
+
+    "hyprland/workspaces": {
+        "format": "{name}",
+        "persistent_workspaces": {
+            "1": [],
+            "2": [],
+            "3": [],
+            "4": [],
+            "5": [],
+            "6": []
+        },
+        "on-click": "activate"
+    },
+    "network": {
+        "format-wifi": "{essid} ({signalStrength}%) ",
+        "format-ethernet": "{ifname} ",
+        "format-disconnected": "", 
+        "max-length": 50,
+        "on-click": "kitty -e 'nmtui'"
+    },
+    "idle_inhibitor": {
+        "format": "{icon}",
+        "format-icons": {
+            "activated": "",
+            "deactivated": ""
+        }
+    },
+    "tray": {
+        "icon-size": 15,
+        "spacing": 10
+    },
+    "clock": {
+        "format": "  {:%d %b %I:%M %p}",
+        "on-click": "gnome-calendar"
+    },
+    "cpu": {
+        "format": "{usage:3d}% {icon}",
+        "interval": 1
+    },
+    "memory": {
+        "format": "{percentage:3d}% {icon}",
+        "interval": 1
+    },
+    "battery": {
+        "format": "{capacity:3d}% {icon}",
+        "format-charging": " {capacity}%",
+        "format-plugged": " {capacity}%",
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "interval": 30
+    },
+    "pulseaudio": {
+        "format": "{volume:3d}% {icon}",
+        "format-bluetooth": "{volume}% {icon} {format_source}",
+        "format-bluetooth-muted": " {icon} {format_source}",
+        "format-muted": "0% {icon}",
+        "format-source": "{volume}% ",
+        "format-source-muted": "",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol"
+    },
+	"custom/power": {
+		"format": "{icon}⏻",
+		"on-click": "hyprctl dispatch exit"
+	},
+	"custom/menu": {
+		"format": "{icon}",
+		"on-click": "rofi -show run -modi drun,run,filebrowser,keys -theme ~/.config/rofi/config.rasi"
+	},
+    "custom/scratchpad-indicator": {
+        "format-text": "{}hi",
+        "return-type": "json",
+        "interval": 3,
+        "exec": "~/.local/bin/scratchpad-indicator 2> /dev/null",
+        "exec-if": "exit 0",
+        "on-click": "swaymsg 'scratchpad show'",
+        "on-click-right": "swaymsg 'move scratchpad'"
+    }
+}

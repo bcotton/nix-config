@@ -115,7 +115,7 @@
     group = "postgres";
   };
 
-  age.secrets."tfstate-database-raw" = {
+  age.secrets."tfstate-database-raw" = lib.mkIf config.services.clubcotton.postgresql.tfstate.enable {
     file = ./tfstate-database-raw.age;
     owner = "bcotton";
     group = "users";
@@ -155,11 +155,12 @@
     group = "paperless";
   };
 
-  # age.secrets."bcotton-atuin-key" = lib.mkIf config.services.clubcotton.atuin.enable {
-  age.secrets."bcotton-atuin-key" = {
-    file = ./bcotton-atuin-key.age;
-    owner = "bcotton";
-    group = "users";
+  age.secrets."bcotton-atuin-key" = lib.mkIf config.services.clubcotton.atuin.enable {
+    age.secrets."bcotton-atuin-key" = {
+      file = ./bcotton-atuin-key.age;
+      owner = "bcotton";
+      group = "users";
+    };
   };
 
   age.secrets."navidrome" = lib.mkIf config.services.clubcotton.navidrome.enable {
