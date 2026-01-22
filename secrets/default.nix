@@ -156,11 +156,9 @@
   };
 
   age.secrets."bcotton-atuin-key" = lib.mkIf config.services.clubcotton.atuin.enable {
-    age.secrets."bcotton-atuin-key" = {
-      file = ./bcotton-atuin-key.age;
-      owner = "bcotton";
-      group = "users";
-    };
+    file = ./bcotton-atuin-key.age;
+    owner = "bcotton";
+    group = "users";
   };
 
   age.secrets."navidrome" = lib.mkIf config.services.clubcotton.navidrome.enable {
