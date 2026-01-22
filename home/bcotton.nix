@@ -277,7 +277,7 @@
         export PAGER=less
         # Variable-dependent PATH additions (static paths are in home.sessionPath)
         export PNPM_HOME="$HOME/.local/share/pnpm"
-        export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
+        export PATH="$HOME/.orbstack/bin:$PNPM_HOME:$GOPATH/bin:$PATH"
         export QMK_HOME=~/projects/qmk_firmware
         export TILT_HOST=0.0.0.0
         export TMPDIR=/tmp/
@@ -358,6 +358,7 @@
       batj = "bat -l json";
       batly = "bat -l yaml";
       batmd = "bat -l md";
+      y = "yazi";
       dir = "exa -l --icons --no-user --group-directories-first  --time-style long-iso --color=always";
       tree = "exa -Tl --color=always";
       ltr = "ll -snew";
@@ -459,7 +460,10 @@
         if [[ "$BUFFER" =~ '(--help|-h|[[:space:]]help)$' ]]; then
           # Don't double-pipe if already piped
           if [[ "$BUFFER" != *"|"* ]]; then
-            BUFFER="$BUFFER 2>&1 | ''${PAGER:-less}"
+            # Save original command to history
+            print -s "$BUFFER"
+            # Prepend space so modified version isn't saved (HIST_IGNORE_SPACE)
+            BUFFER=" $BUFFER 2>&1 | ''${PAGER:-less}"
           fi
         fi
         zle .accept-line
@@ -640,6 +644,7 @@
       etcd
       fswatch
       git-absorb
+      yazi
       glances
       hwatch
       # jd  # not in nixpkgs - keep in Homebrew
@@ -653,6 +658,9 @@
 
       # tmux (cross-platform)
       tmux
+
+      # Fonts
+      nerd-fonts.jetbrains-mono
     ]
     ++ lib.optionals stdenv.isDarwin [
       # macOS-only: tmux clipboard integration
