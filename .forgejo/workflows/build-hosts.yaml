@@ -1,0 +1,43 @@
+name: Build Host Configurations
+
+on:
+  push:
+    branches:
+      - main
+      - forgejo
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-sample:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    strategy:
+      matrix:
+        host: [nas-01, nix-01, nix-02, nix-03]
+      fail-fast: false
+    steps:
+      - name: Setup SSH key for distributed builds
+        run: |
+          mkdir -p /run/secrets
+          echo "${{ secrets.NIX_BUILDER_KEY }}" > /run/secrets/nix-builder-key
+          chmod 600 /run/secrets/nix-builder-key
+
+      - name: Setup Nix environment
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.host }} configuration
+        run: |
+          echo "Building configuration for ${{ matrix.host }}..."
+          nix build ".#nixosConfigurations.${{ matrix.host }}.config.system.build.toplevel" \
+            --no-link \
+            --show-trace \
+            --print-build-logs
+          echo "Successfully built ${{ matrix.host }} configuration"

@@ -9,8 +9,14 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -21,17 +27,24 @@
     freshrss.enable = false;
     paperless.enable = false;
     filebrowser.enable = false;
-    tailscale.enable = true;
   };
-  # services.clubcotton.services.tailscale.enable = true;
 
   clubcotton.zfs_single_root.enable = true;
 
   virtualisation.podman.enable = true;
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
-  programs.zsh.enable = true;
-  services.openssh.enable = true; # Enable the OpenSSH daemon.
+  programs.zsh.enable = variables.zshEnable;
+  services.openssh.enable = variables.opensshEnable; # Enable the OpenSSH daemon.
 
   services.clubcotton.freshrss = {
     port = 8104;
@@ -51,10 +64,7 @@
   };
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys ++ [keys.users.tcotton-mbp];
   };
 
   virtualisation.podman = {
@@ -74,7 +84,7 @@
   };
 
   networking = {
-    hostId = "3fa4e0cb";
+    hostId = variables.hostId;
     hostName = "nix-04";
     defaultGateway = "192.168.12.1";
     nameservers = ["192.168.12.1"];
@@ -94,7 +104,7 @@
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
@@ -103,7 +113,7 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
@@ -126,5 +136,5 @@
   # and migrated your data accordingly.
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

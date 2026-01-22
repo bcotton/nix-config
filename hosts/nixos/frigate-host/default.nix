@@ -5,8 +5,14 @@
   config,
   pkgs,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -30,14 +36,12 @@
     ];
   };
 
-  services.tailscale.enable = true;
-
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this bzy default.
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
@@ -68,12 +72,10 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -104,13 +106,13 @@
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
@@ -133,5 +135,5 @@
   # and migrated your data accordingly.
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

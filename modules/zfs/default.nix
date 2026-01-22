@@ -8,6 +8,7 @@
     ./zfs-single-root.nix
     ./zfs-mirrored-root.nix
     ./zfs-raidz1.nix
+    ./monitoring.nix
   ];
 
   services.sanoid = {
@@ -37,6 +38,11 @@
     ) {
       zfs = {
         enable = true;
+      };
+      smartctl = {
+        enable = true;
+        # Devices will be auto-discovered, but can be explicitly configured per host
+        maxInterval = "60s";
       };
     };
 }

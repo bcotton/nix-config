@@ -4,15 +4,18 @@
   unstablePkgs,
   lib,
   inputs,
+  hostName,
   ...
 }: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
   config = {
-    system.primaryUser = "bcotton";
-    users.users.bcotton.home = "/Users/bcotton";
+    system.primaryUser = variables.primaryUser;
+    users.users.${variables.primaryUser}.home = "/Users/${variables.primaryUser}";
     ids.gids.nixbld = 30000;
-
 
     # These are packages are just for darwin systems
     environment.systemPackages = with pkgs; [
@@ -22,6 +25,7 @@ in {
       # Node and friends
       nodejs_22
       yarn-berry
+      webpack-cli
       pnpm_10
     ];
 
@@ -64,106 +68,84 @@ in {
       taps = [
         #
       ];
+      # Most CLI tools migrated to Nix/Home Manager
+      # Keep only macOS-specific tools and those not in nixpkgs
       brews = [
-        # home.nix
-        # home.packages
-        # "argocd"
-        # "doctl"
-        # "helm"
-        # "flyctl"
-        #"azure-cli"
-        "npm"
-        "node"
-        "tailscale"
+        "bash" # system shell alternative
+        "borders" # macOS window borders (FelixKratz)
+        "jd" # JSON diff tool - not in nixpkgs
+        "kube-fzf" # not in nixpkgs
+        "mas" # Mac App Store CLI (needed by nix-darwin)
+        "mods" # AI CLI tool
+        "oh-my-posh" # shell prompt (complex integration)
+        "skhd" # macOS hotkey daemon
+        "terminal-notifier" # macOS notifications
+        "zizmor" # not in nixpkgs yet
       ];
       casks = [
-        #"alfred" # you are on alfred4 not 5
-        #      "autodesk-fusion360"
-        #      "audacity"
-        "1password-cli"
         "1password"
+        "1password-cli"
+        "aerospace"
         "alfred"
         "amethyst"
         "balenaetcher"
+        "barrier"
         "bartender"
-        #      "bambu-studio"
-        #"canon-eos-utility" #old version and v3 not in repo
+        "calibre"
+        "companion"
         "discord"
-        "docker"
+        "docker-desktop"
         "dropbox"
         "element"
-        #      "firefox"
+        "flirc"
+        "gcloud-cli"
+        "ghostty"
         "google-chrome"
-        "google-cloud-sdk"
+        "gcloud-cli"
         "istat-menus"
         "iterm2"
-        #"lingon-x"
+        "karabiner-elements"
         "little-snitch"
-        #      "logitech-options"
         "macwhisper"
         "monitorcontrol"
         "mqtt-explorer"
-        #      "nextcloud"
-        #      "notion"
-        #      "obs"
         "netnewswire"
+        "obs"
         "obsidian"
         "omnidisksweeper"
+        "onyx"
         "openscad"
+        "openttd"
         "orbstack"
-        #      "plexamp"
         "prusaslicer"
         "rectangle"
+        "shortcat"
         "signal"
         "slack"
         "spotify"
-        "telegram"
         "swinsian"
-        #      "steam"
-        #      "thunderbird"
-        #      "viscosity"
+        "telegram"
         "visual-studio-code"
         "vlc"
-        "wireshark"
+        "wezterm"
+        "wireshark-app"
+        "xquartz"
         "zoom"
-        #      "yubico-yubikey-manager"
-
-        # rogue amoeba
-        # "audio-hijack"
-        # "farrago"
-        # "loopback"
-        # "soundsource"
       ];
       masApps = {
-        #   "Amphetamine" = 937984704;
-        # "Bitwarden" = 1352778147;
-        #   "Creator's Best Friend" = 1524172135;
-        #   "Disk Speed Test" = 425264550;
-        #   "iA Writer" = 775737590;
-        #   "Microsoft Remote Desktop" = 1295203466;
-        #   "Reeder" = 1529448980;
-        #   "Resize Master" = 1025306797;
-        #   # "Steam Link" = 123;
-        "Tailscale" = 1475387142;
-        # "BookPlayer" = 1138219998;
-
-        #   "Telegram" = 747648890;
-        #   "The Unarchiver" = 425424353;
-        #   "Todoist" = 585829637;
-        #   "UTM" = 1538878817;
-        #   "Wireguard" = 1451685025;
-
-        #   # these apps with uk apple id
-        #   #"Final Cut Pro" = 424389933;
-        #   #"Logic Pro" = 634148309;
-        #   #"MainStage" = 634159523;
-        #   #"Garageband" = 682658836;
-        #   #"ShutterCount" = 720123827;
-        #   #"Teleprompter" = 1533078079;
-
-        #   "Keynote" = 409183694;
-        #   "Numbers" = 409203825;
-        #   "Pages" = 409201541;
+        # "Amphetamine" = 937984704;
+        # "Blackmagic Disk Speed Test" = 425264550;
+        # "CleanMyMac" = 1339170533;
+        # "GarageBand" = 682658836;
+        # "iMovie" = 408981434;
+        # "Keynote" = 409183694;
+        # "MultiVNC" = 6738012997;
+        # "Numbers" = 409203825;
+        # "Pages" = 409201541;
+        # "Tailscale" = 1475387142;
+        # "WiFi Explorer Lite" = 1408727408;
+        # "Windows App" = 1295203466;
+        # "Xcode" = 497799835;
       };
     };
 
@@ -213,7 +195,7 @@ in {
         static-only = false;
         show-recents = false;
         show-process-indicators = true;
-        orientation = "right";
+        orientation = "bottom";
         tilesize = 36;
         minimize-to-application = true;
         mineffect = "scale";

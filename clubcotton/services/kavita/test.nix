@@ -40,10 +40,9 @@
   testScript = ''
     start_all()
 
-    machine.shell_interact()
-
     # Wait for kavita service to start
     machine.wait_for_unit("kavita.service")
+    machine.wait_for_open_port(8085)
     # Test basic HTTP connectivity
     machine.succeed(
       "curl -f http://localhost:8085/api/health"

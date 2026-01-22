@@ -7,13 +7,19 @@
     ./arr
     ./atuin
     ./bonob
+    ./borgmatic
     ./calibre
     ./calibre-web
     ./filebrowser
+    ./forgejo
     ./freshrss
+    ./harmonia
+    ./hyprland
+    ./immich
     ./jellyfin
     ./kavita
     ./navidrome
+    ./nix-cache-proxy
     ./nut-client
     ./nut-server
     ./open-webui
@@ -23,6 +29,7 @@
     ./sabnzbd
     ./scanner
     ./syncoid
+    ./technitium
     ./wallabag
     ./webdav
   ];

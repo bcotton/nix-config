@@ -16,6 +16,17 @@ in {
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
+      localTargetAllow = [
+        "change-key"
+        "compression"
+        "create"
+        "mount"
+        "mountpoint"
+        "receive"
+        "rollback"
+        "destroy"
+        "snapshot"
+      ];
       commands = {
         var_lib = {
           source = "rpool/local/lib";

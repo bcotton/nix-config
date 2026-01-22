@@ -6,22 +6,66 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/k3s-agent
+    # nix-builder client is enabled via flake-modules/hosts.nix
     ../../../modules/incus
+    ../../../modules/systemd-network
   ];
 
   services.clubcotton = {
     # vnc.enable = true;
     tailscale.enable = true;
     nut-client.enable = true;
+    hyprland.enable = true;
+    forgejo-runner = {
+      enable = true;
+      instances = {
+        nix02_1 = {
+          name = "nix-02-runner-1";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+        nix02_2 = {
+          name = "nix-02-runner-2";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+      };
+    };
   };
+
+  # Create builder user for remote builds
+  users.users.nix-builder = {
+    isNormalUser = true;
+    description = "Nix remote builder";
+    openssh.authorizedKeys.keys = keys.builderAuthorizedKeys;
+  };
+
+  nix.settings.trusted-users = ["nix-builder"];
 
   virtualisation.containers.enable = true;
 
@@ -32,8 +76,6 @@
     # Required for containers under podman-compose to be able to talk to each other.
     defaultNetwork.settings.dns_enabled = true;
   };
-
-  services.k3s.role = lib.mkForce "agent";
 
   clubcotton.zfs_single_root = {
     enable = true;
@@ -53,43 +95,54 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Enable cgroups v2 unified hierarchy for containers
+  boot.kernelParams = ["systemd.unified_cgroup_hierarchy=1"];
+
+  # Delegate cgroup controllers for container management
+  systemd.services."user@".serviceConfig.Delegate = "cpu cpuset io memory pids";
+
   networking = {
-    hostId = "038f8559";
-    useDHCP = false;
-    hostName = "nix-02";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp3s0.ipv4.addresses = [
-      {
-        address = "192.168.5.212";
-        prefixLength = 24;
-      }
-    ];
-    # interfaces.enp2s0.ipv4.addresses = [
-    #   {
-    #     address = "192.168.5.213";
-    #     prefixLength = 24;
-    #   }
-    # ];
-    bridges."br0".interfaces = ["enp2s0"];
-    interfaces."br0".useDHCP = true;
+    hostId = variables.hostId;
+    hostName = hostName;
   };
-  services.tailscale.enable = true;
 
-  virtualisation.libvirtd.enable = true;
+  # Configure systemd-networkd with bonding and VLANs
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "single-nic";
+    interfaces = ["enp3s0"];
+    bridgeName = "br0";
+    enableIncusBridge = true;
+    enableVlans = true;
+    nativeVlan = {
+      id = 5;
+      address = "192.168.5.212/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
+    };
+  };
 
-  time.timeZone = "America/Denver";
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
-  programs.zsh.enable = true;
+  time.timeZone = variables.timeZone;
+
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
   # TODO
-  networking.firewall.enable = false;
-  system.stateVersion = "23.11"; # Did you read the comment?
+  networking.firewall.enable = variables.firewallEnable;
+  system.stateVersion = variables.stateVersion;
 }

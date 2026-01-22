@@ -1,0 +1,14 @@
+{
+  "name": "playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for CI automation",
+  "scripts": {
+    "test": "node node_modules/@playwright/test/cli.js test",
+    "test:headed": "node node_modules/@playwright/test/cli.js test --headed",
+    "test:debug": "node node_modules/@playwright/test/cli.js test --debug",
+    "report": "node node_modules/@playwright/test/cli.js show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.57.0"
+  }
+}

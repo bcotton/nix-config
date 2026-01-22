@@ -1,3 +1,5 @@
+# Run interactively:  nix run '.#checks.x86_64-linux.zfs-mirrored-root.driverInteractive'
+# Note: SSH access not available for disko tests (use machine.shell_interact() in Python REPL)
 {
   nixpkgs,
   pkgs ? import nixpkgs {},

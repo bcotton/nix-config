@@ -7,7 +7,7 @@
 }: let
   inherit (inputs) nixpkgs nixpkgs-unstable;
 in {
-  time.timeZone = "America/Denver";
+  # timeZone is set via variables.nix (default: America/Denver)
 
   nix = {
     settings = {
@@ -27,14 +27,16 @@ in {
   environment.systemPackages = with pkgs; [
     inputs.isd.packages."${system}".default
     alsa-utils
-    intel-gpu-tools
+    # intel-gpu-tools
     libva-utils
     file
-    intel-media-driver
+    # intel-media-driveupr
     jellyfin-ffmpeg
     hddtemp
     nil
     nixos-shell
+    nodejs_22
+    pnpm_10
     synergy
     qemu
     quickemu

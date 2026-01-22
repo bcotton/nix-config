@@ -18,18 +18,24 @@ let
   nas-01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK4/K8BbFVT/V5SRlWwjBb2vowBQjCiReOeNRw+C+/c4 root@nas-01";
   octoprint = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKtxU4yWKvKtZUV82nISi21UCnZ8D2ua8mPMkhk1flNH root@octoprint";
   frigate-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL7E24JIWthIHIyTnqjdmJPeGUw8UreinxDNfVq9N2AP root@frigate-host";
-  nixbook-test = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKo1rVc4W8yX0P6eYEKPZ9RCt+ZSV8KbGIvge+oUHdyU root@toms-laptop-01";
+  toms-laptop-01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDTtjWF4ZxB9xIcJeOPpGE7swaikFG52fSJQmIz4sQuE root@toms-laptop-01";
+  nixos-utm = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtSuZJ1o7vdfKiooH8AlKnUkyBx6eBqQl+XZ3SdkRyQ root@nixos";
 
-  systems = [admin condo-01 natalya-01 dns-01 imac-01 imac-02 nix-01 nix-02 nix-03 nas-01 octoprint frigate-host nixbook-test];
+  systems = [admin condo-01 natalya-01 dns-01 imac-01 imac-02 nix-01 nix-02 nix-03 nas-01 octoprint frigate-host toms-laptop-01 nixos-utm];
 in {
   "atuin.age".publicKeys = users ++ systems;
   "atuin-database.age".publicKeys = users ++ systems;
   "bcotton-atuin-key.age".publicKeys = users ++ systems;
+  "borg-passphrase.age".publicKeys = users ++ systems;
   "condo-ha-token.age".publicKeys = users ++ systems;
   "freshrss.age".publicKeys = users ++ systems;
   "freshrss-database.age".publicKeys = users ++ systems;
   "freshrss-database-raw.age".publicKeys = users ++ systems;
+  "forgejo-db-password.age".publicKeys = users ++ systems;
+  "forgejo-database.age".publicKeys = users ++ systems;
+  "forgejo-runner-token.age".publicKeys = users ++ systems;
   "grafana-cloud.age".publicKeys = users ++ systems;
+  "harmonia-signing-key.age".publicKeys = users ++ systems;
   "homeassistant-token.age".publicKeys = users ++ systems;
   "immich-database.age".publicKeys = users ++ systems;
   "immich.age".publicKeys = users ++ systems;
@@ -38,6 +44,8 @@ in {
   "mopidy.age".publicKeys = users ++ systems;
   "mqtt.age".publicKeys = users ++ systems;
   "navidrome.age".publicKeys = users ++ systems;
+  "nix-builder-ssh-key.age".publicKeys = users ++ systems;
+  "nix-builder-ssh-pub.age".publicKeys = users ++ systems;
   "nut-client.age".publicKeys = users ++ systems;
   "open-webui-database.age".publicKeys = users ++ systems;
   "open-webui.age".publicKeys = users ++ systems;
@@ -47,8 +55,11 @@ in {
   "pushover-key.age".publicKeys = users ++ systems;
   "pushover-token.age".publicKeys = users ++ systems;
   "scanner-user-private-ssh-key.age".publicKeys = users ++ systems;
+  "syncoid-ssh-key.age".publicKeys = users ++ systems;
   "tailscale-keys.env".publicKeys = users ++ systems;
   "tailscale-keys.raw".publicKeys = users ++ systems;
+  "technitium-admin-password.age".publicKeys = users ++ systems;
+  "technitium-cluster-secret.age".publicKeys = users ++ systems;
   "tfstate-database.age".publicKeys = users ++ systems;
   "tfstate-database-raw.age".publicKeys = users ++ systems;
   "unpoller.age".publicKeys = users ++ systems;

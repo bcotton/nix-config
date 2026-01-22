@@ -21,6 +21,9 @@
       ./default.nix
     ];
 
+    # Define the share group that the webdav service expects
+    users.groups.share = {};
+
     environment.systemPackages = with pkgs; [
       xq-xml
     ];
@@ -83,24 +86,24 @@
 
     # Create test directories and files
     systemd.tmpfiles.rules = [
-      "d /var/lib/webdav 0755 webdav webdav"
-      "d /var/lib/webdav/admin-0 0755 webdav webdav"
-      "d /var/lib/webdav/admin-1 0755 webdav webdav"
-      "d /var/lib/webdav/reader 0755 webdav webdav"
-      "d /var/lib/webdav/env-user 0755 webdav webdav"
-      "f /var/lib/webdav/admin-0/test.txt 0644 webdav webdav - hello-admin-0"
-      "f /var/lib/webdav/admin-1/test.txt 0644 webdav webdav - hello-admin-1"
-      "f /var/lib/webdav/reader/test.txt 0644 webdav webdav - hello-reader"
-      "f /var/lib/webdav/env-user/test.txt 0644 webdav webdav - hello-env-user"
-      "f /var/lib/webdav/test-env 0600 webdav webdav - WEBDAV_TEST_PASSWORD=testpass123"
+      "d /var/lib/webdav 0755 webdav share"
+      "d /var/lib/webdav/admin-0 0755 webdav share"
+      "d /var/lib/webdav/admin-1 0755 webdav share"
+      "d /var/lib/webdav/reader 0755 webdav share"
+      "d /var/lib/webdav/env-user 0755 webdav share"
+      "f /var/lib/webdav/admin-0/test.txt 0644 webdav share - hello-admin-0"
+      "f /var/lib/webdav/admin-1/test.txt 0644 webdav share - hello-admin-1"
+      "f /var/lib/webdav/reader/test.txt 0644 webdav share - hello-reader"
+      "f /var/lib/webdav/env-user/test.txt 0644 webdav share - hello-env-user"
+      "f /var/lib/webdav/test-env 0600 webdav share - WEBDAV_TEST_PASSWORD=testpass123"
       # Test directories and files for rules testing
-      "d /var/lib/webdav/rules-user 0755 webdav webdav"
-      "d /var/lib/webdav/rules-user/readable 0755 webdav webdav"
-      "d /var/lib/webdav/rules-user/writable 0755 webdav webdav"
-      "d /var/lib/webdav/rules-user/blocked 0755 webdav webdav"
-      "f /var/lib/webdav/rules-user/readable/test.txt 0644 webdav webdav - readable-text"
-      "f /var/lib/webdav/rules-user/readable/test.mp4 0644 webdav webdav - readable-video"
-      "f /var/lib/webdav/rules-user/blocked/test.txt 0644 webdav webdav - blocked-text"
+      "d /var/lib/webdav/rules-user 0755 webdav share"
+      "d /var/lib/webdav/rules-user/readable 0755 webdav share"
+      "d /var/lib/webdav/rules-user/writable 0755 webdav share"
+      "d /var/lib/webdav/rules-user/blocked 0755 webdav share"
+      "f /var/lib/webdav/rules-user/readable/test.txt 0644 webdav share - readable-text"
+      "f /var/lib/webdav/rules-user/readable/test.mp4 0644 webdav share - readable-video"
+      "f /var/lib/webdav/rules-user/blocked/test.txt 0644 webdav share - blocked-text"
     ];
   };
 

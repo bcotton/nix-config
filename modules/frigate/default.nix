@@ -5,6 +5,8 @@
   lib,
   ...
 }: let
+  # Use frigate from unstable to get 0.16.x (resolves security advisory GHSA-vg28-83rp-8xx4)
+  frigatePackage = unstablePkgs.frigate;
   go2rtcExporter = pkgs.python3Packages.buildPythonApplication {
     pname = "go2rtc-exporter";
     version = "1.0.0";
@@ -31,6 +33,7 @@ in {
   services.frigate = {
     enable = true;
     hostname = "frigate";
+    package = frigatePackage;
 
     settings = {
       detectors = {
@@ -40,9 +43,14 @@ in {
         };
       };
 
+      # Reset admin password on startup (check logs for new password)
+      auth.reset_admin_password = true;
+      # auth.enabled = false;
+
       ffmpeg = {
+        # Explicit path required on NixOS - Frigate appends /bin/ffmpeg to this
+        path = "${pkgs.ffmpeg-headless}";
         hwaccel_args = "preset-vaapi";
-        # hwaccel_args = "-vaapi_device /dev/dri/renderD128 -hwaccel_output_format qsv -c:v h264_qsv";
       };
 
       mqtt = {
@@ -65,43 +73,48 @@ in {
         mode = "continuous";
       };
 
+      # Frigate 0.16+ requires explicit detection enablement (disabled by default)
+      detect = {
+        enabled = true;
+      };
+
       objects = {
         filters.person.threshold = "0.8";
       };
 
       cameras = {
-        frontporch = {
-          ffmpeg.inputs = [
-            {
-              path = "rtsp://127.0.0.1:8554/frontporch?video=copy&audio=aac";
-              roles = ["record" "detect"];
-            }
-          ];
-          snapshots = {
-            enabled = true;
-            required_zones = ["zone_0"];
-          };
-          record = {
-            enabled = true;
-            retain.days = 2;
-            events.retain.default = 5;
-            events.required_zones = ["zone_0"];
-          };
-          zones = {
-            zone_0 = {
-              coordinates = "0,1080,1920,1080,1899,256,0,239";
-            };
-          };
-        };
+        # frontporch = {
+        #   ffmpeg.inputs = [
+        #     {
+        #       path = "rtsp://127.0.0.1:8554/frontporch?video=copy&audio=aac";
+        #       roles = ["record" "detect"];
+        #     }
+        #   ];
+        #   snapshots = {
+        #     enabled = true;
+        #     required_zones = ["zone_0"];
+        #   };
+        #   record = {
+        #     enabled = true;
+        #     retain.days = 2;
+        #     events.retain.default = 5;
+        #     events.required_zones = ["zone_0"];
+        #   };
+        #   zones = {
+        #     zone_0 = {
+        #       coordinates = "0,1080,1920,1080,1899,256,0,239";
+        #     };
+        #   };
+        # };
 
-        backporch = {
-          ffmpeg.inputs = [
-            {
-              path = "rtsp://127.0.0.1:8554/backporch?video=copy&audio=aac";
-              roles = ["record" "detect"];
-            }
-          ];
-        };
+        # backporch = {
+        #   ffmpeg.inputs = [
+        #     {
+        #       path = "rtsp://127.0.0.1:8554/backporch?video=copy&audio=aac";
+        #       roles = ["record" "detect"];
+        #     }
+        #   ];
+        # };
         northside = {
           ffmpeg.inputs = [
             {
@@ -133,15 +146,15 @@ in {
           exec = "trace";
         };
 
-        streams.backporch = [
-          "rtsp://192.168.20.194:8554/1080p?mp4"
-          "ffmpeg:backporch#video=h264#hardware"
-        ];
+        # streams.backporch = [
+        #   "rtsp://192.168.20.194:8554/1080p?mp4"
+        #   "ffmpeg:backporch#video=h264#hardware"
+        # ];
 
-        streams.frontporch = [
-          "rtsp://192.168.20.140:8554/1080p?mp4"
-          "ffmpeg:frontporch#video=h264#hardware"
-        ];
+        # streams.frontporch = [
+        #   "rtsp://192.168.20.140:8554/1080p?mp4"
+        #   "ffmpeg:frontporch#video=h264#hardware"
+        # ];
 
         streams.northside = [
           "rtmp://192.168.20.129/bcs/channel0_main.bcs?channel=0&stream=0&user=\${FRIGATE_CAMERA_USER}&password=\${FRIGATE_CAMERA_PASSWORD}"

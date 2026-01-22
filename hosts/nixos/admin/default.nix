@@ -7,8 +7,14 @@
   pkgs,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   # How to write modules to be imported here
   # https://discourse.nixos.org/t/append-to-a-list-in-multiple-imports-in-configuration-nix/4364/3
   imports = [
@@ -62,7 +68,7 @@
   ];
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   services.rpcbind.enable = true; # needed for NFS
   systemd.mounts = [
@@ -127,16 +133,14 @@
   # Setup for docker
   virtualisation.docker.enable = true;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # List services that you want to enable:
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
   services.nfs.server.enable = true;
 
   # See https://xeiaso.net/blog/prometheus-grafana-loki-nixos-2020-11-20/
@@ -153,7 +157,7 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
@@ -176,5 +180,5 @@
   # and migrated your data accordingly.
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "23.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

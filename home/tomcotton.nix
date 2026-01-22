@@ -6,9 +6,10 @@
   ...
 }: let
   # See https://haseebmajid.dev/posts/2023-07-10-setting-up-tmux-with-nix-home-manager/
-  tmux-window-name =
-    pkgs.tmuxPlugins.mkTmuxPlugin
-    {
+  # tmux-window-name requires Python with libtmux
+  tmux-window-name = let
+    pythonWithLibtmux = pkgs.python312.withPackages (ps: [ps.libtmux]);
+    unwrapped = pkgs.tmuxPlugins.mkTmuxPlugin {
       pluginName = "tmux-window-name";
       version = "head";
       src = pkgs.fetchFromGitHub {
@@ -17,6 +18,27 @@
         rev = "dc97a79ac35a9db67af558bb66b3a7ad41c924e7";
         sha256 = "sha256-o7ZzlXwzvbrZf/Uv0jHM+FiHjmBO0mI63pjeJwVJEhE=";
       };
+    };
+    wrapped = pkgs.runCommand "tmux-window-name-wrapped" {} ''
+      cp -r ${unwrapped} $out
+      chmod -R +w $out
+
+      # Replace Python shebangs with the correct Python path
+      for f in $(find $out -name "*.py"); do
+        if [[ -f "$f" ]]; then
+          sed -i '1s|^#!.*python.*|#!${pythonWithLibtmux}/bin/python|' "$f"
+        fi
+      done
+
+      # Patch the main tmux script to skip pip check (we know libtmux is available)
+      sed -i '/pip_list=/,/exit 0/d' $out/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux
+    '';
+  in
+    wrapped
+    // {
+      inherit (unwrapped) pname version meta;
+      rtp = "${wrapped}/share/tmux-plugins/tmux-window-name/tmux_window_name.tmux";
+      passthru = unwrapped.passthru or {};
     };
   tmux-fzf-head =
     pkgs.tmuxPlugins.mkTmuxPlugin
@@ -186,8 +208,8 @@ in {
       # Run the latest tmux-fzf
       tmux-fzf-head
 
-      # Default <prefix> + space - show a list of things to copy
-      tmux-thumbs
+      # Default <prefix> + F - shows hints to copy text
+      fingers
       {
         plugin = tmux-window-name;
       }

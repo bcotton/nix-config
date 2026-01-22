@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+echo "🔍 Running formatter on staged files..."
+just fmt
+
+# Re-add any files that were formatted
+git diff --name-only --cached | xargs git add 2>/dev/null || true
+
+echo "✓ Pre-commit checks passed"
+exit 0

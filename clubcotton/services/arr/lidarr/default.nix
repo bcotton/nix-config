@@ -28,6 +28,7 @@ in {
       enable = true;
       user = clubcotton.user;
       group = clubcotton.group;
+      package = unstablePkgs.${service};
     };
 
     services.tsnsrv = {

@@ -7,16 +7,19 @@
   lib,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    # ../../../modules/k3s-agent
-    # ../../../modules/docker/minecraft
-    # ../../../modules/docker/audiobookshelf
   ];
 
   services.xserver.enable = true;
@@ -49,7 +52,7 @@
 
   networking = {
     hostName = "imac-01";
-    hostId = "238f8e1e";
+    hostId = variables.hostId;
 
     useDHCP = false;
     defaultGateway = "192.168.5.1";
@@ -62,30 +65,35 @@
     ];
   };
 
-  services.tailscale.enable = true;
-
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   environment.systemPackages = with pkgs; [
     firefox
     code-cursor
   ];
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

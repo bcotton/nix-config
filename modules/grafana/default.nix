@@ -7,6 +7,7 @@
     enable = true;
     settings.server.http_port = 3000;
     settings.server.http_addr = "0.0.0.0";
+
     declarativePlugins = with pkgs.grafanaPlugins; [
       grafana-piechart-panel
       grafana-clock-panel
@@ -21,5 +22,29 @@
         zipHash = "sha256-GiZCE9/ZXuRCukVIfVWvrv0GUEioiseAv7sOLwk128Q=";
       })
     ];
+
+    provision = {
+      enable = true;
+
+      datasources.settings.datasources = [
+        {
+          name = "Prometheus";
+          type = "prometheus";
+          access = "proxy";
+          url = "http://localhost:${toString config.services.prometheus.port}";
+          isDefault = true;
+        }
+      ];
+
+      dashboards.settings.providers = [
+        {
+          name = "Borgmatic Backups";
+          type = "file";
+          options.path = ./dashboards;
+          disableDeletion = true;
+          updateIntervalSeconds = 86400;
+        }
+      ];
+    };
   };
 }

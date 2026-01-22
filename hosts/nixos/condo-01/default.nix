@@ -9,8 +9,14 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -23,10 +29,19 @@
 
   clubcotton.zfs_single_root.enable = true;
   virtualisation.podman.enable = true;
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
-  programs.zsh.enable = true;
-  services.openssh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
+  services.openssh.enable = variables.opensshEnable;
 
   services.clubcotton.tailscale = {
     useRoutingFeatures = "server";
@@ -37,9 +52,7 @@
   };
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   virtualisation.podman = {
@@ -59,7 +72,7 @@
   };
 
   networking = {
-    hostId = "3fa4e0cb";
+    hostId = variables.hostId;
     hostName = "condo-01";
     defaultGateway = "192.168.12.1";
     nameservers = ["192.168.12.1"];
@@ -73,7 +86,7 @@
     #  }
     #];
   };
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   services.pipewire = {
     enable = true;
@@ -124,7 +137,7 @@
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }

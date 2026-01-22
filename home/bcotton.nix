@@ -3,46 +3,157 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName ? "unknown",
+  nixosHosts ? [],
+  workmuxPackage,
+  inputs,
   ...
-}: let
-  nixVsCodeServer = fetchTarball {
-    url = "https://github.com/zeyugao/nixos-vscode-server/tarball/master";
-    sha256 = "sha256:1l77kybmghws3y834b1agb69vs6h4l746ga5xccvz4p1y8wc67h7";
-  };
-in {
+}: {
   home.stateVersion = "23.05";
 
-  imports = [
-    "${nixVsCodeServer}/modules/vscode-server/home.nix"
-    ./modules/atuin.nix
-    ./modules/tmux-plugins.nix
-    ./modules/beets.nix
-    # ./modules/sesh.nix
-  ];
+  # Declarative PATH management - cross-platform paths
+  home.sessionPath =
+    [
+      "$HOME/.local/bin"
+      "$HOME/projects/deployment_tools/scripts/gcom"
+      "$HOME/projects/grafana-app-sdk/target"
+    ]
+    # macOS-specific paths (Homebrew)
+    ++ lib.optionals pkgs.stdenv.isDarwin [
+      "/opt/homebrew/sbin"
+      "/opt/homebrew/share/google-cloud-sdk/bin"
+    ];
 
-  programs.beets-cli.enable = true;
+  imports = let
+    # Create the path to the host-specific config file
+    # We use string interpolation here because hostName is available as a function argument
+    hostConfigFile = "bcotton-hosts/${hostName}.nix";
+    hostConfigPath = ./. + "/${hostConfigFile}";
+  in
+    [
+      inputs.vscode-server.homeModules.default
+      ./modules/atuin.nix
+      ./modules/git.nix
+      ./modules/tmux-plugins.nix
+      ./modules/beets.nix
+      ./modules/hyprland
+      ./modules/gwtmux.nix
+      ./modules/llm.nix
+      ./modules/zsh-profiling.nix
+      ./modules/kubectl-lazy.nix
+      ./modules/nvm-lazy.nix
+      ./modules/tmux-popup-apps.nix
+      ./modules/browser-opener.nix
+      ./modules/clipboard-receiver.nix
+      ./modules/notification-receiver.nix
+      ./modules/xdg-open-remote.nix
+      ./modules/remote-copy.nix
+      ./modules/remote-notify.nix
+      ./modules/arc-tab-archiver.nix
+      # workmux module is imported via flake input in flake.nix
+      # ./modules/sesh.nix
+    ]
+    ++ lib.optional (builtins.pathExists hostConfigPath) hostConfigPath;
+
+  # Beets is only available on Linux due to gst-python build issues on Darwin
+  programs.beets-cli.enable = pkgs.stdenv.isLinux;
   programs.tmux-plugins.enable = true;
+  programs.gwtmux.enable = true;
 
-  # programs.sesh-config = {
-  #   enable = true;
-  #   sessions = [
-  #     {
-  #       name = "default";
-  #     }
-  #     {
-  #       name = "just";
-  #       startup_command = "cd ~/nix-config && just";
-  #     }
-  #     {
-  #       name = "admin";
-  #       startup_command = "ssh admin -t 'tmux a'";
-  #     }
-  #     {
-  #       name = "nix-03";
-  #       startup_command = "ssh -q nix-03 -L 10350:localhost:10350 -L 3000:localhost:3000  -t 'tmux a'";
-  #     }
-  #   ];
-  # };
+  # Remote browser opening - allows CLI tools on remote Linux hosts to open
+  # URLs in the browser on the local Mac desktop via SSH reverse port forwarding
+  programs.browser-opener.enable = pkgs.stdenv.isDarwin;
+  programs.xdg-open-remote.enable = pkgs.stdenv.isLinux;
+
+  # Remote clipboard - allows remote Linux hosts to copy text to local Mac clipboard
+  programs.clipboard-receiver.enable = pkgs.stdenv.isDarwin;
+  programs.remote-copy.enable = pkgs.stdenv.isLinux;
+
+  # Remote notifications - allows remote Linux hosts to send macOS notifications
+  programs.notification-receiver.enable = pkgs.stdenv.isDarwin;
+  programs.remote-notify.enable = pkgs.stdenv.isLinux;
+
+  # Arc Tab Archiver - captures auto-archived Arc browser tabs to Obsidian
+  programs.arc-tab-archiver = {
+    enable = pkgs.stdenv.isDarwin;
+    obsidianDir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/Bob's Projects/arc-archive";
+  };
+
+  programs.tmux-popup-apps = {
+    enable = true;
+    apps = [
+      {
+        name = "LazyGit";
+        command = "lazygit";
+      }
+      {
+        name = "LazyDocker";
+        command = "lazydocker";
+      }
+      {
+        name = "K9s";
+        command = "k9s";
+      }
+      {
+        name = "Btop";
+        command = "btop";
+      }
+      {
+        name = "JQ Clipboard";
+        command = "pbpaste | jq -C '.' | less -R";
+      }
+    ];
+  };
+
+  # Hyprland configuration - these are default settings
+  # Host-specific overrides can be placed in bcotton-hosts/<hostname>.nix
+  # See bcotton-hosts/README.md for details on per-host configuration
+  # Using lib.mkDefault allows host-specific configs to override these values
+  programs.hyprland-config = {
+    enable = lib.mkDefault false;
+    modifier = lib.mkDefault "SUPER";
+    terminal = lib.mkDefault "ghostty";
+    browser = lib.mkDefault "firefox";
+    # Default monitor auto-configuration
+    monitors = lib.mkDefault [
+      ",preferred,auto,auto"
+    ];
+    gapsIn = lib.mkDefault 5;
+    gapsOut = lib.mkDefault 10;
+  };
+
+  programs.llm = {
+    enable = true;
+
+    # Enable specific plugins
+    plugins = {
+      llm-anthropic = true; # Claude models
+      llm-gemini = true; # Google Gemini models
+      llm-openrouter = true; # OpenRouter models
+      llm-jq = true; # jq plugin
+      llm-openai-plugin = true; # OpenAI models
+    };
+  };
+
+  programs.workmux = {
+    enable = true;
+    package = workmuxPackage;
+    agent = "claude";
+    mainBranch = "main";
+    worktreeDir = "..";
+    windowPrefix = "";
+    mergeStrategy = "merge";
+
+    panes = [
+      {
+        command = "<agent>";
+        focus = true;
+      }
+      {
+        split = "horizontal";
+      }
+    ];
+  };
 
   programs.atuin-config = {
     enable-daemon = true;
@@ -50,6 +161,11 @@ in {
     darwinKeyPath = "~/.local/share/atuin/key";
     filter_mode = "session";
   };
+
+  # ZSH performance optimizations
+  programs.zsh-profiling.enable = false; # Enable to see zprof output on shell startup
+  programs.kubectl-lazy.enable = true; # Step 2: Enable kubectl lazy-loading
+  programs.nvm-lazy.enable = true; # Step 3: Enable NVM lazy-loading
 
   # list of programs
   # https://mipmip.github.io/home-manager-option-search
@@ -66,186 +182,28 @@ in {
     tmux.enableShellIntegration = true;
   };
 
-  programs.git = {
-    enable = true;
-    userEmail = "bob.cotton@gmail.com";
-    userName = "Bob Cotton";
-    extraConfig = {
-      alias = {
-        br = "branch";
-        co = "checkout";
-        ci = "commit";
-        d = "diff";
-        dc = "diff --cached";
-        st = "status";
-        la = "config --get-regexp alias";
-        lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit";
-        lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
-      };
-      url = {
-        "ssh://git@github.com/" = {
-          insteadOf = "https://github.com/";
-        };
-      };
-      init.defaultBranch = "main";
-      pager.difftool = true;
-
-      core = {
-        whitespace = "trailing-space,space-before-tab";
-        # pager = "difftastic";
-      };
-      # interactive.diffFilter = "difft";
-      merge.conflictstyle = "diff3";
-      diff = {
-        # tool = "difftastic";
-        colorMoved = "default";
-      };
-      # difftool."difftastic".cmd = "difft $LOCAL $REMOTE";
-    };
-    difftastic = {
-      enable = false;
-      background = "dark";
-      display = "side-by-side";
-    };
-    includes = [
-      {path = "${pkgs.delta}/share/themes.gitconfig";}
-    ];
-    delta = {
-      enable = true;
-      options = {
-        # decorations = {
-        #   commit-decoration-style = "bold yellow box ul";
-        #   file-decoration-style = "none";
-        #   file-style = "bold yellow ul";
-        # };
-        # features = "mellow-barbet";
-        features = "collared-trogon";
-        # whitespace-error-style = "22 reverse";
-        navigate = true;
-        light = false;
-        side-by-side = true;
-      };
-    };
-  };
-
   programs.htop = {
     enable = true;
     settings.show_program_path = true;
   };
 
-  programs.tmux = {
+  # GitHub CLI with SSH protocol
+  programs.gh = {
     enable = true;
-    keyMode = "vi";
-    clock24 = true;
-    mouse = true;
-    prefix = "C-Space";
-    historyLimit = 20000;
-    baseIndex = 1;
-    aggressiveResize = true;
-    # escapeTime = 0;
-    terminal = "screen-256color";
-    extraConfig = ''
-      if-shell "uname | grep -q Darwin" {
-        set-option -g default-command "reattach-to-user-namespace -l zsh"
-      }
+    settings = {
+      git_protocol = "ssh";
+    };
+  };
 
-      # Bring these environment variables into tmux on re-attach
-      set-option -g update-environment "SSH_AUTH_SOCK SSH_CONNECTION DISPLAY"
+  # Kubernetes dashboard
+  programs.k9s = {
+    enable = true;
+  };
 
-      # Vim style pane selection
-      bind h select-pane -L
-      bind j select-pane -D
-      bind k select-pane -U
-      bind l select-pane -R
-
-      # Need to decide if these are the commands I want to use
-      bind "C-h" select-pane -L
-      bind "C-j" select-pane -D
-      bind "C-k" select-pane -U
-      bind "C-l" select-pane -R
-
-      # Recommended for sesh
-      bind-key x kill-pane # skip "kill-pane 1? (y/n)" prompt
-      set -g detach-on-destroy off  # don't exit from tmux when closing a session
-      bind -N "last-session (via sesh) " L run-shell "sesh last"
-
-      bind -n "M-k" run-shell "sesh connect \"$(
-          ~/go/bin/sesh list --icons | fzf-tmux -p 80%,70% --no-border \
-            --reverse \
-            --ansi \
-            --list-border \
-            --no-sort --prompt '⚡  ' \
-            --color 'list-border:6,input-border:3,preview-border:2,header-bg:-1,header-border:6' \
-            --input-border \
-            --header-border \
-            --bind 'tab:down,btab:up' \
-            --bind 'ctrl-a:change-prompt(⚡  )+reload(sesh list --icons)' \
-            --bind 'ctrl-t:change-prompt(🪟  )+reload(sesh list -t --icons)' \
-            --bind 'ctrl-g:change-prompt(⚙️  )+reload(sesh list -c --icons)' \
-            --bind 'ctrl-x:change-prompt(📁  )+reload(sesh list -z --icons)' \
-            --bind 'ctrl-f:change-prompt(🔎  )+reload(fd -H -d 2 -t d -E .Trash . ~)' \
-            --bind 'ctrl-d:execute(tmux kill-session -t {2..})+change-prompt(⚡  )+reload(sesh list --icons)' \
-            --preview-window 'right:70%' \
-            --preview '~/go/bin/sesh preview {}' \
-      )\""
-
-      # set-option -g status-position top
-      set -g renumber-windows on
-      set -g set-clipboard on
-
-      # Status left configuration:
-      # - #[bg=colour241,fg=colour248]: Sets grey background with light text
-      # - Second #[...]: Configures separator styling
-      # - #S: Displays current session name
-      set-option -g status-left "#[bg=colour241,fg=colour46] #S #[bg=colour237,fg=colour241,nobold,noitalics,nounderscore]"
-
-      # Status right configuration:
-      # - First #[...]: Sets up transition styling
-      # - %Y-%m-%d: Shows date in YYYY-MM-DD format
-      # - %H:%M: Shows time in 24-hour format
-      # - #h: Displays hostname
-      # - Second #[...]: Configures styling for session name
-      set-option -g status-right "#[bg=colour237,fg=colour239 nobold, nounderscore, noitalics]#[bg=colour239,fg=colour246] %Y-%m-%d  %H:%M #[bg=colour239,fg=colour248,nobold,noitalics,nounderscore]#[bg=colour248,fg=colour237] #h "
-
-      # Per session kubeconfig
-      set-hook -g session-created 'run-shell "~/.config/tmux/cp-kubeconfig start #{hook_session_name}"'
-      set-hook -g session-closed 'run-shell "~/.config/tmux/cp-kubeconfig stop #{hook_session_name}"'
-
-      # https://github.com/samoshkin/tmux-config/blob/master/tmux/tmux.conf
-      set -g buffer-limit 20
-      set -g display-time 1500
-      set -g remain-on-exit off
-      set -g repeat-time 300
-      # setw -g allow-rename off
-      # setw -g automatic-rename off
-
-      # Turn off the prefix key when nesting tmux sessions, led to this
-      # https://gist.github.com/samoshkin/05e65f7f1c9b55d3fc7690b59d678734?permalink_comment_id=4616322#gistcomment-4616322
-      # Whcih led to the tmux-nested plugin
-
-      # keybind to disable outer-most active tmux
-      set -g @nested_down_keybind 'M-o'
-      # keybind to enable inner-most inactive tmux
-      set -g @nested_up_keybind 'M-O'
-      # keybind to recursively enable all tmux instances
-      set -g @nested_up_recursive_keybind 'M-U'
-      # status style of inactive tmux
-      set -g @nested_inactive_status_style '#[fg=black,bg=red] #h #[bg=colour237,fg=colour241,nobold,noitalics,nounderscore]'
-      set -g @nested_inactive_status_style_target 'status-left'
-
-      # tmux-fzf stuff
-
-      # git-popup: (<prefix> + ctrl-g)
-      bind-key C-g display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "lazygit"
-      # k9s popup: (<prefix> + ctrl-k)
-      bind-key C-k display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "k9s"
-      # jq as a popup, from the clipboard
-      bind-key C-j display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "pbpaste | jq -C '.' | less -R"
-      # btop as a popup
-      bind-key C-b display-popup -E -d "#{pane_current_path}" -xC -yC -w 80% -h 75% "btop"
-
-
-    '';
+  # Command correction
+  programs.thefuck = {
+    enable = true;
+    enableZshIntegration = true;
   };
 
   services.vscode-server.enable = true;
@@ -278,6 +236,14 @@ in {
     configFile."nix/registry.json" = {
       source = ./bcotton.config/nix/registry.json;
     };
+    configFile."git-worktrees/git-clone-bare-for-worktrees.sh" = {
+      executable = true;
+      source = ./bcotton.config/git-worktrees/git-clone-bare-for-worktrees.sh;
+    };
+    configFile."beads-init/beads-init.sh" = {
+      executable = true;
+      source = ./bcotton.config/beads-init/beads-init.sh;
+    };
   };
 
   programs.zsh = {
@@ -295,49 +261,50 @@ in {
       "~/projects"
     ];
 
-    dirHashes = {
-      docs = "$HOME/Documents";
-      proj = "$HOME/projects";
-      dl = "$HOME/Downloads";
-    };
-
     # atuin register -u bcotton -e bob.cotton@gmail.com
-    envExtra = ''
-      #export DOCKER_HOST="unix://$HOME/.docker/run/docker.sock"
-      export BAT_THEME="Visual Studio Dark+"
-      export DFT_DISPLAY=side-by-side
-      export EDITOR=vim
-      export EMAIL=bob.cotton@gmail.com
-      export EXA_COLORS="da=1;35"
-      export FULLNAME='Bob Cotton'
-      export GOPATH=$HOME/projects/go
-      export GOPRIVATE="github.com/grafana/*"
-      export LESS="-iMSx4 -FXR"
-      export OKTA_MFA_OPTION=1
-      export PAGER=less
-      export PATH=$GOPATH/bin:/opt/homebrew/sbin:/opt/homebrew/share/google-cloud-sdk/bin:~/projects/deployment_tools/scripts/gcom:~/projects/grafana-app-sdk/target:$PATH
-      export QMK_HOME=~/projects/qmk_firmware
-      export TMPDIR=/tmp/
-      export XDG_CONFIG_HOME="$HOME/.config"
+    envExtra =
+      ''
+        export BAT_THEME="Visual Studio Dark+"
+        export DFT_DISPLAY=side-by-side
+        export EDITOR=vim
+        export EMAIL=bob.cotton@gmail.com
+        export EXA_COLORS="da=1;35"
+        export FULLNAME='Bob Cotton'
+        export GOPATH=$HOME/projects/go
+        export GOPRIVATE="github.com/grafana/*"
+        export LESS="-iMSx4 -FXR"
+        export OKTA_MFA_OPTION=1
+        export PAGER=less
+        # Variable-dependent PATH additions (static paths are in home.sessionPath)
+        export PNPM_HOME="$HOME/.local/share/pnpm"
+        export PATH="$PNPM_HOME:$GOPATH/bin:$PATH"
+        export QMK_HOME=~/projects/qmk_firmware
+        export TILT_HOST=0.0.0.0
+        export TMPDIR=/tmp/
+        export XDG_CONFIG_HOME="$HOME/.config"
 
-      export FZF_CTRL_R_OPTS="--reverse"
-      export FZF_TMUX_OPTS="-p"
+        export FZF_CTRL_R_OPTS="--reverse"
+        export FZF_TMUX_OPTS="-p"
 
-      export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+        export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+        [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
+      ''
+      # Linux-specific: podman socket configuration
+      # TODO: The systemctl fix should ideally be in NixOS activation, not shell init
+      + lib.optionalString pkgs.stdenv.isLinux ''
+        # Fix broken podman.service symlink if present
+        if [ -L "$HOME/.config/systemd/user/podman.service" ]; then
+          systemctl --user enable podman.socket 2>/dev/null
+          systemctl --user start podman.socket 2>/dev/null
+        fi
 
-      if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
-         export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-         export DOCKER_BUILDKIT=0
-      fi
-
-
-
-      [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
-    '';
+        # Set DOCKER_HOST to use podman socket if available
+        if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
+          export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
+          export DOCKER_BUILDKIT=0
+        fi
+      '';
 
     oh-my-zsh = {
       enable = true;
@@ -358,7 +325,7 @@ in {
         "bundler"
         "colorize"
         "dotenv"
-        "fzf"
+        # "fzf" # Using programs.fzf.enableZshIntegration instead
         "git"
         "gh"
         "kubectl"
@@ -367,6 +334,9 @@ in {
         "tmux"
 
         # these are custom
+        "bd-completion"
+        "bdl"
+        "claude-personal"
         "kubectl-fzf-get"
         "git-reflog-fzf"
         "sesh"
@@ -376,40 +346,42 @@ in {
     };
 
     shellAliases = {
-      # Automatically run `go test` for a package when files change.
+      # Development
       autotest = "watchexec -c clear -o do-nothing --delay-run 100ms --exts go 'pkg=\".\${WATCHEXEC_COMMON_PATH/\$PWD/}/...\"; echo \"running tests for \$pkg\"; go test \"\$pkg\"'";
-      cd = "z";
+      gdn = "git diff | gitnav";
+      lg = "lazygit";
+      ld = "lazydocker";
+      tf = "tofu";
+      wm = "workmux";
+
+      # File viewing
       batj = "bat -l json";
       batly = "bat -l yaml";
       batmd = "bat -l md";
       dir = "exa -l --icons --no-user --group-directories-first  --time-style long-iso --color=always";
-      gdn = "git diff | gitnav";
+      tree = "exa -Tl --color=always";
+      ltr = "ll -snew";
+      watch = "viddy ";
+
+      # Kubernetes
       k = "kubectl";
       kctx = "kubectx";
       kns = "kubens";
-      ltr = "ll -snew";
-      tf = "tofu";
-      tree = "exa -Tl --color=always";
-      # watch = "watch --color "; # Note the trailing space for alias expansion https://unix.stackexchange.com/questions/25327/watch-command-alias-expansion
-      watch = "viddy ";
-      # z = "zoxide";
     };
 
     initContent = ''
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+      # Source zsh-defer for deferred initialization
+      source ${pkgs.zsh-defer}/share/zsh-defer/zsh-defer.plugin.zsh
 
-      if [ -e "/var/run/user/1000/podman/podman.sock" ]; then
-         export DOCKER_HOST=unix:///run/user/1000/podman/podman.sock
-         export DOCKER_BUILDKIT=0
+      # Defer heavy initializations until after prompt displays
+      zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
+
+      if [[ "$CLAUDECODE" != "1" ]]; then
+        zsh-defer -c 'eval "$(zoxide init zsh)"; alias cd="z"'
       fi
 
-      [ -e ~/.config/sensitive/.zshenv ] && \. ~/.config/sensitive/.zshenv
-
-      source <(kubectl completion zsh)
-      eval "$(atuin init zsh --disable-up-arrow)"
-      eval "$(zoxide init zsh)"
+      zsh-defer -c 'eval "$(sesh completion zsh)"'
+      zsh-defer -c 'eval "$($HOME/.local/bin/bd completion zsh)"; _bd_setup_completion'
 
       bindkey -e
       bindkey '^[[A' up-history
@@ -426,6 +398,7 @@ in {
           export $(tmux show-environment | grep "^SSH_AUTH_SOCK") > /dev/null
           export $(tmux show-environment | grep "^DISPLAY") > /dev/null
           export $(tmux show-environment | grep "^KUBECONFIG") > /dev/null
+          export $(tmux show-environment | grep "^REMOTE_BROWSER_PORT") > /dev/null
         }
       else
         function refresh { }
@@ -453,6 +426,14 @@ in {
         esac
       }
 
+      # Wrapper for nix-shell that reminds about nix-run when using -p
+      function nix-shell () {
+        if [[ "$1" == "-p" ]]; then
+          echo "💡 Tip: Use 'nix-run $2' instead of 'nix-shell -p $2'" >&2
+        fi
+        command nix-shell "$@"
+      }
+
       # nix shell nixpkgs#pacakge and 'nix run' and the proper channel-less way to bring in a program
       function nix-run () {
         program="$1"
@@ -466,16 +447,105 @@ in {
         nix run "nixpkgs-unstable#$program" -- "$@"
       }
 
+      # Auto-page help output: detects --help or -h and pipes through pager
+      # Also provides manual 'h' function: h git, h kubectl, etc.
+      function h () {
+        "$@" --help 2>&1 | ''${PAGER:-less}
+      }
+
+      # ZLE widget: auto-append pager when command ends with --help or -h
+      function _auto_page_help() {
+        # Check if command ends with --help, -h, or help (standalone)
+        if [[ "$BUFFER" =~ '(--help|-h|[[:space:]]help)$' ]]; then
+          # Don't double-pipe if already piped
+          if [[ "$BUFFER" != *"|"* ]]; then
+            BUFFER="$BUFFER 2>&1 | ''${PAGER:-less}"
+          fi
+        fi
+        zle .accept-line
+      }
+      zle -N accept-line _auto_page_help
+
+      # Reload home-manager environment after 'just switch'
+      # Uses exec zsh to get a fresh shell with proper PATH initialization
+      function reload-hm () {
+        echo "🔄 Reloading home-manager environment..."
+
+        # Reload tmux config first (before exec replaces this shell)
+        if [[ -n "$TMUX" ]]; then
+          local tmux_conf="$HOME/.config/tmux/tmux.conf"
+          if [[ -f "$tmux_conf" ]]; then
+            tmux source-file "$tmux_conf"
+            echo "  ✓ Reloaded tmux.conf"
+          fi
+        fi
+
+        # Unset the guard so hm-session-vars.sh runs in the new shell
+        unset __HM_SESS_VARS_SOURCED
+
+        echo "  ✓ Starting fresh shell..."
+        exec zsh
+      }
+
       if [[ "$TERM_PROGRAM" != "vscode" ]]; then
-        RPROMPT=$RED'[%~]'$DEFAULT
         DISABLE_AUTO_UPDATE="true"
         DISABLE_UPDATE_PROMPT="true"
       fi
 
-      setopt autocd autopushd autoresume cdablevars correct correctall extendedglob histignoredups longlistjobs mailwarning  notify pushdminus pushdsilent pushdtohome rcquotes recexact sunkeyboardhack always_to_end hist_allow_clobber no_share_history
-      unsetopt menucomplete
-      unset globdots
-      unsetopt bgnice
+      # ═══════════════════════════════════════════════════════════════════
+      # ZSH Options - Organized by Category
+      # Reference: https://zsh.sourceforge.io/Doc/Release/Options.html
+      # ═══════════════════════════════════════════════════════════════════
+
+      # Directory Navigation
+      # --------------------
+      setopt autocd            # Type dir name to cd (handled by programs.zsh.autocd)
+      setopt autopushd         # cd pushes old dir onto stack
+      setopt cdablevars        # cd to value of variable if not a directory
+      setopt pushdminus        # Swap +/- meanings in pushd
+      setopt pushdsilent       # Don't print stack after pushd/popd
+      setopt pushdtohome       # pushd with no args goes to ~
+
+      # History
+      # -------
+      setopt histignoredups    # Don't record duplicate entries
+      setopt hist_allow_clobber # Add | to redirections in history for safety
+      setopt no_share_history  # Don't share history between sessions (atuin handles sync)
+
+      # Completion
+      # ----------
+      setopt always_to_end     # Move cursor to end after completion
+      setopt recexact          # Accept exact match even if ambiguous
+      setopt menucomplete      # First tab completes to first match, subsequent tabs cycle
+
+      # Menu selection: show list and highlight current selection
+      zstyle ':completion:*' menu select
+
+      # Prioritize local directories in cd/z completion over cdpath and zoxide
+      zstyle ':completion:*:(cd|z):*' tag-order 'local-directories' 'directory-stack' 'named-directories' 'path-directories'
+
+      # Spelling Correction
+      # -------------------
+      setopt correct           # Correct spelling of commands
+      setopt correctall        # Correct spelling of all arguments
+
+      # Globbing
+      # --------
+      setopt extendedglob      # Extended glob operators (#, ~, ^)
+      unsetopt globdots        # Don't match dotfiles without explicit dot
+
+      # Job Control
+      # -----------
+      setopt autoresume        # Single-word commands resume existing job if matches
+      setopt longlistjobs      # List jobs in long format
+      setopt notify            # Report job status immediately, not at next prompt
+      unsetopt bgnice          # Don't run background jobs at lower priority
+
+      # Miscellaneous
+      # -------------
+      setopt mailwarning       # Warn if mail file has been accessed
+      setopt rcquotes          # Two single-quotes inside quoted string = literal quote
+      setopt sunkeyboardhack   # Ignore trailing | (for Sun keyboard quirks, legacy)
 
     '';
   };
@@ -485,40 +555,112 @@ in {
 
   #  programs.neovim.enable = true;
   programs.nix-index.enable = true;
-  programs.zoxide.enable = true;
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = false; # Using zsh-defer for deferred init in initContent
+  };
 
   programs.ssh = {
     enable = true;
-    extraConfig = ''
+    extraConfig = let
+      # Generate host list from nixosHosts for RemoteForward configuration
+      remoteForwardHosts = lib.concatStringsSep " " nixosHosts;
+    in ''
+      Host nas-01 nix-02 nix-03
+        IdentityFile ~/.ssh/nix-builder-id_ed25519
+        IdentitiesOnly no
+
+      # Remote browser opening - forward port 7890 from remote Linux hosts
+      # to localhost:7890 where browser-opener listens (macOS only)
+      # Remote clipboard - forward port 7891 for clipboard-receiver
+      # Remote notifications - forward port 7892 for notification-receiver
+      Host ${remoteForwardHosts}
+        RemoteForward 7890 localhost:7890
+        RemoteForward 7891 localhost:7891
+        RemoteForward 7892 localhost:7892
+
       Host *
         StrictHostKeyChecking no
         ForwardAgent yes
+
 
       Host github.com
         Hostname ssh.github.com
         Port 443
     '';
-    matchBlocks = {
-    };
   };
 
-  home.packages = with pkgs; [
-    (pkgs.python312.withPackages (ppkgs: [
-      ppkgs.libtmux
-    ]))
-    unstablePkgs.aider-chat
-    devenv
-    fx
-    kubernetes-helm
-    kubectx
-    kubectl
-    llm
-    # nodejs_22
-    opentofu
-    unstablePkgs.sesh
-    unstablePkgs.uv
-    tldr
-    unstablePkgs.spotdl
-    unstablePkgs.zed-editor
-  ];
+  home.packages = with pkgs;
+    [
+      (pkgs.python312.withPackages (ppkgs: [
+        ppkgs.libtmux
+      ]))
+      # unstablePkgs.aider-chat
+      _1password-cli
+      bottom
+      claude-code
+      devenv
+      docker-compose
+      forgejo-cli
+      fx
+      google-cloud-sdk
+      kubernetes-helm
+      kubectx
+      kubectl
+      opentofu
+
+      inputs.opencode.packages.${pkgs.system}.default
+      inputs.beads.packages.${pkgs.system}.default
+
+      procs
+      unstablePkgs.sesh
+      unstablePkgs.uv
+      tldr
+      unstablePkgs.zed-editor
+      zsh-defer # Step 4: Needed for deferred initialization
+
+      # Migrated from Homebrew brews
+      # Kubernetes/Cloud tools
+      kustomize
+      minikube
+      tanka
+      jsonnet
+      jsonnet-bundler
+
+      # Development tools
+      azure-cli
+      golangci-lint
+      shellcheck
+      terraform
+      trufflehog
+      # zizmor  # not in nixpkgs yet
+
+      # CLI utilities
+      colordiff
+      etcd
+      fswatch
+      git-absorb
+      glances
+      hwatch
+      # jd  # not in nixpkgs - keep in Homebrew
+      jnv
+      silver-searcher # the_silver_searcher (ag)
+      inetutils # provides telnet
+
+      # Monitoring
+      prometheus
+      prometheus-node-exporter
+
+      # tmux (cross-platform)
+      tmux
+    ]
+    ++ lib.optionals stdenv.isDarwin [
+      # macOS-only: tmux clipboard integration
+      reattach-to-user-namespace
+    ]
+    ++ [
+      # Additional tools
+      tailscale
+      lastpass-cli
+    ];
 }

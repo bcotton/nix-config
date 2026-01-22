@@ -1,0 +1,81 @@
+name: Nix Flake Check
+
+on:
+  push:
+    branches:
+      - main
+      - forgejo
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  flake-check:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    steps:
+      - name: Setup SSH key for distributed builds
+        run: |
+          mkdir -p /run/secrets
+          echo "${{ secrets.NIX_BUILDER_KEY }}" > /run/secrets/nix-builder-key
+          chmod 600 /run/secrets/nix-builder-key
+
+      - name: Setup Nix environment
+        run: |
+          # Configure git for flakes
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for better caching
+
+      - name: Check Nix installation
+        run: |
+          nix --version
+          git --version
+          echo "Current directory: $(pwd)"
+          echo "Git status:"
+          git status || echo "Not a git repository or git not working"
+
+      - name: Run nix flake check
+        run: |
+          echo "Running nix flake check..."
+          nix flake check --show-trace
+
+      - name: Show flake info
+        if: success() || failure()
+        run: |
+          echo "=== Flake Info ==="
+          nix flake info --json | head -20 || true
+          echo ""
+          echo "=== Flake Metadata ==="
+          nix flake metadata || true
+
+  format-check:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    steps:
+      - name: Setup Nix environment
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check formatting
+        run: |
+          echo "Checking Nix code formatting..."
+          # Run the formatter in check mode
+          nix fmt -- --check . || {
+            echo ""
+            echo "❌ Code formatting issues found!"
+            echo "Run 'nix fmt' or 'just fmt' locally to fix formatting"
+            exit 1
+          }
+          echo "✅ All Nix files are properly formatted"

@@ -2,14 +2,15 @@
 name = "default"
 
 [[session]]
-name = "just"
-startup_command = "cd ~/nix-config && just"
+name = "admin"
+startup_command = "ssh admin -t 'tmux a || tmux'"
 
 [[session]]
-name = "admin"
-startup_command = "ssh admin -t 'tmux a'"
+name = "nix-01"
+startup_command = "ssh -q nix-01 -t 'tmux a || tmux'"
 
 [[session]]
 name = "nix-03"
-startup_command = "ssh -q nix-03 -L 10350:localhost:10350 -L 3000:localhost:3000  -t 'tmux a'"
+startup_command = "ssh -q nix-03 -t 'tmux a || tmux'"
+
 

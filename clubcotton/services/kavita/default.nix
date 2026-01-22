@@ -6,7 +6,6 @@
 }:
 with lib; let
   cfg = config.services.clubcotton.kavita;
-  clubcotton = config.clubcotton;
 in {
   options.services.clubcotton.kavita = {
     enable = mkEnableOption "Kavita server";
@@ -62,37 +61,40 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    # Create the library directory with appropriate permissions:
-    # - 0775 means rwxrwxr-x
-    # - Owner (kavita user) gets full access (rwx)
-    # - Group (kavita group) gets full access (rwx)
-    # - Others get read and execute (r-x)
-    systemd.tmpfiles.rules = [
-      "d '${cfg.libraryDir}' 0775 ${cfg.user} ${cfg.user} - -"
-    ];
+  config = mkIf cfg.enable (mkMerge [
+    {
+      # Create the library directory with appropriate permissions:
+      # - 0775 means rwxrwxr-x
+      # - Owner (kavita user) gets full access (rwx)
+      # - Group (kavita group) gets full access (rwx)
+      # - Others get read and execute (r-x)
+      systemd.tmpfiles.rules = [
+        "d '${cfg.libraryDir}' 0775 ${cfg.user} ${cfg.user} - -"
+      ];
 
-    # Configure the upstream Kavita service
-    # Note: The kavita group is created by the upstream module
-    services.kavita = {
-      enable = true;
-      inherit (cfg) user dataDir tokenKeyFile;
-      settings = {
-        Port = cfg.port;
-        IpAddresses = concatStringsSep "," cfg.bindAddresses;
+      # Configure the upstream Kavita service
+      # Note: The kavita group is created by the upstream module
+      services.kavita = {
+        enable = true;
+        inherit (cfg) user dataDir tokenKeyFile;
+        settings = {
+          Port = cfg.port;
+          IpAddresses = concatStringsSep "," cfg.bindAddresses;
+        };
       };
-    };
+    }
 
-    # Expose Kavita on the tailnet if hostname is configured
-    services.tsnsrv = {
-      enable = true;
-      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-
-      services."${cfg.tailnetHostname}" = mkIf (cfg.tailnetHostname != "") {
-        ephemeral = true;
-        toURL = "http://localhost:${toString cfg.port}/";
-      };
-    };
+    # Note: Tailscale/tsnsrv integration should be configured separately
+    # in host configurations where clubcotton config is available.
+    # Example:
+    #   services.tsnsrv = {
+    #     enable = true;
+    #     defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
+    #     services."kavita.example.com" = {
+    #       ephemeral = true;
+    #       toURL = "http://localhost:${toString config.services.clubcotton.kavita.port}/";
+    #     };
+    #   };
 
     # Add specified users to the kavita group to grant them
     # shared access to the libraries through group permissions
@@ -103,5 +105,5 @@ in {
     #     };
     #   };
     # in mkMerge (map makeKavitaUser cfg.sharedUsers);
-  };
+  ]);
 }

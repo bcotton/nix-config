@@ -4,16 +4,34 @@
 {
   config,
   pkgs,
+  lib,
   unstablePkgs,
+  inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
+    inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
+    ../../../modules/prometheus/nix-build-cache-check.nix
+    ../../../modules/systemd-network
     ../../../users/cheryl.nix
+    ./borgmatic.nix
+    # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
+    "${inputs.nixpkgs-unstable}/nixos/modules/services/printing/cups-pdf.nix"
   ];
+
+  # Use unstable cups-pdf module to avoid evaluation issues
+  # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
+  disabledModules = ["services/printing/cups-pdf.nix"];
 
   services.clubcotton = {
     atuin.enable = true;
@@ -21,12 +39,15 @@
     calibre-web.enable = true;
     filebrowser.enable = true;
     freshrss.enable = true;
+    forgejo.enable = true;
+    harmonia.enable = true;
     immich.enable = true;
     jellyfin.enable = true;
     jellyseerr.enable = true;
     kavita.enable = false;
     lidarr.enable = true;
     navidrome.enable = true;
+    nix-cache-proxy.enable = true;
     nut-client.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
@@ -49,20 +70,72 @@
     beets-unstable
   ];
 
+  services.clubcotton.harmonia = {
+    bindAddress = "0.0.0.0";
+  };
+
+  # Configure distributed build fleet
+  services.nix-builder.coordinator = {
+    enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
+    signingKeyPath = config.age.secrets."harmonia-signing-key".path;
+    enableLocalBuilds = true; # nas-01 builds locally, no SSH to itself
+    builders = [
+      # Note: localhost removed to avoid SSH loop - enableLocalBuilds handles local builds
+      # Use .lan suffix for local DNS resolution (Tailscale names won't resolve from builder environment)
+      {
+        hostname = "nix-01.lan";
+        systems = ["x86_64-linux"];
+        maxJobs = 16;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-02.lan";
+        systems = ["x86_64-linux"];
+        maxJobs = 16;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+      {
+        hostname = "nix-03.lan";
+        systems = ["x86_64-linux"];
+        maxJobs = 16;
+        speedFactor = 1;
+        supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
+      }
+    ];
+  };
+
+  # Create builder user for remote/local builds
+  users.users.nix-builder = {
+    isNormalUser = true;
+    description = "Nix remote builder";
+    openssh.authorizedKeys.keys = keys.builderAuthorizedKeys;
+  };
+
   nix.extraOptions = ''
-    trusted-users = root bcotton
+    trusted-users = root bcotton nix-builder
   '';
 
   networking = {
     hostName = "nas-01";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp0s31f6.ipv4.addresses = [
-      {
-        address = "192.168.5.300";
-        prefixLength = 24;
-      }
-    ];
+  };
+
+  # Configure systemd-networkd with VLANs (single NIC mode)
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "single-nic";
+    interfaces = ["enp0s31f6"];
+    bridgeName = "br0";
+    enableIncusBridge = false; # nas-01 doesn't run Incus, but needs VLAN access
+    enableVlans = true;
+    nativeVlan = {
+      id = 5;
+      address = "192.168.5.300/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
+    };
   };
 
   services.nfs.server = {
@@ -71,7 +144,7 @@
   services.rpcbind.enable = true;
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   services.clubcotton.pinchflat = {
     mediaDir = "/media/youtube/pinchflat";
@@ -108,6 +181,10 @@
     atuin = {
       enable = true;
       passwordFile = config.age.secrets."atuin-database".path;
+    };
+    forgejo = {
+      enable = true;
+      passwordFile = config.age.secrets."forgejo-database".path;
     };
     freshrss = {
       enable = true;
@@ -158,6 +235,14 @@
   };
 
   services.clubcotton.open-webui = {
+    package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
+      dependencies =
+        (oldAttrs.dependencies or [])
+        ++ [
+          unstablePkgs.python313Packages.psycopg2-binary
+        ];
+    });
+
     tailnetHostname = "llm";
     environment = {
       WEBUI_AUTH = "True";
@@ -166,6 +251,11 @@
       OLLAMA_API_BASE_URL = "http://toms-mini:11434";
     };
     environmentFile = config.age.secrets.open-webui.path;
+  };
+
+  services.clubcotton.navidrome = {
+    musicFolder = "/media/music/curated";
+    musicFolderRoot = "/media/music";
   };
 
   services.clubcotton.webdav = {
@@ -231,6 +321,25 @@
     tailnetHostname = "kavita";
   };
 
+  services.clubcotton.forgejo = {
+    port = 3000;
+    sshPort = 2222;
+    domain = "nas-01";
+    customPath = "/ssdpool/local/forgejo";
+    tailnetHostname = "forgejo";
+    database = {
+      enable = true;
+      # Database is managed by services.clubcotton.postgresql.forgejo
+      passwordFile = config.age.secrets."forgejo-db-password".path;
+    };
+    features = {
+      actions = true;
+      packages = true;
+      lfs = true;
+      federation = false;
+    };
+  };
+
   # This is here and not in the webdav module because of fuckery
   # rg fuckery
   services.tsnsrv = {
@@ -240,14 +349,16 @@
       ephemeral = true;
       toURL = "http://127.0.0.1:6065";
     };
+    services.nix-cache = {
+      ephemeral = true;
+      toURL = "http://127.0.0.1:${toString config.services.clubcotton.nix-cache-proxy.port}";
+    };
   };
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
   services.openssh = {
     enable = true;
@@ -263,8 +374,89 @@
     };
   };
 
-  networking.firewall.enable = false;
-  networking.hostId = "007f0200";
+  # SSH client configuration (keepalive settings)
+  programs.ssh.extraConfig = ''
+    Host *
+      ServerAliveCountMax 60
+      ServerAliveInterval 60
+  '';
+
+  networking.firewall.enable = variables.firewallEnable;
+  networking.hostId = variables.hostId;
+
+  # CUPS PDF service for paperless consumption
+  services.printing = {
+    enable = true;
+    # Enable network printing and sharing
+    listenAddresses = ["*:631"];
+    allowFrom = ["all"];
+    browsing = true;
+    defaultShared = true;
+  };
+
+  # Enable Avahi for printer discovery
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+    publish = {
+      enable = true;
+      userServices = true;
+    };
+  };
+
+  services.printing.cups-pdf = {
+    enable = true;
+    instances = {
+      # Disable the default pdf instance
+      pdf.enable = false;
+
+      bcotton = {
+        enable = true;
+        installPrinter = true;
+        settings = {
+          Out = "/var/lib/paperless/consume/bcotton";
+          AnonDirName = "/var/lib/paperless/consume/bcotton"; # Anonymous users go to same directory
+          UserUMask = "0000"; # More permissive - creates files with 666 permissions
+          Grp = "paperless"; # Set group to paperless so paperless service can access
+          UserPrefix = "";
+          TitlePref = "TRUE";
+          Label = "1";
+          Anonuser = "bcotton"; # Allow anonymous access, treat as bcotton user
+          GhostScript = "${pkgs.ghostscript}/bin/gs";
+        };
+      };
+
+      tomcotton = {
+        enable = true;
+        installPrinter = true;
+        settings = {
+          Out = "/var/lib/paperless/consume/tomcotton";
+          AnonDirName = "/var/lib/paperless/consume/tomcotton"; # Anonymous users go to same directory
+          UserUMask = "0000";
+          Grp = "paperless";
+          UserPrefix = "";
+          TitlePref = "TRUE";
+          Label = "1";
+          Anonuser = "tomcotton"; # Allow anonymous access, treat as tomcotton user
+          GhostScript = "${pkgs.ghostscript}/bin/gs";
+        };
+      };
+    };
+  };
+
+  # Create consumption directories and set permissions
+  # Make directories writable by cups user and owned by respective users
+  systemd.tmpfiles.rules = [
+    "d /var/lib/paperless/consume/bcotton 0775 bcotton lp - -"
+    "d /var/lib/paperless/consume/tomcotton 0775 tomcotton lp - -"
+  ];
+
+  # Ensure users are in the lp group so cups can write files they can read
+  users.users.bcotton.extraGroups = ["lp"];
+  users.users.tomcotton.extraGroups = ["lp"];
+  # Add cups user to paperless group for better file access
+  users.users.cups.extraGroups = ["paperless"];
 
   clubcotton.zfs_mirrored_root = {
     enable = true;
@@ -288,6 +480,26 @@
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903194N"
         "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X905916M"
       ];
+      # filesystems = {
+      #   "ssdpool/local/forgejo" = {
+      #     mountpoint = "/ssdpool/local/forgejo";
+      #     options = {
+      #       compression = "lz4";
+      #       atime = "off";
+      #       quota = "200G";
+      #     };
+      #   };
+      # };
+      # filesystems = {
+      #   "local/nix-cache" = {
+      #     mountpoint = "/ssdpool/local/nix-cache";
+      #     options = {
+      #       compression = "lz4";
+      #       atime = "off";
+      #       quota = "500G";
+      #     };
+      #   };
+      # };
       volumes = {
         "local/incus" = {
           size = "300G";
@@ -317,6 +529,9 @@
     datasets."ssdpool/local/database" = {
       useTemplate = ["backup"];
     };
+    datasets."ssdpool/local/nix-cache" = {
+      useTemplate = ["backup"];
+    };
     datasets."mediapool/local/photos" = {
       useTemplate = ["media"];
     };
@@ -331,5 +546,34 @@
     };
   };
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  # Enhanced monitoring for nas-01 specific disks
+  services.prometheus.exporters.smartctl = {
+    devices = [
+      # rpool (mirrored root) disks
+      "/dev/disk/by-id/ata-WD_Blue_SA510_2.5_1000GB_24293W800136"
+      "/dev/disk/by-id/ata-SPCC_Solid_State_Disk_AAAA0000000000006990"
+      # ssdpool (RAIDZ1) NVMe drives
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903171J"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903188X"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X903194N"
+      "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X905916M"
+      # mediapool (RAIDZ1) drives
+      "/dev/disk/by-id/wwn-0x5000c500cbac2c8c"
+      "/dev/disk/by-id/wwn-0x5000c500cbadaef8"
+      "/dev/disk/by-id/wwn-0x5000c500f73da9f5"
+      # backuppool (RAIDZ1) drives
+      "/dev/disk/by-id/wwn-0x5000c500cb986994"
+      "/dev/disk/by-id/wwn-0x5000c500cb5e1c80"
+      "/dev/disk/by-id/wwn-0x5000c500f6f25ea9"
+    ];
+  };
+
+  # Nix build and cache infrastructure monitoring
+  services.prometheus.nixBuildCacheCheck = {
+    enable = true;
+    interval = "15m";
+    cacheUrl = "http://nas-01.lan:80";
+  };
+
+  system.stateVersion = variables.stateVersion;
 }

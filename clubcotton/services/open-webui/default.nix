@@ -36,9 +36,7 @@ in {
       # types.package indicates this option expects a Nix package
       type = types.package;
       # default value comes from unstable package set for newer features
-      default = unstablePkgs.open-webui.override {
-        python312 = unstablePkgs.python312;
-      };
+      default = unstablePkgs.open-webui;
       description = "Open WebUI package to use.";
     };
 
@@ -84,16 +82,17 @@ in {
       enable = true;
       package = cfg.package;
       host = "0.0.0.0"; # Listen on all interfaces for Tailscale access
-      port = 3000; # Default port for open-webui
+      port = 3001; # Default port for open-webui
       inherit (cfg) stateDir environment environmentFile;
     };
 
-    # Expose this code-server as a host on the tailnet if tsnsrv module is available
+    # Note: Tailscale/tsnsrv integration should be configured separately
+    # in host configurations where clubcotton config is available.
+    # Example:
     services.tsnsrv = {
       enable = true;
       defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-
-      services."${cfg.tailnetHostname}" = mkIf (cfg.tailnetHostname != "") {
+      services."${config.services.clubcotton.open-webui.tailnetHostname}" = {
         ephemeral = true;
         toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
       };

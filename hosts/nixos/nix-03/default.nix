@@ -6,21 +6,64 @@
   pkgs,
   lib,
   unstablePkgs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/node-exporter
     ../../../modules/nfs
-    ../../../modules/k3s-agent
+    # nix-builder client is enabled via flake-modules/hosts.nix
     ../../../modules/incus
+    ../../../modules/systemd-network
   ];
 
   services.clubcotton = {
     tailscale.enable = true;
     nut-client.enable = true;
+    forgejo-runner = {
+      enable = true;
+      instances = {
+        nix03_1 = {
+          name = "nix-03-runner-1";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+        nix03_2 = {
+          name = "nix-03-runner-2";
+          url = "http://nas-01.lan:3000";
+          tokenFile = config.age.secrets."forgejo-runner-token".path;
+          labels = [
+            "nixos:docker://nixos/nix:latest"
+            "ubuntu-latest:docker://node:20-bookworm"
+            "debian-latest:docker://node:20-bookworm"
+          ];
+          capacity = 2;
+        };
+      };
+    };
   };
+
+  # Create builder user for remote builds
+  users.users.nix-builder = {
+    isNormalUser = true;
+    description = "Nix remote builder";
+    openssh.authorizedKeys.keys = keys.builderAuthorizedKeys;
+  };
+
+  nix.settings.trusted-users = ["nix-builder"];
 
   virtualisation.containers.enable = true;
 
@@ -31,8 +74,6 @@
     # Required for containers under podman-compose to be able to talk to each other.
     defaultNetwork.settings.dns_enabled = true;
   };
-
-  services.k3s.role = lib.mkForce "agent";
 
   clubcotton.zfs_single_root = {
     enable = true;
@@ -49,49 +90,62 @@
   };
 
   networking = {
-    hostId = "007f0200";
-    useDHCP = false;
+    hostId = variables.hostId;
     hostName = "nix-03";
-    defaultGateway = "192.168.5.1";
-    nameservers = ["192.168.5.220"];
-    interfaces.enp3s0.ipv4.addresses = [
-      {
-        address = "192.168.5.214";
-        prefixLength = 24;
-      }
-    ];
-    # interfaces.enp2s0.ipv4.addresses = [
-    #   {
-    #     address = "192.168.5.215";
-    #     prefixLength = 24;
-    #   }
-    # ];
-    bridges."br0".interfaces = ["enp2s0"];
-    interfaces."br0".useDHCP = true;
   };
 
-  virtualisation.libvirtd.enable = true;
+  # Enable cgroups v2 unified hierarchy for containers
+  boot.kernelParams = ["systemd.unified_cgroup_hierarchy=1"];
+
+  # Delegate cgroup controllers for container management
+  systemd.services."user@".serviceConfig.Delegate = "cpu cpuset io memory pids";
+
+  # Configure systemd-networkd with bonding and VLANs
+  clubcotton.systemd-network = {
+    enable = true;
+    mode = "bonded";
+    interfaces = ["enp2s0" "enp3s0"];
+    bondName = "bond0";
+    bridgeName = "br0";
+    enableIncusBridge = true;
+    enableVlans = true;
+    nativeVlan = {
+      id = 5;
+      address = "192.168.5.214/24";
+      gateway = "192.168.5.1";
+      dns = ["192.168.5.220"];
+    };
+  };
+
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # An attemp at a headless x server
-  services.x2goserver.enable = true;
+  # services.x2goserver.enable = true;
 
   # Enable the OpenSSH daemon.
   services.openssh = {
@@ -101,6 +155,6 @@
     };
   };
 
-  networking.firewall.enable = false;
-  system.stateVersion = "23.11"; # Did you read the comment?
+  networking.firewall.enable = variables.firewallEnable;
+  system.stateVersion = variables.stateVersion;
 }

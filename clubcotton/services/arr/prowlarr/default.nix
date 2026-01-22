@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  unstablePkgs,
   ...
 }:
 with lib; let
@@ -25,6 +26,7 @@ in {
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
+      package = unstablePkgs.prowlarr;
     };
     services.tsnsrv = {
       enable = true;

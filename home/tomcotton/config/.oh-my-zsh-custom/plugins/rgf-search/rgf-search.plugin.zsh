@@ -5,5 +5,10 @@ rgf() {
   local query="$1"
   shift
   rg --color=always --line-number --no-heading --smart-case "$query" "$@" | \
-    fzf --ansi --delimiter : --preview 'bat --color=always --highlight-line {2} {1}' --preview-window 'right,60%,wrap'
+    fzf --layout=reverse \
+        --border \
+        --ansi \
+        --delimiter : \
+        --preview 'bat --color=always --theme=1337 --highlight-line {2} {1}' \
+        --preview-window 'right,60%,wrap'
 }

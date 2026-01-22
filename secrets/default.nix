@@ -67,6 +67,24 @@
     # group = "mopidy";
   };
 
+  age.secrets."forgejo-database" = lib.mkIf config.services.clubcotton.postgresql.forgejo.enable {
+    file = ./forgejo-database.age;
+    owner = "postgres";
+    group = "postgres";
+  };
+
+  age.secrets."forgejo-db-password" = lib.mkIf config.services.clubcotton.forgejo.enable {
+    file = ./forgejo-db-password.age;
+    owner = "forgejo";
+    group = "forgejo";
+  };
+
+  age.secrets."forgejo-runner-token" = lib.mkIf config.services.clubcotton.forgejo-runner.enable {
+    file = ./forgejo-runner-token.age;
+    owner = "gitea-runner";
+    group = "gitea-runner";
+  };
+
   age.secrets."immich-database" = lib.mkIf config.services.clubcotton.postgresql.enable {
     file = ./immich-database.age;
     owner = "postgres";
@@ -182,5 +200,47 @@
     file = ./wallabag.age;
     owner = "wallabag";
     group = "wallabag";
+  };
+
+  age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable) {
+    file = ./syncoid-ssh-key.age;
+    owner =
+      if config.services.clubcotton.borgmatic.enable
+      then "root"
+      else "syncoid";
+    group =
+      if config.services.clubcotton.borgmatic.enable
+      then "root"
+      else "syncoid";
+    mode = "0400";
+  };
+
+  age.secrets."borg-passphrase" = lib.mkIf config.services.clubcotton.borgmatic.enable {
+    file = ./borg-passphrase.age;
+    owner = "root";
+    group = "root";
+  };
+
+  # Harmonia binary cache signing key
+  age.secrets."harmonia-signing-key" = lib.mkIf config.services.clubcotton.harmonia.enable {
+    file = ./harmonia-signing-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  # Nix builder SSH keys
+  age.secrets."nix-builder-ssh-key" = lib.mkIf (config.services.nix-builder.coordinator.enable or false) {
+    file = ./nix-builder-ssh-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets."nix-builder-ssh-pub" = lib.mkIf ((config.services.nix-builder.coordinator.enable or false) || (config.users.users ? nix-builder)) {
+    file = ./nix-builder-ssh-pub.age;
+    owner = "root";
+    group = "root";
+    mode = "0444";
   };
 }

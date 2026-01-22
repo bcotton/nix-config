@@ -7,8 +7,14 @@
   lib,
   unstablePkgs,
   inputs,
+  hostName,
   ...
-}: {
+}: let
+  # Get merged variables (defaults + host overrides)
+  commonLib = import ../../common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  keys = import ../../common/keys.nix;
+in {
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -16,16 +22,16 @@
     ../../../modules/nfs
   ];
 
-  services.clubcotton = {
-    scanner.enable = true;
-    tailscale.enable = true;
-  };
-
   services.xserver.enable = true;
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
+
+  services.clubcotton = {
+    scanner.enable = true;
+    tailscale.enable = true;
+  };
 
   virtualisation.containers.enable = true;
   virtualisation.podman = {
@@ -35,7 +41,16 @@
     # Required for containers under podman-compose to be able to talk to each other.
     defaultNetwork.settings.dns_enabled = true;
   };
-  virtualisation.libvirtd.enable = true;
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      ovmf = {
+        enable = true;
+        packages = [pkgs.OVMFFull.fd];
+      };
+    };
+  };
 
   clubcotton.zfs_single_root = {
     enable = true;
@@ -52,7 +67,7 @@
 
   networking = {
     hostName = "imac-02";
-    hostId = "95c41ddc";
+    hostId = variables.hostId;
 
     useDHCP = false;
     defaultGateway = "192.168.5.1";
@@ -66,25 +81,23 @@
   };
 
   # Set your time zone.
-  time.timeZone = "America/Denver";
+  time.timeZone = variables.timeZone;
 
-  programs.zsh.enable = true;
+  programs.zsh.enable = variables.zshEnable;
 
   users.users.root = {
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com"
-    ];
+    openssh.authorizedKeys.keys = keys.rootAuthorizedKeys;
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh.enable = variables.opensshEnable;
 
-  networking.firewall.enable = false;
+  networking.firewall.enable = variables.firewallEnable;
 
   environment.systemPackages = with pkgs; [
     firefox
     code-cursor
   ];
 
-  system.stateVersion = "24.11"; # Did you read the comment?
+  system.stateVersion = variables.stateVersion;
 }
