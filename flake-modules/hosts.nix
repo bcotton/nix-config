@@ -98,7 +98,7 @@
       };
       nix-02 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
+        usernames = ["bcotton" "tomcotton" "larry"];
       };
       nix-03 = {
         system = "x86_64-linux";
