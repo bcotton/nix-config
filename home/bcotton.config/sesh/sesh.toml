@@ -10,7 +10,15 @@ name = "nix-01"
 startup_command = "ssh -q nix-01 -t 'tmux a || tmux'"
 
 [[session]]
+name = "nix-02"
+startup_command = "ssh -q nix-02 -t 'tmux a || tmux'"
+
+[[session]]
 name = "nix-03"
 startup_command = "ssh -q nix-03 -t 'tmux a || tmux'"
+
+[[session]]
+name = "nas-01"
+startup_command = "ssh -q nas-01 -t 'tmux a || tmux'"
 
 
