@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Portable sed in-place edit (works on both macOS and Linux)
+sed_inplace() {
+    local pattern="$1"
+    local file="$2"
+    local tmp="${file}.tmp"
+    sed "$pattern" "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -19,7 +27,7 @@ LATEST_VERSION=$(npm view @anthropic-ai/claude-code version)
 echo -e "${GREEN}Latest version: ${LATEST_VERSION}${NC}"
 
 # Get current version from overlay
-CURRENT_VERSION=$(grep -oP 'version = "\K[^"]+' "$OVERLAY_FILE")
+CURRENT_VERSION=$(sed -n 's/.*version = "\([^"]*\)".*/\1/p' "$OVERLAY_FILE" | head -1)
 echo -e "${BLUE}Current version: ${CURRENT_VERSION}${NC}"
 
 if [[ "$LATEST_VERSION" == "$CURRENT_VERSION" ]]; then
@@ -31,50 +39,22 @@ echo -e "${YELLOW}==> Updating to version ${LATEST_VERSION}...${NC}"
 
 # Step 1: Update version number
 echo -e "${BLUE}==> Updating version in ${OVERLAY_FILE}...${NC}"
-sed -i "s/version = \"[^\"]*\";/version = \"${LATEST_VERSION}\";/" "$OVERLAY_FILE"
+sed_inplace "s/version = \"[^\"]*\";/version = \"${LATEST_VERSION}\";/" "$OVERLAY_FILE"
 
 # Step 2: Get source hash
 echo -e "${BLUE}==> Fetching source hash...${NC}"
 SOURCE_URL="https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${LATEST_VERSION}.tgz"
 SOURCE_HASH_NIX32=$(nix-prefetch-url --unpack "$SOURCE_URL" 2>/dev/null)
-# Convert nix32 hash to SRI format (base64)
-SOURCE_HASH_SRI=$(nix hash convert --to sri --hash-algo sha256 "$SOURCE_HASH_NIX32")
+# Convert nix32 hash to SRI format
+SOURCE_HASH_SRI=$(nix hash to-sri --type sha256 "$SOURCE_HASH_NIX32")
 
 echo -e "${GREEN}Source hash: ${SOURCE_HASH_SRI}${NC}"
 
 # Step 3: Update source hash
 echo -e "${BLUE}==> Updating source hash...${NC}"
-sed -i "s|hash = \"sha256-[^\"]*\";|hash = \"${SOURCE_HASH_SRI}\";|" "$OVERLAY_FILE"
+sed_inplace "s|hash = \"sha256-[^\"]*\";|hash = \"${SOURCE_HASH_SRI}\";|" "$OVERLAY_FILE"
 
-# Step 4: Set npmDepsHash to fake hash
-echo -e "${BLUE}==> Setting npmDepsHash to lib.fakeHash for build...${NC}"
-sed -i 's/npmDepsHash = "sha256-[^"]*";/npmDepsHash = lib.fakeHash;/' "$OVERLAY_FILE"
-
-# Step 5: Build to get correct npmDepsHash
-echo -e "${BLUE}==> Building to get correct npmDepsHash (this will fail, that's expected)...${NC}"
-if BUILD_OUTPUT=$(just build 2>&1); then
-    echo -e "${RED}Warning: Build succeeded unexpectedly with fake hash${NC}"
-    NPM_DEPS_HASH="lib.fakeHash"
-else
-    # Parse the error output for the correct hash
-    NPM_DEPS_HASH=$(echo "$BUILD_OUTPUT" | grep -oP 'got:\s+sha256-\K[A-Za-z0-9+/=]+' | head -1)
-
-    if [[ -z "$NPM_DEPS_HASH" ]]; then
-        echo -e "${RED}Error: Could not extract npmDepsHash from build output${NC}"
-        echo -e "${YELLOW}Build output:${NC}"
-        echo "$BUILD_OUTPUT"
-        exit 1
-    fi
-
-    NPM_DEPS_HASH="sha256-${NPM_DEPS_HASH}"
-    echo -e "${GREEN}Found npmDepsHash: ${NPM_DEPS_HASH}${NC}"
-fi
-
-# Step 6: Update with correct npmDepsHash
-echo -e "${BLUE}==> Updating npmDepsHash...${NC}"
-sed -i "s|npmDepsHash = lib.fakeHash;|npmDepsHash = \"${NPM_DEPS_HASH}\";|" "$OVERLAY_FILE"
-
-# Step 7: Build again to verify
+# Step 4: Build to verify (npmDepsHash = lib.fakeHash works for this package)
 echo -e "${BLUE}==> Building to verify...${NC}"
 if just build; then
     echo -e "${GREEN}==> Successfully upgraded claude-code from ${CURRENT_VERSION} to ${LATEST_VERSION}!${NC}"

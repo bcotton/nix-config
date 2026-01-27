@@ -264,8 +264,12 @@
     # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra =
       ''
+        export BAT_PAGER="less -RFX"
+        export BAT_STYLE="plain"
         export BAT_THEME="Visual Studio Dark+"
         export DFT_DISPLAY=side-by-side
+        export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+        export MANROFFOPT="-c"
         export EDITOR=vim
         export EMAIL=bob.cotton@gmail.com
         export EXA_COLORS="da=1;35"
@@ -274,7 +278,7 @@
         export GOPRIVATE="github.com/grafana/*"
         export LESS="-iMSx4 -FXR"
         export OKTA_MFA_OPTION=1
-        export PAGER=less
+        export PAGER=bat
         # Variable-dependent PATH additions (static paths are in home.sessionPath)
         export PNPM_HOME="$HOME/.local/share/pnpm"
         export PATH="$HOME/.orbstack/bin:$PNPM_HOME:$GOPATH/bin:$PATH"
@@ -348,14 +352,18 @@
     shellAliases = {
       # Development
       autotest = "watchexec -c clear -o do-nothing --delay-run 100ms --exts go 'pkg=\".\${WATCHEXEC_COMMON_PATH/\$PWD/}/...\"; echo \"running tests for \$pkg\"; go test \"\$pkg\"'";
+      claude-fork = "claude --fork-session --continue";
+      claudep-fork = "claudep --fork-session --continue";
       gdn = "git diff | gitnav";
       lg = "lazygit";
+      lgs = "lazygit status";
       ld = "lazydocker";
       tf = "tofu";
       wm = "workmux";
 
       # File viewing
       batj = "bat -l json";
+      batl = "bat --style=numbers";
       batly = "bat -l yaml";
       batmd = "bat -l md";
       y = "yazi";
@@ -449,9 +457,10 @@
       }
 
       # Auto-page help output: detects --help or -h and pipes through pager
+      # Uses bat with help syntax highlighting for colorized output
       # Also provides manual 'h' function: h git, h kubectl, etc.
       function h () {
-        "$@" --help 2>&1 | ''${PAGER:-less}
+        "$@" --help 2>&1 | bat -l help -p
       }
 
       # ZLE widget: auto-append pager when command ends with --help or -h
@@ -463,7 +472,7 @@
             # Save original command to history
             print -s "$BUFFER"
             # Prepend space so modified version isn't saved (HIST_IGNORE_SPACE)
-            BUFFER=" $BUFFER 2>&1 | ''${PAGER:-less}"
+            BUFFER=" $BUFFER 2>&1 | bat -l help -p"
           fi
         fi
         zle .accept-line
