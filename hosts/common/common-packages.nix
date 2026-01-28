@@ -33,6 +33,7 @@
       bat-extras.batwatch
       bat-extras.prettybat
       btop
+      moar
 
       # K8s development tools
       ctlptl

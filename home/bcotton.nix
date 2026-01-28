@@ -264,7 +264,7 @@
     # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra =
       ''
-        export BAT_PAGER="less -RFX"
+        export BAT_PAGER="moar"
         export BAT_STYLE="plain"
         export BAT_THEME="Visual Studio Dark+"
         export DFT_DISPLAY=side-by-side
@@ -366,6 +366,7 @@
       batl = "bat --style=numbers";
       batly = "bat -l yaml";
       batmd = "bat -l md";
+      less = "bat";
       y = "yazi";
       dir = "exa -l --icons --no-user --group-directories-first  --time-style long-iso --color=always";
       tree = "exa -Tl --color=always";
