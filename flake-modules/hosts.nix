@@ -94,7 +94,7 @@
       };
       nix-01 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
+        usernames = ["bcotton" "tomcotton" "larry"];
       };
       nix-02 = {
         system = "x86_64-linux";
@@ -102,7 +102,7 @@
       };
       nix-03 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
+        usernames = ["bcotton" "tomcotton" "larry"];
       };
       nix-04 = {
         system = "x86_64-linux";
@@ -179,7 +179,7 @@
         ];
 
       # User modules
-      userModules = map (username: ../users/${username}.nix) usernames;
+      userModules = [../users/groups.nix] ++ map (username: ../users/${username}.nix) usernames;
     in
       nixpkgs.lib.nixosSystem {
         inherit system;

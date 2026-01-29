@@ -2,6 +2,9 @@
   # Host-specific variables that can be imported and used across modules
   # Default values - override in hosts/<type>/<hostname>/variables.nix
 
+  # Bot hosts - hosts that run AI/LLM bot services (moltbot, etc.)
+  botHosts = ["nix-01" "nix-02" "nix-03"];
+
   # Darwin primary user - MUST be overridden per Darwin host
   # Required for nix-darwin system.primaryUser setting
   primaryUser = null; # Force override - no sensible default
