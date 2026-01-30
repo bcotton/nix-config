@@ -428,14 +428,18 @@
         ]
       },
       "locked": {
-        "lastModified": 1769725786,
-        "narHash": "sha256-T02takYG0kow0O+OjZ5g2wP5T3114DY+k9jEP0X5sjU=",
-        "path": "/home/bcotton/projects/nix-moltbot",
-        "type": "path"
+        "lastModified": 1769775831,
+        "narHash": "sha256-WEXNPFciVTgP35kW2Z+2/UrfkOuCwTfo8dL/NsM5J1o=",
+        "owner": "bcotton",
+        "repo": "nix-clawbot",
+        "rev": "6b8fde326c0f001ed149ea0579a2b75adfa9d621",
+        "type": "github"
       },
       "original": {
-        "path": "/home/bcotton/projects/nix-moltbot",
-        "type": "path"
+        "owner": "bcotton",
+        "ref": "install-templates",
+        "repo": "nix-clawbot",
+        "type": "github"
       }
     },
     "nix-steipete-tools": {

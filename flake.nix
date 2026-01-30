@@ -63,8 +63,7 @@
     };
 
     nix-moltbot = {
-      # Local path for testing - change back to github:moltbot/nix-moltbot after fix is merged
-      url = "path:/home/bcotton/projects/nix-moltbot";
+      url = "github:bcotton/nix-clawbot/install-templates";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
