@@ -428,17 +428,14 @@
         ]
       },
       "locked": {
-        "lastModified": 1769686228,
-        "narHash": "sha256-DrQaccJQZ2PRSFWNnjlZj54l92HEHAT/0DTd3sc3z+Y=",
-        "owner": "moltbot",
-        "repo": "nix-moltbot",
-        "rev": "92b6b8d85e057f85cc47ceea4229db748c3c3e5f",
-        "type": "github"
+        "lastModified": 1769725786,
+        "narHash": "sha256-T02takYG0kow0O+OjZ5g2wP5T3114DY+k9jEP0X5sjU=",
+        "path": "/home/bcotton/projects/nix-moltbot",
+        "type": "path"
       },
       "original": {
-        "owner": "moltbot",
-        "repo": "nix-moltbot",
-        "type": "github"
+        "path": "/home/bcotton/projects/nix-moltbot",
+        "type": "path"
       }
     },
     "nix-steipete-tools": {

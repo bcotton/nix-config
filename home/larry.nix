@@ -19,10 +19,25 @@
     PATH = "/run/current-system/sw/bin:/bin";
   };
 
-  # Remove nix-managed config symlink - user manages their own moltbot.json
+  # Handle existing moltbot config - remove old nix symlinks and backups before home-manager runs
+  # This must run BEFORE checkLinkTargets to avoid file conflict errors
+  home.activation.moltbotPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
+    configFile="$HOME/.moltbot/moltbot.json"
+    backupFile="$HOME/.moltbot/moltbot.json.home-manager-backup"
+    # Remove symlinks and backups to allow home-manager to proceed
+    if [ -L "$configFile" ]; then
+      rm "$configFile"
+      echo "Removed existing nix-managed moltbot.json symlink"
+    fi
+    if [ -e "$backupFile" ]; then
+      rm "$backupFile"
+      echo "Removed existing home-manager backup file"
+    fi
+  '';
+
+  # After nix-moltbot creates its config, remove the symlink so user can manage manually
   home.activation.moltbotUserConfig = lib.hm.dag.entryAfter ["moltbotConfigFiles"] ''
     configFile="$HOME/.moltbot/moltbot.json"
-    # Remove symlink if module created one, preserve user's real file
     if [ -L "$configFile" ]; then
       rm "$configFile"
       echo "Removed nix-managed moltbot.json symlink - manage config manually"
