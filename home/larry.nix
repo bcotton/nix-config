@@ -51,11 +51,6 @@
     enable = true;
     autosuggestion.enable = true;
     enableCompletion = true;
-    initContent = ''
-      # Ensure systemd user session env vars are set
-      export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-      export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-    '';
 
     shellAliases = {
       # Modern replacements
@@ -97,6 +92,10 @@
 
       # tea completion if available
       command -v tea >/dev/null && source <(tea autocomplete zsh)
+
+      # Ensure systemd user session env vars are set
+      export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
     '';
   };
 
