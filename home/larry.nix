@@ -93,7 +93,7 @@
       # Ensure systemd user session env vars are set
       export XDG_RUNTIME_DIR="/run/user/$(id -u)"
       export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-      
+
       # tea completion if available (source the file directly to avoid "Fetching" output)
       [[ -f ~/.config/tea/autocomplete.zsh ]] && PROG=tea _CLI_ZSH_AUTOCOMPLETE_HACK=1 source ~/.config/tea/autocomplete.zsh
     '';
