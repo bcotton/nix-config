@@ -72,8 +72,7 @@
       ".." = "cd ..";
       "..." = "cd ../..";
 
-      # Forgejo
-      tea = "tea --login forgejo";
+      # Forgejo - use `tea login default forgejo` to set default, --login is a subcommand flag
 
       # Safety
       rm = "rm -i";
