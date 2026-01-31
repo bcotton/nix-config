@@ -24,7 +24,7 @@ in {
 
   nixpkgs.config.allowUnfree = true;
 
-  # Workaround for scripts expecting FHS paths (e.g., nix-moltbot uses coreutils)
+  # Workaround for scripts expecting FHS paths (e.g., nix-openclaw uses coreutils)
   system.activationScripts.binCompat = ''
     mkdir -p /bin
     for cmd in cat chmod chown cp ln ls mkdir mv rm; do

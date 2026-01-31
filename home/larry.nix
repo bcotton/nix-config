@@ -267,7 +267,8 @@
     };
     Service = {
       # Load API key from env file created during activation
-      EnvironmentFile = "/home/larry/.openclaw/openclaw.env";
+      # Prefix with - to make it optional (service starts even if file missing)
+      EnvironmentFile = "-/home/larry/.openclaw/openclaw.env";
       # PATH for daemon with required directories
       Environment = [
         "PATH=/home/larry/.local/bin:/home/larry/.npm-global/bin:/home/larry/bin:/home/larry/.nvm/current/bin:/home/larry/.fnm/current/bin:/home/larry/.volta/bin:/home/larry/.asdf/shims:/home/larry/.local/share/pnpm:/home/larry/.bun/bin:/usr/local/bin:/usr/bin:/run/current-system/sw/bin:/bin"

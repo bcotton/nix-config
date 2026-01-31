@@ -62,8 +62,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-moltbot = {
-      url = "github:bcotton/nix-clawbot/install-templates";
+    nix-openclaw = {
+      url = "github:bcotton/nix-clawbot/install-templates-again";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
