@@ -64,6 +64,17 @@ in {
     tailscale.enable = true;
     wallabag.enable = true;
     webdav.enable = true;
+
+    obsidian = {
+      enable = true;
+      instances.bcotton = {
+        httpPort = 13000;
+        httpsPort = 13001;
+        user = "bcotton";
+        group = "users";
+        vaultDir = "/home/bcotton/obsidian-vaults";
+      };
+    };
   };
 
   environment.systemPackages = with pkgs; [
