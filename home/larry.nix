@@ -7,7 +7,7 @@
   ...
 }: {
   imports = [
-    inputs.nix-moltbot.homeManagerModules.moltbot
+    inputs.nix-openclaw.homeManagerModules.openclaw
   ];
 
   home.stateVersion = "24.05";
@@ -19,28 +19,29 @@
     PATH = "/run/current-system/sw/bin:/bin";
   };
 
-  # Handle existing moltbot config - remove old nix symlinks and backups before home-manager runs
+  # Handle existing config - remove old nix symlinks before home-manager runs
   # This must run BEFORE checkLinkTargets to avoid file conflict errors
-  home.activation.moltbotPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
-    configFile="$HOME/.moltbot/moltbot.json"
-    backupFile="$HOME/.moltbot/moltbot.json.home-manager-backup"
-    # Remove symlinks and backups to allow home-manager to proceed
-    if [ -L "$configFile" ]; then
-      rm "$configFile"
-      echo "Removed existing nix-managed moltbot.json symlink"
-    fi
-    if [ -e "$backupFile" ]; then
-      rm "$backupFile"
-      echo "Removed existing home-manager backup file"
-    fi
+  home.activation.openClawPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
+    configFile="$HOME/.openclaw/openclaw.json"
+    # Also check old moltbot path for migration
+    oldConfigFile="$HOME/.moltbot/moltbot.json"
+    for f in "$configFile" "$oldConfigFile"; do
+      if [ -L "$f" ]; then
+        rm "$f"
+        echo "Removed existing nix-managed symlink: $f"
+      fi
+    done
   '';
 
-  # After nix-moltbot creates its config, remove the symlink so user can manage manually
-  home.activation.moltbotUserConfig = lib.hm.dag.entryAfter ["moltbotConfigFiles"] ''
-    configFile="$HOME/.moltbot/moltbot.json"
+  # After openclaw creates its config, convert symlink to regular file for runtime writes
+  home.activation.openclawUserConfig = lib.hm.dag.entryAfter ["openclawConfigFiles"] ''
+    configFile="$HOME/.openclaw/openclaw.json"
     if [ -L "$configFile" ]; then
+      content=$(cat "$configFile")
       rm "$configFile"
-      echo "Removed nix-managed moltbot.json symlink - manage config manually"
+      echo "$content" > "$configFile"
+      chmod 644 "$configFile"
+      echo "Converted nix symlink to regular file for runtime management"
     fi
   '';
 
@@ -168,11 +169,11 @@
     };
   };
 
-  # Moltbot gateway configuration
-  programs.moltbot = {
+  # Openclaw gateway configuration
+  programs.openclaw = {
     enable = true;
 
-    # Disable first-party plugins for now
+    # Disable first-party plugins
     firstParty = {
       summarize.enable = false;
       peekaboo.enable = false;
@@ -186,15 +187,10 @@
       imsg.enable = false;
     };
 
-    instances.default = {
-      enable = true;
-      gatewayPort = 18789;
-
-      # Providers
-      providers.telegram = {
-        enable = true;
-        botTokenFile = "/run/agenix/moltbot-telegram-token";
-        # TODO: Add telegram user IDs to allowFrom
+    # Schema-typed config (replaces providers.* and configOverrides)
+    config = {
+      channels.telegram = {
+        tokenFile = "/run/agenix/moltbot-telegram-token";
         allowFrom = [
           7780937205
         ];
@@ -202,23 +198,30 @@
           "*" = {requireMention = true;};
         };
       };
-
-      providers.anthropic.apiKeyFile = "/run/agenix/anthropic-api-key";
-
-      # Additional config not covered by module options
-      configOverrides = {
-        agents.defaults.workspace = "/home/larry/moltbot";
-        # New schema: gateway.auth.tokenFile is no longer valid
-        # gateway.auth.mode = "token" with token read at runtime
-        messages.tts = {
-          provider = "openai";
-          openai = {
-            model = "gpt-4o-mini-tts";
-            voice = "onyx";
-          };
+      agents.defaults.workspace = "/home/larry/moltbot";
+      messages.tts = {
+        provider = "openai";
+        openai = {
+          model = "gpt-4o-mini-tts";
+          voice = "onyx";
         };
       };
     };
+
+    # Instance config
+    instances.default = {
+      enable = true;
+      gatewayPort = 18789;
+      systemd.enable = true;
+    };
+  };
+
+  # Inject Anthropic API key into systemd service from agenix secret
+  # The secret contains just the key value, so we create an env file at runtime
+  # %t is systemd specifier for runtime directory (/run/user/$UID)
+  systemd.user.services.openclaw-gateway.Service = {
+    ExecStartPre = "${pkgs.bash}/bin/bash -c 'echo ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key) > %t/openclaw-env'";
+    EnvironmentFile = "%t/openclaw-env";
   };
 
   # ─────────────────────────────────────────────────────────────
