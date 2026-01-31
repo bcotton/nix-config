@@ -227,8 +227,10 @@
       # %t is systemd specifier for runtime directory (/run/user/$UID)
       ExecStartPre = "${pkgs.bash}/bin/bash -c 'echo ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key) > %t/openclaw-env'";
       EnvironmentFile = "%t/openclaw-env";
-      # Minimal PATH for daemon
-      Environment = ["PATH=/run/current-system/sw/bin:/bin"];
+      # PATH for daemon with required directories
+      Environment = [
+        "PATH=/home/larry/.local/bin:/home/larry/.npm-global/bin:/home/larry/bin:/home/larry/.nvm/current/bin:/home/larry/.fnm/current/bin:/home/larry/.volta/bin:/home/larry/.asdf/shims:/home/larry/.local/share/pnpm:/home/larry/.bun/bin:/usr/local/bin:/usr/bin:/run/current-system/sw/bin:/bin"
+      ];
       RestartSec = lib.mkForce "5s";
     };
   };
