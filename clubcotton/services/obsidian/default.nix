@@ -105,6 +105,7 @@ in {
             ];
             extraOptions = [
               "--shm-size=${instanceCfg.shmSize}"
+              "--userns=keep-id"
             ];
           }
       )
