@@ -19,29 +19,59 @@
     PATH = "/run/current-system/sw/bin:/bin";
   };
 
-  # Handle existing config - remove old nix symlinks before home-manager runs
+  # Handle existing config - backup user config and remove nix symlinks before home-manager runs
   # This must run BEFORE checkLinkTargets to avoid file conflict errors
   home.activation.openClawPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
     configFile="$HOME/.openclaw/openclaw.json"
+    backupDir="$HOME/.openclaw/backups"
+    mkdir -p "$backupDir"
+
+    # Backup existing config if it's a regular file (user-managed)
+    if [ -f "$configFile" ] && [ ! -L "$configFile" ]; then
+      timestamp=$(date +%Y%m%d-%H%M%S)
+      cp "$configFile" "$backupDir/openclaw.json.$timestamp"
+      cp "$configFile" "$backupDir/openclaw.json.latest"
+      echo "Backed up existing config to $backupDir/openclaw.json.$timestamp"
+    fi
+
+    # Remove symlinks to allow home-manager to proceed
+    if [ -L "$configFile" ]; then
+      rm "$configFile"
+      echo "Removed existing nix-managed symlink"
+    fi
+
     # Also check old moltbot path for migration
     oldConfigFile="$HOME/.moltbot/moltbot.json"
-    for f in "$configFile" "$oldConfigFile"; do
-      if [ -L "$f" ]; then
-        rm "$f"
-        echo "Removed existing nix-managed symlink: $f"
-      fi
-    done
+    if [ -L "$oldConfigFile" ]; then
+      rm "$oldConfigFile"
+      echo "Removed old moltbot symlink"
+    fi
+
+    # Keep only last 10 backups (excluding .latest)
+    ls -t "$backupDir"/openclaw.json.2* 2>/dev/null | tail -n +11 | xargs -r rm
   '';
 
-  # After openclaw creates its config, convert symlink to regular file for runtime writes
+  # After openclaw creates its config, restore user config from backup
   home.activation.openclawUserConfig = lib.hm.dag.entryAfter ["openclawConfigFiles"] ''
     configFile="$HOME/.openclaw/openclaw.json"
-    if [ -L "$configFile" ]; then
-      content=$(cat "$configFile")
-      rm "$configFile"
-      echo "$content" > "$configFile"
+    backupFile="$HOME/.openclaw/backups/openclaw.json.latest"
+
+    # Restore from backup if available
+    if [ -f "$backupFile" ]; then
+      # Remove the nix symlink and restore backup
+      if [ -L "$configFile" ]; then
+        rm "$configFile"
+      fi
+      cp "$backupFile" "$configFile"
       chmod 644 "$configFile"
-      echo "Converted nix symlink to regular file for runtime management"
+      echo "Restored user config from backup"
+    elif [ -L "$configFile" ]; then
+      # No backup (first run) - convert symlink to regular file with nix content
+      nixContent=$(cat "$configFile")
+      rm "$configFile"
+      echo "$nixContent" > "$configFile"
+      chmod 644 "$configFile"
+      echo "First run: converted nix symlink to regular file"
     fi
   '';
 
