@@ -216,12 +216,21 @@
     };
   };
 
-  # Inject Anthropic API key into systemd service from agenix secret
-  # The secret contains just the key value, so we create an env file at runtime
-  # %t is systemd specifier for runtime directory (/run/user/$UID)
-  systemd.user.services.openclaw-gateway.Service = {
-    ExecStartPre = "${pkgs.bash}/bin/bash -c 'echo ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key) > %t/openclaw-env'";
-    EnvironmentFile = "%t/openclaw-env";
+  # Extend openclaw-gateway systemd service
+  systemd.user.services.openclaw-gateway = {
+    Unit = {
+      After = ["network-online.target"];
+      Wants = ["network-online.target"];
+    };
+    Service = {
+      # Inject Anthropic API key from agenix secret
+      # %t is systemd specifier for runtime directory (/run/user/$UID)
+      ExecStartPre = "${pkgs.bash}/bin/bash -c 'echo ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key) > %t/openclaw-env'";
+      EnvironmentFile = "%t/openclaw-env";
+      # Minimal PATH for daemon
+      Environment = ["PATH=/run/current-system/sw/bin:/bin"];
+      RestartSec = lib.mkForce "5s";
+    };
   };
 
   # ─────────────────────────────────────────────────────────────
