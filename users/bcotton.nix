@@ -18,6 +18,7 @@
       # NixOS-specific options
       ignoreShellProgramCheck = true;
       isNormalUser = true;
+      uid = 1000; # Explicit UID for container bind mounts
       extraGroups = ["wheel" "docker" "incus-admin" "podman" "share" "scanner" "llm-users"]; # Enable 'sudo' for the user.
       hashedPassword = "$6$G9latKdzvUGuwcba$/8qQObrrQdMYIpQMXV4.04Zn1zhvZmtATFM5iSrmWgL9jybIkh7B1sHMhr2l/6jDhXz80OjAWQuFFsdQUTQyp.";
       openssh.authorizedKeys.keys = [
