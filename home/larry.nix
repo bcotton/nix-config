@@ -45,6 +45,19 @@
     fi
   '';
 
+  # Create openclaw environment file with API key from agenix secret
+  home.activation.openclawEnvFile = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    envFile="$HOME/.openclaw/openclaw.env"
+    mkdir -p "$HOME/.openclaw"
+    if [ -r "/run/agenix/anthropic-api-key" ]; then
+      echo "ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key)" > "$envFile"
+      chmod 600 "$envFile"
+      echo "Created openclaw environment file"
+    else
+      echo "Warning: /run/agenix/anthropic-api-key not readable, skipping env file"
+    fi
+  '';
+
   # ─────────────────────────────────────────────────────────────
   # Shell: zsh with starship prompt
   # ─────────────────────────────────────────────────────────────
@@ -223,10 +236,8 @@
       Wants = ["network-online.target"];
     };
     Service = {
-      # Inject Anthropic API key from agenix secret
-      # %t is systemd specifier for runtime directory (/run/user/$UID)
-      ExecStartPre = "${pkgs.bash}/bin/bash -c 'echo ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key) > %t/openclaw-env'";
-      EnvironmentFile = "%t/openclaw-env";
+      # Load API key from env file created during activation
+      EnvironmentFile = "/home/larry/.openclaw/openclaw.env";
       # PATH for daemon with required directories
       Environment = [
         "PATH=/home/larry/.local/bin:/home/larry/.npm-global/bin:/home/larry/bin:/home/larry/.nvm/current/bin:/home/larry/.fnm/current/bin:/home/larry/.volta/bin:/home/larry/.asdf/shims:/home/larry/.local/share/pnpm:/home/larry/.bun/bin:/usr/local/bin:/usr/bin:/run/current-system/sw/bin:/bin"
