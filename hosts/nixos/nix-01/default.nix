@@ -58,6 +58,17 @@ in {
     };
   };
 
+  services.clubcotton.obsidian = {
+    enable = true;
+    instances.bcotton = {
+      httpPort = 13000;
+      httpsPort = 13001;
+      user = "bcotton";
+      group = "users";
+      vaultDir = "/home/bcotton/obsidian-vaults";
+    };
+  };
+
   # Configure distributed build fleet
   services.nix-builder.coordinator = {
     enable = true;
