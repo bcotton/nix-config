@@ -22,6 +22,7 @@
   # Handle existing config - backup user config and remove nix symlinks before home-manager runs
   # This must run BEFORE checkLinkTargets to avoid file conflict errors
   home.activation.openClawPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
+    PATH="${pkgs.coreutils}/bin:${pkgs.findutils}/bin:$PATH"
     configFile="$HOME/.openclaw/openclaw.json"
     backupDir="$HOME/.openclaw/backups"
     mkdir -p "$backupDir"
@@ -48,11 +49,12 @@
     fi
 
     # Keep only last 10 backups (excluding .latest)
-    ls -t "$backupDir"/openclaw.json.2* 2>/dev/null | tail -n +11 | xargs -r rm
+    ls -t "$backupDir"/openclaw.json.2* 2>/dev/null | tail -n +11 | xargs -r rm || true
   '';
 
   # After openclaw creates its config, restore user config from backup
   home.activation.openclawUserConfig = lib.hm.dag.entryAfter ["openclawConfigFiles"] ''
+    PATH="${pkgs.coreutils}/bin:$PATH"
     configFile="$HOME/.openclaw/openclaw.json"
     backupFile="$HOME/.openclaw/backups/openclaw.json.latest"
 
@@ -77,6 +79,7 @@
 
   # Create openclaw environment file with API key from agenix secret
   home.activation.openclawEnvFile = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    PATH="${pkgs.coreutils}/bin:$PATH"
     envFile="$HOME/.openclaw/openclaw.env"
     mkdir -p "$HOME/.openclaw"
     if [ -r "/run/agenix/anthropic-api-key" ]; then
