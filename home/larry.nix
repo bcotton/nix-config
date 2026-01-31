@@ -19,77 +19,10 @@
     PATH = "/run/current-system/sw/bin:/bin";
   };
 
-  # Handle existing config - backup user config and remove nix symlinks before home-manager runs
-  # This must run BEFORE checkLinkTargets to avoid file conflict errors
-  home.activation.openClawPreCleanup = lib.hm.dag.entryBefore ["checkLinkTargets"] ''
-    PATH="${pkgs.coreutils}/bin:${pkgs.findutils}/bin:$PATH"
-    configFile="$HOME/.openclaw/openclaw.json"
-    backupDir="$HOME/.openclaw/backups"
-    mkdir -p "$backupDir"
-
-    # Backup existing config if it's a regular file (user-managed)
-    if [ -f "$configFile" ] && [ ! -L "$configFile" ]; then
-      timestamp=$(date +%Y%m%d-%H%M%S)
-      cp "$configFile" "$backupDir/openclaw.json.$timestamp"
-      cp "$configFile" "$backupDir/openclaw.json.latest"
-      echo "Backed up existing config to $backupDir/openclaw.json.$timestamp"
-    fi
-
-    # Remove symlinks to allow home-manager to proceed
-    if [ -L "$configFile" ]; then
-      rm "$configFile"
-      echo "Removed existing nix-managed symlink"
-    fi
-
-    # Also check old moltbot path for migration
-    oldConfigFile="$HOME/.moltbot/moltbot.json"
-    if [ -L "$oldConfigFile" ]; then
-      rm "$oldConfigFile"
-      echo "Removed old moltbot symlink"
-    fi
-
-    # Keep only last 10 backups (excluding .latest)
-    ls -t "$backupDir"/openclaw.json.2* 2>/dev/null | tail -n +11 | xargs -r rm || true
-  '';
-
-  # After openclaw creates its config, restore user config from backup
-  home.activation.openclawUserConfig = lib.hm.dag.entryAfter ["openclawConfigFiles"] ''
-    PATH="${pkgs.coreutils}/bin:$PATH"
-    configFile="$HOME/.openclaw/openclaw.json"
-    backupFile="$HOME/.openclaw/backups/openclaw.json.latest"
-
-    # Restore from backup if available
-    if [ -f "$backupFile" ]; then
-      # Remove the nix symlink and restore backup
-      if [ -L "$configFile" ]; then
-        rm "$configFile"
-      fi
-      cp "$backupFile" "$configFile"
-      chmod 644 "$configFile"
-      echo "Restored user config from backup"
-    elif [ -L "$configFile" ]; then
-      # No backup (first run) - convert symlink to regular file with nix content
-      nixContent=$(cat "$configFile")
-      rm "$configFile"
-      echo "$nixContent" > "$configFile"
-      chmod 644 "$configFile"
-      echo "First run: converted nix symlink to regular file"
-    fi
-  '';
-
-  # Create openclaw environment file with API key from agenix secret
-  home.activation.openclawEnvFile = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    PATH="${pkgs.coreutils}/bin:$PATH"
-    envFile="$HOME/.openclaw/openclaw.env"
-    mkdir -p "$HOME/.openclaw"
-    if [ -r "/run/agenix/anthropic-api-key" ]; then
-      echo "ANTHROPIC_API_KEY=$(cat /run/agenix/anthropic-api-key)" > "$envFile"
-      chmod 600 "$envFile"
-      echo "Created openclaw environment file"
-    else
-      echo "Warning: /run/agenix/anthropic-api-key not readable, skipping env file"
-    fi
-  '';
+  # Add pnpm local bin to user's shell PATH
+  home.sessionPath = [
+    "/home/larry/node_modules/.bin"
+  ];
 
   # ─────────────────────────────────────────────────────────────
   # Shell: zsh with starship prompt
@@ -215,71 +148,6 @@
     };
   };
 
-  # Openclaw gateway configuration
-  programs.openclaw = {
-    enable = true;
-
-    # Disable first-party plugins
-    firstParty = {
-      summarize.enable = false;
-      peekaboo.enable = false;
-      oracle.enable = false;
-      poltergeist.enable = false;
-      sag.enable = false;
-      camsnap.enable = false;
-      gogcli.enable = false;
-      bird.enable = false;
-      sonoscli.enable = false;
-      imsg.enable = false;
-    };
-
-    # Schema-typed config (replaces providers.* and configOverrides)
-    config = {
-      channels.telegram = {
-        tokenFile = "/run/agenix/moltbot-telegram-token";
-        allowFrom = [
-          7780937205
-        ];
-        groups = {
-          "*" = {requireMention = true;};
-        };
-      };
-      agents.defaults.workspace = "/home/larry/moltbot";
-      messages.tts = {
-        provider = "openai";
-        openai = {
-          model = "gpt-4o-mini-tts";
-          voice = "onyx";
-        };
-      };
-    };
-
-    # Instance config
-    instances.default = {
-      enable = true;
-      gatewayPort = 18789;
-      systemd.enable = true;
-    };
-  };
-
-  # Extend openclaw-gateway systemd service
-  systemd.user.services.openclaw-gateway = {
-    Unit = {
-      After = ["network-online.target"];
-      Wants = ["network-online.target"];
-    };
-    Service = {
-      # Load API key from env file created during activation
-      # Prefix with - to make it optional (service starts even if file missing)
-      EnvironmentFile = "-/home/larry/.openclaw/openclaw.env";
-      # PATH for daemon with required directories
-      Environment = [
-        "PATH=/home/larry/.local/bin:/home/larry/.npm-global/bin:/home/larry/bin:/home/larry/.nvm/current/bin:/home/larry/.fnm/current/bin:/home/larry/.volta/bin:/home/larry/.asdf/shims:/home/larry/.local/share/pnpm:/home/larry/.bun/bin:/usr/local/bin:/usr/bin:/run/current-system/sw/bin:/bin"
-      ];
-      RestartSec = lib.mkForce "5s";
-    };
-  };
-
   # ─────────────────────────────────────────────────────────────
   # Other useful programs
   # ─────────────────────────────────────────────────────────────
@@ -351,6 +219,8 @@
     # Development
     tldr # simplified man pages
     direnv # per-directory environments
+    pnpm
+    nodejs_22
 
     # Nix tools
     nil # nix LSP
