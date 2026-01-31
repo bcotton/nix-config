@@ -76,6 +76,7 @@ in {
 
   # LLM API keys (shared by llm-users, decryptable on bot hosts)
   "openai-api-key.age".publicKeys = anthropic_users ++ botSystems;
+  "openrouter-api-key.age".publicKeys = anthropic_users ++ botSystems;
 
   # Bot secrets (larry + bot host systems for decryption)
   "forgejo-password-larry.age".publicKeys = just_larry ++ botSystems;

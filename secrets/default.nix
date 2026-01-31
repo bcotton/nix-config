@@ -262,6 +262,12 @@ in {
     mode = "0440";
   };
 
+  age.secrets."openrouter-api-key" = lib.mkIf isBotHost {
+    file = ./openrouter-api-key.age;
+    group = "llm-users";
+    mode = "0440";
+  };
+
   age.secrets."moltbot-telegram-token" = lib.mkIf isBotHost {
     file = ./moltbot-telegram-token.age;
     owner = "larry";
