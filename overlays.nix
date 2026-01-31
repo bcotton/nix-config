@@ -13,8 +13,8 @@
       bird = prev.bird2;
     })
 
-    # nix-moltbot overlay - provides pkgs.moltbot
-    inputs.nix-moltbot.overlays.default
+    # nix-openclaw overlay - provides pkgs.moltbot
+    inputs.nix-openclaw.overlays.default
 
     # Create a single overlay function that composes all conditional overlays
     (final: prev:
