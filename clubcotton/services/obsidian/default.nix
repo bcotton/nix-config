@@ -90,12 +90,13 @@ in {
           nameValuePair "obsidian-${name}" {
             image = "lscr.io/linuxserver/obsidian:latest";
             autoStart = true;
-            user = "${toString config.users.users.${instanceCfg.user}.uid}:${toString config.users.groups.${instanceCfg.group}.gid}";
             volumes = [
               "${instanceCfg.configDir}:/config"
               "${instanceCfg.vaultDir}:/vaults"
             ];
             environment = {
+              PUID = toString config.users.users.${instanceCfg.user}.uid;
+              PGID = toString config.users.groups.${instanceCfg.group}.gid;
               TZ = instanceCfg.timezone;
             };
             ports = [
