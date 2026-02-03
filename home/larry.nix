@@ -221,6 +221,7 @@
     direnv # per-directory environments
     pnpm
     nodejs_22
+    claude-code # Anthropic's Claude Code CLI
 
     # Nix tools
     nil # nix LSP
