@@ -64,6 +64,10 @@
         inherit pkgs;
       };
 
+      garage = pkgs.nixosTest (import ../modules/garage/test.nix {
+        nixpkgs = inputs.nixpkgs;
+      });
+
       # ZFS/disko tests - DISABLED BY DEFAULT
       # These tests require --impure flag due to disko's test infrastructure
       # using impure <nixpkgs> path lookups internally.
