@@ -51,7 +51,7 @@ in {
         displayName = "NAS-01";
       };
       admin = {
-        ip = "127.0.0.1";
+        ip = "192.168.5.98";
         displayName = "Admin";
       };
       nix-01 = {
@@ -235,7 +235,7 @@ in {
         name = "Prometheus";
         category = "Monitoring";
         icon = "prometheus.svg";
-        href = "http://admin:9090";
+        href = "http://admin:9001";
         description = "Metrics collection";
       };
     };
