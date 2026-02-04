@@ -170,10 +170,9 @@ in {
         # Dark theme settings
         theme = "dark";
         color = "slate";
+        cardBlur = "sm";
         background = {
-          image = "";
-          blur = "sm";
-          opacity = 75;
+          color = "rgb(30, 41, 59)"; # slate-800
         };
 
         layout = [
