@@ -69,9 +69,24 @@ in {
     };
 
     s3WebBindAddr = mkOption {
-      type = types.str;
-      default = "[::]:3902";
-      description = "Address to bind for S3 web UI.";
+      type = types.nullOr types.str;
+      default = null;
+      example = "[::]:3902";
+      description = ''
+        Address to bind for S3 static website hosting endpoint.
+        Only enabled when s3WebRootDomain is also set.
+      '';
+    };
+
+    s3WebRootDomain = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "web.example.com";
+      description = ''
+        Root domain for static website hosting.
+        Required when s3WebBindAddr is set.
+        Buckets can be accessed as <bucket>.web.example.com
+      '';
     };
 
     s3RootDomain = mkOption {
@@ -79,7 +94,7 @@ in {
       default = null;
       example = "s3.example.com";
       description = ''
-        Root domain for virtual-hosted-style S3 requests.
+        Root domain for virtual-hosted-style S3 API requests.
         If set, requests to <bucket>.s3.example.com will be handled.
       '';
     };
@@ -112,33 +127,38 @@ in {
   config = mkIf cfg.enable {
     assertions = [
       {
-        assertion = cfg.replicationMode == "1" || cfg.rpcSecretFile != null;
-        message = "Garage replicationMode > 1 requires rpcSecretFile to be set for cluster security";
+        assertion = cfg.rpcSecretFile != null;
+        message = "Garage requires rpcSecretFile to be set for RPC authentication";
       }
     ];
 
     # Create Garage configuration
-    environment.etc."garage/garage.toml".source = tomlFormat.generate "garage.toml" {
-      metadata_dir = cfg.metadataDir;
-      data_dir = cfg.dataDir;
-      replication_mode = cfg.replicationMode;
-      rpc_bind_addr = cfg.rpcBindAddr;
-      rpc_secret_file = optionalString (cfg.rpcSecretFile != null) (toString cfg.rpcSecretFile);
-      s3_api =
-        {
-          s3_region = cfg.s3Region;
-          bind_addr = cfg.s3ApiBindAddr;
-        }
-        // optionalAttrs (cfg.s3RootDomain != null) {
-          root_domain = cfg.s3RootDomain;
-        }
-        // optionalAttrs cfg.allowUnauthenticatedReads {
-          allow_unauthenticated_reads = true;
+    environment.etc."garage/garage.toml".source = tomlFormat.generate "garage.toml" ({
+        metadata_dir = cfg.metadataDir;
+        data_dir = cfg.dataDir;
+        replication_mode = cfg.replicationMode;
+        rpc_bind_addr = cfg.rpcBindAddr;
+        s3_api =
+          {
+            s3_region = cfg.s3Region;
+            api_bind_addr = cfg.s3ApiBindAddr;
+          }
+          // optionalAttrs (cfg.s3RootDomain != null) {
+            root_domain = cfg.s3RootDomain;
+          }
+          // optionalAttrs cfg.allowUnauthenticatedReads {
+            allow_unauthenticated_reads = true;
+          };
+      }
+      // optionalAttrs (cfg.rpcSecretFile != null) {
+        rpc_secret_file = toString cfg.rpcSecretFile;
+      }
+      // optionalAttrs (cfg.s3WebBindAddr != null && cfg.s3WebRootDomain != null) {
+        s3_web = {
+          bind_addr = cfg.s3WebBindAddr;
+          root_domain = cfg.s3WebRootDomain;
         };
-      s3_web = {
-        bind_addr = cfg.s3WebBindAddr;
-      };
-    };
+      });
 
     # Create data and metadata directories
     systemd.tmpfiles.rules = [
@@ -162,11 +182,15 @@ in {
       after = ["network.target"];
       wantedBy = ["multi-user.target"];
 
+      environment = {
+        GARAGE_CONFIG_FILE = "/etc/garage/garage.toml";
+      };
+
       serviceConfig = {
         Type = "simple";
         User = "garage";
         Group = "garage";
-        ExecStart = "${cfg.package}/bin/garage server -c /etc/garage/garage.toml";
+        ExecStart = "${cfg.package}/bin/garage server";
         Restart = "on-failure";
         RestartSec = 5;
 
@@ -193,11 +217,12 @@ in {
 
     # Firewall configuration
     networking.firewall = mkIf cfg.openFirewall {
-      allowedTCPPorts = [
-        (toInt (elemAt (splitString ":" cfg.s3ApiBindAddr) 1)) # S3 API port
-        (toInt (elemAt (splitString ":" cfg.rpcBindAddr) 1)) # RPC port
-        (toInt (elemAt (splitString ":" cfg.s3WebBindAddr) 1)) # Web UI port
-      ];
+      allowedTCPPorts =
+        [
+          (toInt (elemAt (splitString ":" cfg.s3ApiBindAddr) 1)) # S3 API port
+          (toInt (elemAt (splitString ":" cfg.rpcBindAddr) 1)) # RPC port
+        ]
+        ++ optional (cfg.s3WebBindAddr != null) (toInt (elemAt (splitString ":" cfg.s3WebBindAddr) 1)); # Web port
     };
 
     environment.systemPackages = [cfg.package];
