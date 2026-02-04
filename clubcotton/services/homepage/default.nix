@@ -41,6 +41,11 @@ in {
             default = 61208;
             description = "Port for Glances service";
           };
+          icon = lib.mkOption {
+            type = lib.types.str;
+            default = "mdi-server";
+            description = "Icon for the host";
+          };
         };
       });
       default = {};
@@ -162,10 +167,19 @@ in {
       bookmarks = cfg.bookmarks;
 
       settings = {
+        # Dark theme settings
+        theme = "dark";
+        color = "slate";
+        background = {
+          image = "";
+          blur = "sm";
+          opacity = 75;
+        };
+
         layout = [
           {
-            Glances = {
-              header = false;
+            Hosts = {
+              header = true;
               style = "row";
               columns = 4;
             };
@@ -250,83 +264,31 @@ in {
           svcs = servicesByCategory category;
         in
           lib.mapAttrsToList serviceToHomepage svcs;
+
+        # Build Hosts section with links to Glances UI and system info widget
+        hostServices =
+          lib.mapAttrsToList (
+            _hostname: hostCfg: {
+              "${hostCfg.displayName}" = {
+                icon = hostCfg.icon;
+                href = "http://${hostCfg.ip}:${toString hostCfg.glancesPort}";
+                description = "System monitoring";
+                widget = {
+                  type = "glances";
+                  url = "http://${hostCfg.ip}:${toString hostCfg.glancesPort}";
+                  metric = "info";
+                  chart = false;
+                  version = 4;
+                };
+              };
+            }
+          )
+          cfg.hosts;
       in
         # Build list of category objects
-        (lib.map (cat: {"${cat}" = categoryServices cat;}) categories)
-        ++ [{Misc = cfg.misc;}]
-        ++ [
-          {
-            Glances = let
-              # Build Glances widgets for all configured hosts
-              hostWidgets =
-                lib.mapAttrsToList (
-                  hostname: hostCfg: {
-                    "${hostCfg.displayName}" = {
-                      widget = {
-                        type = "glances";
-                        url = "http://${hostCfg.ip}:${toString hostCfg.glancesPort}";
-                        metric = "info";
-                        chart = false;
-                        version = 4;
-                      };
-                    };
-                  }
-                )
-                cfg.hosts;
-            in
-              # If no hosts configured, use localhost
-              if cfg.hosts == {}
-              then let
-                port = toString config.services.glances.port;
-              in [
-                {
-                  Info = {
-                    widget = {
-                      type = "glances";
-                      url = "http://localhost:${port}";
-                      metric = "info";
-                      chart = false;
-                      version = 4;
-                    };
-                  };
-                }
-                {
-                  "CPU Temp" = {
-                    widget = {
-                      type = "glances";
-                      url = "http://localhost:${port}";
-                      metric = "sensor:Package id 0";
-                      chart = false;
-                      version = 4;
-                    };
-                  };
-                }
-                {
-                  Processes = {
-                    widget = {
-                      type = "glances";
-                      url = "http://localhost:${port}";
-                      metric = "process";
-                      chart = false;
-                      version = 4;
-                    };
-                  };
-                }
-                {
-                  Network = {
-                    widget = {
-                      type = "glances";
-                      url = "http://localhost:${port}";
-                      metric = "network:enp2s0";
-                      chart = false;
-                      version = 4;
-                    };
-                  };
-                }
-              ]
-              else hostWidgets;
-          }
-        ];
+        [{Hosts = hostServices;}]
+        ++ (lib.map (cat: {"${cat}" = categoryServices cat;}) categories)
+        ++ [{Misc = cfg.misc;}];
     };
 
     # Expose homepage on tailnet
