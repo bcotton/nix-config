@@ -2,7 +2,8 @@
   config,
   lib,
   nixosHostSpecs ? {},
-  homepageServices ? {},
+  homepageServiceList ? [],
+  homepageManualServices ? {},
   ...
 }: let
   service = "homepage-dashboard";
@@ -24,21 +25,34 @@
     )
     hostsWithIp;
 
-  # Generate services from homepageServices spec
-  # Services with tailnetHostname get URLs constructed from tailnetDomain
-  # Services with explicit href use that URL directly
-  servicesFromSpecs =
-    lib.mapAttrs (
-      _name: spec: {
-        inherit (spec) name description icon category;
-        href =
-          if spec.href or null != null
-          then spec.href
-          else "https://${spec.tailnetHostname}.${cfg.tailnetDomain}";
-        widget = spec.widget or null;
-      }
-    )
-    homepageServices;
+  # Generate services from clubcotton modules
+  # Read homepage.* and tailnetHostname from each service in the list
+  servicesFromModules = lib.listToAttrs (map (name: let
+      svc = config.services.clubcotton.${name};
+      # Use tailnetHostname from module, fall back to service name
+      hostname = svc.tailnetHostname or name;
+    in {
+      inherit name;
+      value = {
+        inherit (svc.homepage) name description icon category;
+        href = "https://${hostname}.${cfg.tailnetDomain}";
+        widget = null;
+      };
+    })
+    homepageServiceList);
+
+  # Process manual services (may have href or tailnetHostname)
+  # Strip tailnetHostname from final output since it's not part of the services option type
+  processedManualServices =
+    lib.mapAttrs (_name: spec: {
+      inherit (spec) name description icon category;
+      href = spec.href or "https://${spec.tailnetHostname}.${cfg.tailnetDomain}";
+      widget = spec.widget or null;
+    })
+    homepageManualServices;
+
+  # Merge module-derived services with manual services
+  servicesFromSpecs = servicesFromModules // processedManualServices;
 in {
   options.services.clubcotton.homepage = {
     enable = lib.mkEnableOption {
@@ -115,7 +129,7 @@ in {
         };
       });
       default = servicesFromSpecs;
-      description = "Services to display on the homepage. Auto-populated from homepageServices in flake-modules/hosts.nix.";
+      description = "Services to display. Auto-populated from homepageServiceList and homepageManualServices.";
     };
 
     bookmarks = lib.mkOption {
