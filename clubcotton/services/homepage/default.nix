@@ -111,6 +111,8 @@ in {
 
     services.${service} = {
       enable = true;
+      openFirewall = true;
+      allowedHosts = "localhost,127.0.0.1,admin,admin.lan,admin.bobtail-clownfish.ts.net,192.168.5.98";
       customCSS = ''
         body, html {
           font-family: SF Pro Display, Helvetica, Arial, sans-serif !important;
