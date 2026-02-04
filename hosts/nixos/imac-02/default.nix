@@ -22,6 +22,9 @@ in {
     ../../../modules/nfs
   ];
 
+  # Enable Glances for homepage dashboard monitoring
+  services.glances.enable = true;
+
   services.xserver.enable = true;
   services.displayManager.sddm.enable = true;
   services.desktopManager.plasma6.enable = true;
