@@ -5,6 +5,8 @@
 }: let
   service = "homepage-dashboard";
   cfg = config.services.clubcotton.homepage;
+  clubcotton = config.clubcotton;
+  port = toString config.services.${service}.listenPort;
 in {
   options.services.clubcotton.homepage = {
     enable = lib.mkEnableOption {
@@ -15,6 +17,12 @@ in {
       type = lib.types.str;
       default = "bobtail-clownfish.ts.net";
       description = "Tailscale domain for service URLs";
+    };
+
+    tailnetHostname = lib.mkOption {
+      type = lib.types.str;
+      default = "home";
+      description = "Tailnet hostname to expose homepage as";
     };
 
     hosts = lib.mkOption {
@@ -112,7 +120,20 @@ in {
     services.${service} = {
       enable = true;
       openFirewall = true;
-      allowedHosts = "localhost,127.0.0.1,admin,admin.lan,admin.bobtail-clownfish.ts.net,192.168.5.98";
+      # Include both with and without port for flexibility
+      allowedHosts = lib.concatStringsSep "," [
+        "localhost"
+        "localhost:${port}"
+        "127.0.0.1"
+        "127.0.0.1:${port}"
+        "admin"
+        "admin:${port}"
+        "admin.lan"
+        "admin.lan:${port}"
+        "192.168.5.98"
+        "192.168.5.98:${port}"
+        "${cfg.tailnetHostname}.${cfg.tailnetDomain}"
+      ];
       customCSS = ''
         body, html {
           font-family: SF Pro Display, Helvetica, Arial, sans-serif !important;
@@ -306,6 +327,17 @@ in {
               else hostWidgets;
           }
         ];
+    };
+
+    # Expose homepage on tailnet
+    services.tsnsrv = {
+      enable = true;
+      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
+
+      services."${cfg.tailnetHostname}" = {
+        ephemeral = true;
+        toURL = "http://127.0.0.1:${port}/";
+      };
     };
   };
 }
