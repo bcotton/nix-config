@@ -137,13 +137,13 @@ in {
   clubcotton.systemd-network = {
     enable = true;
     mode = "single-nic";
-    interfaces = ["enp0s31f6"];
+    interfaces = ["enp65s0"];
     bridgeName = "br0";
     enableIncusBridge = false; # nas-01 doesn't run Incus, but needs VLAN access
     enableVlans = true;
     nativeVlan = {
       id = 5;
-      address = "192.168.5.300/24";
+      address = "192.168.5.42/24";
       gateway = "192.168.5.1";
       dns = ["192.168.5.220"];
     };
