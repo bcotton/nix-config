@@ -20,9 +20,6 @@ in {
     ../../../modules/octoprint
   ];
 
-  # Enable Glances for homepage dashboard monitoring
-  services.glances.enable = true;
-
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

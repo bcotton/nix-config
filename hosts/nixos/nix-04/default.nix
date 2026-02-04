@@ -23,9 +23,6 @@ in {
     ../../../modules/incus
   ];
 
-  # Enable Glances for homepage dashboard monitoring
-  services.glances.enable = true;
-
   services.clubcotton = {
     freshrss.enable = false;
     paperless.enable = false;

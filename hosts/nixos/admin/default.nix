@@ -41,56 +41,9 @@ in {
   };
 
   # Configure homepage dashboard with all services
+  # Hosts are auto-populated from nixosHostSpecs in flake-modules/hosts.nix
   services.clubcotton.homepage = {
     tailnetDomain = "bobtail-clownfish.ts.net";
-
-    # Hosts to monitor with Glances
-    hosts = {
-      admin = {
-        ip = "192.168.5.98";
-        displayName = "Admin";
-      };
-      nas-01 = {
-        ip = "192.168.5.42";
-        displayName = "NAS-01";
-      };
-      dns-01 = {
-        ip = "192.168.5.220";
-        displayName = "DNS-01";
-      };
-      nix-01 = {
-        ip = "192.168.5.210";
-        displayName = "Nix-01";
-      };
-      nix-02 = {
-        ip = "192.168.5.212";
-        displayName = "Nix-02";
-      };
-      nix-03 = {
-        ip = "192.168.5.214";
-        displayName = "Nix-03";
-      };
-      nix-04 = {
-        ip = "192.168.5.54";
-        displayName = "Nix-04";
-      };
-      imac-01 = {
-        ip = "192.168.5.125";
-        displayName = "iMac-01";
-      };
-      imac-02 = {
-        ip = "192.168.5.153";
-        displayName = "iMac-02";
-      };
-      octoprint = {
-        ip = "192.168.5.49";
-        displayName = "OctoPrint";
-      };
-      frigate-host = {
-        ip = "192.168.20.174";
-        displayName = "Frigate";
-      };
-    };
 
     # All services organized by category
     services = {

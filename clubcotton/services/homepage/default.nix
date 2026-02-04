@@ -1,12 +1,27 @@
 {
   config,
   lib,
+  nixosHostSpecs ? {},
   ...
 }: let
   service = "homepage-dashboard";
   cfg = config.services.clubcotton.homepage;
   clubcotton = config.clubcotton;
   port = toString config.services.${service}.listenPort;
+
+  # Generate hosts from nixosHostSpecs - only include hosts with an IP
+  # Filter first (hosts with IP), then map to expected format
+  hostsWithIp = lib.filterAttrs (_name: spec: spec.ip or null != null) nixosHostSpecs;
+  hostsFromSpecs =
+    lib.mapAttrs (
+      name: spec: {
+        ip = spec.ip;
+        displayName = spec.displayName or name;
+        glancesPort = spec.glancesPort or 61208;
+        icon = spec.icon or "mdi-server";
+      }
+    )
+    hostsWithIp;
 in {
   options.services.clubcotton.homepage = {
     enable = lib.mkEnableOption {
@@ -48,8 +63,8 @@ in {
           };
         };
       });
-      default = {};
-      description = "Hosts to monitor with Glances";
+      default = hostsFromSpecs;
+      description = "Hosts to monitor with Glances. Auto-populated from nixosHostSpecs.";
     };
 
     services = lib.mkOption {
