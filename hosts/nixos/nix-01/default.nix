@@ -25,6 +25,9 @@ in {
     ../../../modules/systemd-network
   ];
 
+  # Enable Glances for homepage dashboard monitoring
+  services.glances.enable = true;
+
   services.clubcotton = {
     code-server.enable = true;
     nut-client.enable = true;

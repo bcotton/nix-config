@@ -37,6 +37,252 @@ in {
     nut-server.enable = true;
     nut-client.enable = true;
     tailscale.enable = true;
+    homepage.enable = true;
+  };
+
+  # Configure homepage dashboard with all services
+  services.clubcotton.homepage = {
+    tailnetDomain = "bobtail-clownfish.ts.net";
+
+    # Hosts to monitor with Glances
+    hosts = {
+      nas-01 = {
+        ip = "192.168.5.42";
+        displayName = "NAS-01";
+      };
+      admin = {
+        ip = "127.0.0.1";
+        displayName = "Admin";
+      };
+      nix-01 = {
+        ip = "192.168.5.210";
+        displayName = "Nix-01";
+      };
+      dns-01 = {
+        ip = "192.168.5.220";
+        displayName = "DNS-01";
+      };
+    };
+
+    # All services organized by category
+    services = {
+      # Arr Suite
+      radarr = {
+        name = "Radarr";
+        category = "Arr";
+        icon = "radarr.svg";
+        href = "https://radarr.bobtail-clownfish.ts.net";
+        description = "Movie collection manager";
+      };
+      sonarr = {
+        name = "Sonarr";
+        category = "Arr";
+        icon = "sonarr.svg";
+        href = "https://sonarr.bobtail-clownfish.ts.net";
+        description = "TV series collection manager";
+      };
+      lidarr = {
+        name = "Lidarr";
+        category = "Arr";
+        icon = "lidarr.svg";
+        href = "https://lidarr.bobtail-clownfish.ts.net";
+        description = "Music collection manager";
+      };
+      prowlarr = {
+        name = "Prowlarr";
+        category = "Arr";
+        icon = "prowlarr.svg";
+        href = "https://prowlarr.bobtail-clownfish.ts.net";
+        description = "Indexer manager for *arr apps";
+      };
+      readarr-epub = {
+        name = "Readarr (Books)";
+        category = "Arr";
+        icon = "readarr.svg";
+        href = "https://readarr-epub.bobtail-clownfish.ts.net";
+        description = "E-book collection manager";
+      };
+      readarr-audio = {
+        name = "Readarr (Audio)";
+        category = "Arr";
+        icon = "readarr.svg";
+        href = "https://readarr-audio.bobtail-clownfish.ts.net";
+        description = "Audiobook collection manager";
+      };
+      jellyseerr = {
+        name = "Jellyseerr";
+        category = "Arr";
+        icon = "jellyseerr.svg";
+        href = "https://jellyseerr.bobtail-clownfish.ts.net";
+        description = "Media request management";
+      };
+
+      # Media
+      jellyfin = {
+        name = "Jellyfin";
+        category = "Media";
+        icon = "jellyfin.svg";
+        href = "https://jellyfin.bobtail-clownfish.ts.net";
+        description = "Media streaming server";
+      };
+      navidrome = {
+        name = "Navidrome";
+        category = "Media";
+        icon = "navidrome.svg";
+        href = "https://navidrome.bobtail-clownfish.ts.net";
+        description = "Music streaming server";
+      };
+      immich = {
+        name = "Immich";
+        category = "Media";
+        icon = "immich.svg";
+        href = "https://immich.bobtail-clownfish.ts.net";
+        description = "Photo and video backup";
+      };
+      calibre-web = {
+        name = "Calibre-Web";
+        category = "Media";
+        icon = "calibre-web.svg";
+        href = "https://calibre-web.bobtail-clownfish.ts.net";
+        description = "E-book library browser";
+      };
+
+      # Downloads
+      sabnzbd = {
+        name = "SABnzbd";
+        category = "Downloads";
+        icon = "sabnzbd.svg";
+        href = "https://sabnzbd.bobtail-clownfish.ts.net";
+        description = "Usenet download client";
+      };
+      pinchflat = {
+        name = "Pinchflat";
+        category = "Downloads";
+        icon = "pinchflat.svg";
+        href = "https://pinchflat.bobtail-clownfish.ts.net";
+        description = "YouTube media archiver";
+      };
+
+      # Content
+      paperless = {
+        name = "Paperless-ngx";
+        category = "Content";
+        icon = "paperless-ngx.svg";
+        href = "https://paperless.bobtail-clownfish.ts.net";
+        description = "Document management system";
+      };
+      freshrss = {
+        name = "FreshRSS";
+        category = "Content";
+        icon = "freshrss.svg";
+        href = "https://freshrss.bobtail-clownfish.ts.net";
+        description = "RSS feed aggregator";
+      };
+      wallabag = {
+        name = "Wallabag";
+        category = "Content";
+        icon = "wallabag.svg";
+        href = "https://wallabag.bobtail-clownfish.ts.net";
+        description = "Read-it-later service";
+      };
+      filebrowser = {
+        name = "File Browser";
+        category = "Content";
+        icon = "filebrowser.svg";
+        href = "https://filebrowser.bobtail-clownfish.ts.net";
+        description = "Web-based file manager";
+      };
+
+      # Infrastructure
+      forgejo = {
+        name = "Forgejo";
+        category = "Infrastructure";
+        icon = "forgejo.svg";
+        href = "https://forgejo.bobtail-clownfish.ts.net";
+        description = "Self-hosted Git forge";
+      };
+      atuin = {
+        name = "Atuin";
+        category = "Infrastructure";
+        icon = "atuin.png";
+        href = "https://atuin.bobtail-clownfish.ts.net";
+        description = "Shell history sync server";
+      };
+      llm = {
+        name = "Open WebUI";
+        category = "Infrastructure";
+        icon = "open-webui.svg";
+        href = "https://llm.bobtail-clownfish.ts.net";
+        description = "LLM chat interface";
+      };
+      harmonia = {
+        name = "Harmonia";
+        category = "Infrastructure";
+        icon = "nix.svg";
+        href = "https://nix-cache.bobtail-clownfish.ts.net";
+        description = "Nix binary cache server";
+      };
+
+      # Monitoring (local to admin)
+      grafana = {
+        name = "Grafana";
+        category = "Monitoring";
+        icon = "grafana.svg";
+        href = "http://admin:3000";
+        description = "Metrics dashboards";
+      };
+      prometheus = {
+        name = "Prometheus";
+        category = "Monitoring";
+        icon = "prometheus.svg";
+        href = "http://admin:9090";
+        description = "Metrics collection";
+      };
+    };
+
+    # External bookmarks
+    bookmarks = [
+      {
+        External = [
+          {
+            GitHub = [
+              {
+                abbr = "GH";
+                href = "https://github.com";
+                icon = "github.svg";
+              }
+            ];
+          }
+          {
+            "Home Assistant" = [
+              {
+                abbr = "HA";
+                href = "http://homeassistant.lan:8123";
+                icon = "home-assistant.svg";
+              }
+            ];
+          }
+        ];
+      }
+    ];
+
+    # Miscellaneous external services
+    misc = [
+      {
+        "Home Assistant" = {
+          description = "Smart home control";
+          href = "http://homeassistant.lan:8123";
+          icon = "home-assistant.svg";
+        };
+      }
+      {
+        UniFi = {
+          description = "Network management";
+          href = "https://unifi.ui.com";
+          icon = "ubiquiti.svg";
+        };
+      }
+    ];
   };
 
   boot.loader.systemd-boot.enable = true;

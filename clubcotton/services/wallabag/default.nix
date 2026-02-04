@@ -53,6 +53,22 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Wallabag";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Read-it-later service";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "wallabag.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {

@@ -53,6 +53,22 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Pinchflat";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "YouTube media archiver";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "pinchflat.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Downloads";
+    };
   };
 
   config = mkIf cfg.enable {

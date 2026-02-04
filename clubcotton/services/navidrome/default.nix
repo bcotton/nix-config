@@ -33,6 +33,22 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Navidrome";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Music streaming server";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "navidrome.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Media";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {

@@ -32,6 +32,9 @@ in {
     192.168.5.42 nas-01
   '';
 
+  # Enable Glances for homepage dashboard monitoring
+  services.glances.enable = true;
+
   services.clubcotton = {
     nut-client.enable = true;
 

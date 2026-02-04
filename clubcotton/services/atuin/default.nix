@@ -18,6 +18,22 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Atuin";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Shell history sync server";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "atuin.png";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {

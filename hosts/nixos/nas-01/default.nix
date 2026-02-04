@@ -33,6 +33,9 @@ in {
   # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
   disabledModules = ["services/printing/cups-pdf.nix"];
 
+  # Enable Glances for homepage dashboard monitoring
+  services.glances.enable = true;
+
   services.clubcotton = {
     atuin.enable = true;
     calibre.enable = true;

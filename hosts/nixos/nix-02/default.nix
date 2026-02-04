@@ -24,6 +24,9 @@ in {
     ../../../modules/systemd-network
   ];
 
+  # Enable Glances for homepage dashboard monitoring
+  services.glances.enable = true;
+
   services.clubcotton = {
     # vnc.enable = true;
     tailscale.enable = true;

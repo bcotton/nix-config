@@ -21,6 +21,22 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Radarr";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Movie collection manager";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "radarr.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Arr";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {
