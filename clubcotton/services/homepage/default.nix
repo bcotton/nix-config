@@ -2,6 +2,7 @@
   config,
   lib,
   nixosHostSpecs ? {},
+  homepageServices ? {},
   ...
 }: let
   service = "homepage-dashboard";
@@ -22,6 +23,22 @@
       }
     )
     hostsWithIp;
+
+  # Generate services from homepageServices spec
+  # Services with tailnetHostname get URLs constructed from tailnetDomain
+  # Services with explicit href use that URL directly
+  servicesFromSpecs =
+    lib.mapAttrs (
+      _name: spec: {
+        inherit (spec) name description icon category;
+        href =
+          if spec.href or null != null
+          then spec.href
+          else "https://${spec.tailnetHostname}.${cfg.tailnetDomain}";
+        widget = spec.widget or null;
+      }
+    )
+    homepageServices;
 in {
   options.services.clubcotton.homepage = {
     enable = lib.mkEnableOption {
@@ -97,8 +114,8 @@ in {
           };
         };
       });
-      default = {};
-      description = "Services to display on the homepage";
+      default = servicesFromSpecs;
+      description = "Services to display on the homepage. Auto-populated from homepageServices in flake-modules/hosts.nix.";
     };
 
     bookmarks = lib.mkOption {

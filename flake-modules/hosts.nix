@@ -169,6 +169,193 @@
     # Derive host list from specs - used for SSH RemoteForward configuration
     nixosHosts = builtins.attrNames nixosHostSpecs;
 
+    # Homepage service specifications - single source of truth for dashboard services
+    # Adding a service here automatically includes it on the homepage dashboard
+    # Services with tailnetHostname get URLs constructed from tailnetDomain
+    # Services with href use the explicit URL (for local/non-tailnet services)
+    #
+    # Fields:
+    #   name            - Display name on homepage
+    #   description     - Service description
+    #   icon            - Icon file (e.g., "radarr.svg")
+    #   category        - Category for grouping (Arr, Media, Downloads, Content, Infrastructure, Monitoring)
+    #   tailnetHostname - Hostname on tailnet (constructs https://<hostname>.<tailnetDomain>)
+    #   href            - Explicit URL (overrides tailnetHostname, use for local services)
+    homepageServices = {
+      # Arr Suite
+      radarr = {
+        name = "Radarr";
+        category = "Arr";
+        icon = "radarr.svg";
+        description = "Movie collection manager";
+        tailnetHostname = "radarr";
+      };
+      sonarr = {
+        name = "Sonarr";
+        category = "Arr";
+        icon = "sonarr.svg";
+        description = "TV series collection manager";
+        tailnetHostname = "sonarr";
+      };
+      lidarr = {
+        name = "Lidarr";
+        category = "Arr";
+        icon = "lidarr.svg";
+        description = "Music collection manager";
+        tailnetHostname = "lidarr";
+      };
+      prowlarr = {
+        name = "Prowlarr";
+        category = "Arr";
+        icon = "prowlarr.svg";
+        description = "Indexer manager for *arr apps";
+        tailnetHostname = "prowlarr";
+      };
+      readarr-epub = {
+        name = "Readarr (Books)";
+        category = "Arr";
+        icon = "readarr.svg";
+        description = "E-book collection manager";
+        tailnetHostname = "readarr-epub";
+      };
+      readarr-audio = {
+        name = "Readarr (Audio)";
+        category = "Arr";
+        icon = "readarr.svg";
+        description = "Audiobook collection manager";
+        tailnetHostname = "readarr-audio";
+      };
+      jellyseerr = {
+        name = "Jellyseerr";
+        category = "Arr";
+        icon = "jellyseerr.svg";
+        description = "Media request management";
+        tailnetHostname = "jellyseerr";
+      };
+
+      # Media
+      jellyfin = {
+        name = "Jellyfin";
+        category = "Media";
+        icon = "jellyfin.svg";
+        description = "Media streaming server";
+        tailnetHostname = "jellyfin";
+      };
+      navidrome = {
+        name = "Navidrome";
+        category = "Media";
+        icon = "navidrome.svg";
+        description = "Music streaming server";
+        tailnetHostname = "navidrome";
+      };
+      immich = {
+        name = "Immich";
+        category = "Media";
+        icon = "immich.svg";
+        description = "Photo and video backup";
+        tailnetHostname = "immich";
+      };
+      calibre-web = {
+        name = "Calibre-Web";
+        category = "Media";
+        icon = "calibre-web.svg";
+        description = "E-book library browser";
+        tailnetHostname = "calibre-web";
+      };
+
+      # Downloads
+      sabnzbd = {
+        name = "SABnzbd";
+        category = "Downloads";
+        icon = "sabnzbd.svg";
+        description = "Usenet download client";
+        tailnetHostname = "sabnzbd";
+      };
+      pinchflat = {
+        name = "Pinchflat";
+        category = "Downloads";
+        icon = "pinchflat.svg";
+        description = "YouTube media archiver";
+        tailnetHostname = "pinchflat";
+      };
+
+      # Content
+      paperless = {
+        name = "Paperless-ngx";
+        category = "Content";
+        icon = "paperless-ngx.svg";
+        description = "Document management system";
+        tailnetHostname = "paperless";
+      };
+      freshrss = {
+        name = "FreshRSS";
+        category = "Content";
+        icon = "freshrss.svg";
+        description = "RSS feed aggregator";
+        tailnetHostname = "freshrss";
+      };
+      wallabag = {
+        name = "Wallabag";
+        category = "Content";
+        icon = "wallabag.svg";
+        description = "Read-it-later service";
+        tailnetHostname = "wallabag";
+      };
+      filebrowser = {
+        name = "File Browser";
+        category = "Content";
+        icon = "filebrowser.svg";
+        description = "Web-based file manager";
+        tailnetHostname = "filebrowser";
+      };
+
+      # Infrastructure
+      forgejo = {
+        name = "Forgejo";
+        category = "Infrastructure";
+        icon = "forgejo.svg";
+        description = "Self-hosted Git forge";
+        tailnetHostname = "forgejo";
+      };
+      atuin = {
+        name = "Atuin";
+        category = "Infrastructure";
+        icon = "atuin.png";
+        description = "Shell history sync server";
+        tailnetHostname = "atuin";
+      };
+      open-webui = {
+        name = "Open WebUI";
+        category = "Infrastructure";
+        icon = "open-webui.svg";
+        description = "LLM chat interface";
+        tailnetHostname = "llm";
+      };
+      harmonia = {
+        name = "Harmonia";
+        category = "Infrastructure";
+        icon = "nix.svg";
+        description = "Nix binary cache server";
+        tailnetHostname = "nix-cache";
+      };
+
+      # Monitoring (local to admin host)
+      grafana = {
+        name = "Grafana";
+        category = "Monitoring";
+        icon = "grafana.svg";
+        description = "Metrics dashboards";
+        href = "http://admin:3000";
+      };
+      prometheus = {
+        name = "Prometheus";
+        category = "Monitoring";
+        icon = "prometheus.svg";
+        description = "Metrics collection";
+        href = "http://admin:9001";
+      };
+    };
+
     # NixOS system builder (consolidated from nixosSystem and nixosMinimalSystem)
     nixosSystem = {
       system,
@@ -223,7 +410,7 @@
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit self system inputs hostName nixosHostSpecs;
+          inherit self system inputs hostName nixosHostSpecs homepageServices;
         };
         modules =
           commonModules
