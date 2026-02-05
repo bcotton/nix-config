@@ -56,24 +56,24 @@ in {
         };
       };
     };
-  };
 
-  obsidian = {
-    enable = true;
-    instances.bcotton = {
-      httpPort = 13000;
-      httpsPort = 13001;
-      user = "bcotton";
-      group = "users";
-      vaultDir = "/home/bcotton/obsidian-vaults";
-      # To enable HTTP Basic Auth:
-      # 1. Create the secret: agenix -e secrets/obsidian-bcotton.age
-      # 2. Add content: PASSWORD=your-secret-password
-      # 3. Uncomment the basicAuth block below
-      basicAuth = {
-        enable = true;
-        username = "bcotton";
-        environmentFile = config.age.secrets.obsidian-bcotton.path;
+    obsidian = {
+      enable = true;
+      instances.bcotton = {
+        httpPort = 13000;
+        httpsPort = 13001;
+        user = "bcotton";
+        group = "users";
+        vaultDir = "/home/bcotton/obsidian-vaults";
+        # To enable HTTP Basic Auth:
+        # 1. Create the secret: agenix -e secrets/obsidian-bcotton.age
+        # 2. Add content: PASSWORD=your-secret-password
+        # 3. Uncomment the basicAuth block below
+        basicAuth = {
+          enable = true;
+          username = "bcotton";
+          environmentFile = config.age.secrets.obsidian-bcotton.path;
+        };
       };
     };
   };
