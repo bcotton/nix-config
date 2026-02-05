@@ -4,9 +4,18 @@
   lib,
   unstablePkgs,
   localPackages,
+  inputs,
   ...
 }: {
   config.nixpkgs.overlays = [
+    # Fix bird alias that was removed in nixpkgs - point to bird2
+    (final: prev: {
+      bird = prev.bird2;
+    })
+
+    # nix-openclaw overlay - provides pkgs.moltbot
+    inputs.nix-openclaw.overlays.default
+
     # Create a single overlay function that composes all conditional overlays
     (final: prev:
       lib.foldl' lib.recursiveUpdate {} [

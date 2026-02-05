@@ -40,6 +40,22 @@ in {
       type = types.str;
       default = "${service}";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "FreshRSS";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "RSS feed aggregator";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "freshrss.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {

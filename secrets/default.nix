@@ -1,8 +1,13 @@
 {
   config,
   lib,
+  hostName,
   ...
-}: {
+}: let
+  commonLib = import ../hosts/common/lib.nix;
+  variables = commonLib.getHostVariables hostName;
+  isBotHost = builtins.elem hostName (variables.botHosts or []);
+in {
   # Generate postgres secrets here: https://supercaracal.github.io/scram-sha-256/
 
   # Unconditional secrets (no special permissions needed)
@@ -256,5 +261,51 @@
     owner = "root";
     group = "root";
     mode = "0444";
+  };
+
+  # LLM/Bot secrets - only on bot hosts
+  age.secrets."anthropic-api-key" = lib.mkIf isBotHost {
+    file = ./anthropic-api-key.age;
+    group = "llm-users";
+    mode = "0440";
+  };
+
+  age.secrets."openai-api-key" = lib.mkIf isBotHost {
+    file = ./openai-api-key.age;
+    group = "llm-users";
+    mode = "0440";
+  };
+
+  age.secrets."openrouter-api-key" = lib.mkIf isBotHost {
+    file = ./openrouter-api-key.age;
+    group = "llm-users";
+    mode = "0440";
+  };
+
+  age.secrets."moltbot-telegram-token" = lib.mkIf isBotHost {
+    file = ./moltbot-telegram-token.age;
+    owner = "larry";
+    group = "users";
+    mode = "0400";
+  };
+
+  age.secrets."moltbot-gateway-token" = lib.mkIf isBotHost {
+    file = ./moltbot-gateway-token.age;
+    owner = "larry";
+    group = "users";
+    mode = "0400";
+  };
+
+  # Bot host secrets - only on hosts in botHosts list
+  age.secrets."forgejo-password-larry" = lib.mkIf isBotHost {
+    file = ./forgejo-password-larry.age;
+    owner = "larry";
+    group = "users";
+  };
+
+  age.secrets."forgejo-token-larry" = lib.mkIf isBotHost {
+    file = ./forgejo-token-larry.age;
+    owner = "larry";
+    group = "users";
   };
 }

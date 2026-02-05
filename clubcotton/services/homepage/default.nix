@@ -1,16 +1,143 @@
 {
   config,
   lib,
+  nixosHostSpecs ? {},
+  homepageServiceList ? [],
+  homepageManualServices ? {},
   ...
 }: let
   service = "homepage-dashboard";
   cfg = config.services.clubcotton.homepage;
-  homelab = config.homelab;
+  clubcotton = config.clubcotton;
+  port = toString config.services.${service}.listenPort;
+
+  # Generate hosts from nixosHostSpecs - only include hosts with an IP
+  # Filter first (hosts with IP), then map to expected format
+  hostsWithIp = lib.filterAttrs (_name: spec: spec.ip or null != null) nixosHostSpecs;
+  hostsFromSpecs =
+    lib.mapAttrs (
+      name: spec: {
+        ip = spec.ip;
+        displayName = spec.displayName or name;
+        glancesPort = spec.glancesPort or 61208;
+        icon = spec.icon or "mdi-server";
+      }
+    )
+    hostsWithIp;
+
+  # Generate services from clubcotton modules
+  # Read homepage.* and tailnetHostname from each service in the list
+  servicesFromModules = lib.listToAttrs (map (name: let
+      svc = config.services.clubcotton.${name};
+      # Use tailnetHostname from module, fall back to service name
+      hostname = svc.tailnetHostname or name;
+    in {
+      inherit name;
+      value = {
+        inherit (svc.homepage) name description icon category;
+        href = "https://${hostname}.${cfg.tailnetDomain}";
+        widget = null;
+      };
+    })
+    homepageServiceList);
+
+  # Process manual services (may have href or tailnetHostname)
+  # Strip tailnetHostname from final output since it's not part of the services option type
+  processedManualServices =
+    lib.mapAttrs (_name: spec: {
+      inherit (spec) name description icon category;
+      href = spec.href or "https://${spec.tailnetHostname}.${cfg.tailnetDomain}";
+      widget = spec.widget or null;
+    })
+    homepageManualServices;
+
+  # Merge module-derived services with manual services
+  servicesFromSpecs = servicesFromModules // processedManualServices;
 in {
-  options.services.clubcoton.homepage = {
+  options.services.clubcotton.homepage = {
     enable = lib.mkEnableOption {
       description = "Enable ${service}";
     };
+
+    tailnetDomain = lib.mkOption {
+      type = lib.types.str;
+      default = "bobtail-clownfish.ts.net";
+      description = "Tailscale domain for service URLs";
+    };
+
+    tailnetHostname = lib.mkOption {
+      type = lib.types.str;
+      default = "home";
+      description = "Tailnet hostname to expose homepage as";
+    };
+
+    hosts = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule {
+        options = {
+          ip = lib.mkOption {
+            type = lib.types.str;
+            description = "IP address for Glances monitoring";
+          };
+          displayName = lib.mkOption {
+            type = lib.types.str;
+            description = "Display name for the host in Glances widget";
+          };
+          glancesPort = lib.mkOption {
+            type = lib.types.port;
+            default = 61208;
+            description = "Port for Glances service";
+          };
+          icon = lib.mkOption {
+            type = lib.types.str;
+            default = "mdi-server";
+            description = "Icon for the host";
+          };
+        };
+      });
+      default = hostsFromSpecs;
+      description = "Hosts to monitor with Glances. Auto-populated from nixosHostSpecs.";
+    };
+
+    services = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule {
+        options = {
+          name = lib.mkOption {
+            type = lib.types.str;
+            description = "Display name for the service";
+          };
+          description = lib.mkOption {
+            type = lib.types.str;
+            description = "Service description";
+          };
+          icon = lib.mkOption {
+            type = lib.types.str;
+            description = "Icon for the service (e.g., 'jellyfin.svg')";
+          };
+          category = lib.mkOption {
+            type = lib.types.str;
+            description = "Category for grouping (Arr, Media, Downloads, Content, Infrastructure, Monitoring)";
+          };
+          href = lib.mkOption {
+            type = lib.types.str;
+            description = "URL for the service";
+          };
+          widget = lib.mkOption {
+            type = lib.types.nullOr (lib.types.attrsOf lib.types.anything);
+            default = null;
+            description = "Optional widget configuration for API integration";
+          };
+        };
+      });
+      default = servicesFromSpecs;
+      description = "Services to display. Auto-populated from homepageServiceList and homepageManualServices.";
+    };
+
+    bookmarks = lib.mkOption {
+      type = lib.types.listOf lib.types.anything;
+      default = [];
+      description = "Bookmarks to display in the header";
+    };
+
     misc = lib.mkOption {
       default = [];
       type = lib.types.listOf (
@@ -25,6 +152,7 @@ in {
               };
               siteMonitor = lib.mkOption {
                 type = lib.types.str;
+                default = "";
               };
               icon = lib.mkOption {
                 type = lib.types.str;
@@ -33,12 +161,30 @@ in {
           }
         )
       );
+      description = "Miscellaneous services to display";
     };
   };
+
   config = lib.mkIf cfg.enable {
     services.glances.enable = true;
+
     services.${service} = {
       enable = true;
+      openFirewall = true;
+      # Include both with and without port for flexibility
+      allowedHosts = lib.concatStringsSep "," [
+        "localhost"
+        "localhost:${port}"
+        "127.0.0.1"
+        "127.0.0.1:${port}"
+        "admin"
+        "admin:${port}"
+        "admin.lan"
+        "admin.lan:${port}"
+        "192.168.5.98"
+        "192.168.5.98:${port}"
+        "${cfg.tailnetHostname}.${cfg.tailnetDomain}"
+      ];
       customCSS = ''
         body, html {
           font-family: SF Pro Display, Helvetica, Arial, sans-serif !important;
@@ -63,11 +209,22 @@ in {
           padding-bottom: 3rem;
         };
       '';
+
+      bookmarks = cfg.bookmarks;
+
       settings = {
+        # Dark theme settings
+        theme = "dark";
+        color = "slate";
+        cardBlur = "sm";
+        background = {
+          color = "rgb(30, 41, 59)"; # slate-800
+        };
+
         layout = [
           {
-            Glances = {
-              header = false;
+            Hosts = {
+              header = true;
               style = "row";
               columns = 4;
             };
@@ -91,7 +248,31 @@ in {
             };
           }
           {
-            Services = {
+            Content = {
+              header = true;
+              style = "column";
+            };
+          }
+          {
+            Infrastructure = {
+              header = true;
+              style = "column";
+            };
+          }
+          {
+            Monitoring = {
+              header = true;
+              style = "column";
+            };
+          }
+          {
+            "Smart Home" = {
+              header = true;
+              style = "column";
+            };
+          }
+          {
+            Misc = {
               header = true;
               style = "column";
             };
@@ -101,91 +282,69 @@ in {
         statusStyle = "dot";
         hideVersion = "true";
       };
+
       services = let
-        homepageCategories = [
-          "Arr"
-          "Media"
-          "Downloads"
-          "Services"
-          "Smart Home"
-        ];
-        hl = config.homelab.services;
-        homepageServices = x: (lib.attrsets.filterAttrs (
-            name: value: value ? homepage && value.homepage.category == x
-          )
-          homelab.services);
-      in
-        lib.lists.forEach homepageCategories (cat: {
-          "${cat}" =
-            lib.lists.forEach (lib.attrsets.mapAttrsToList (name: value: name) (homepageServices "${cat}"))
-            (x: {
-              "${hl.${x}.homepage.name}" = {
-                icon = hl.${x}.homepage.icon;
-                description = hl.${x}.homepage.description;
-                href = "https://${hl.${x}.url}";
-                siteMonitor = "https://${hl.${x}.url}";
+        # Group services by category
+        categories = ["Arr" "Media" "Downloads" "Content" "Infrastructure" "Monitoring"];
+
+        servicesByCategory = category:
+          lib.filterAttrs (_name: svc: svc.category == category) cfg.services;
+
+        # Convert a service config to homepage format
+        serviceToHomepage = _name: svc: {
+          "${svc.name}" =
+            {
+              icon = svc.icon;
+              description = svc.description;
+              href = svc.href;
+              siteMonitor = svc.href;
+            }
+            // lib.optionalAttrs (svc.widget != null) {
+              widget = svc.widget;
+            };
+        };
+
+        # Build homepage services list for a category
+        categoryServices = category: let
+          svcs = servicesByCategory category;
+        in
+          lib.mapAttrsToList serviceToHomepage svcs;
+
+        # Build Hosts section with links to Glances UI and system info widget
+        hostServices =
+          lib.mapAttrsToList (
+            _hostname: hostCfg: {
+              "${hostCfg.displayName}" = {
+                icon = hostCfg.icon;
+                href = "http://${hostCfg.ip}:${toString hostCfg.glancesPort}";
+                description = "System monitoring";
+                widget = {
+                  type = "glances";
+                  url = "http://${hostCfg.ip}:${toString hostCfg.glancesPort}";
+                  metric = "info";
+                  chart = false;
+                  version = 4;
+                };
               };
-            });
-        })
-        ++ [{Misc = cfg.misc;}]
-        ++ [
-          {
-            Glances = let
-              port = toString config.services.glances.port;
-            in [
-              {
-                Info = {
-                  widget = {
-                    type = "glances";
-                    url = "http://localhost:${port}";
-                    metric = "info";
-                    chart = false;
-                    version = 4;
-                  };
-                };
-              }
-              {
-                "CPU Temp" = {
-                  widget = {
-                    type = "glances";
-                    url = "http://localhost:${port}";
-                    metric = "sensor:Package id 0";
-                    chart = false;
-                    version = 4;
-                  };
-                };
-              }
-              {
-                Processes = {
-                  widget = {
-                    type = "glances";
-                    url = "http://localhost:${port}";
-                    metric = "process";
-                    chart = false;
-                    version = 4;
-                  };
-                };
-              }
-              {
-                Network = {
-                  widget = {
-                    type = "glances";
-                    url = "http://localhost:${port}";
-                    metric = "network:enp2s0";
-                    chart = false;
-                    version = 4;
-                  };
-                };
-              }
-            ];
-          }
-        ];
+            }
+          )
+          cfg.hosts;
+      in
+        # Build list of category objects
+        [{Hosts = hostServices;}]
+        ++ (lib.map (cat: {"${cat}" = categoryServices cat;}) categories)
+        ++ [{Misc = cfg.misc;}];
     };
-    services.caddy.virtualHosts."${homelab.baseDomain}" = {
-      useACMEHost = homelab.baseDomain;
-      extraConfig = ''
-        reverse_proxy http://127.0.0.1:${toString config.services.${service}.listenPort}
-      '';
+
+    # Expose homepage on tailnet
+    services.tsnsrv = {
+      enable = true;
+      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
+
+      services."${cfg.tailnetHostname}" = {
+        ephemeral = true;
+        toURL = "http://127.0.0.1:${port}/";
+      };
     };
   };
 }

@@ -45,6 +45,23 @@ in {
       default = null;
       description = "Configuration for audio Readarr instance.";
     };
+
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Readarr";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Book collection manager";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "readarr.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Arr";
+    };
   };
 
   config = lib.mkIf cfg.enable {

@@ -67,8 +67,24 @@ in {
 
     tailnetHostname = mkOption {
       type = types.str;
-      default = "";
-      description = "The tailnet hostname to expose the code-server as.";
+      default = "llm";
+      description = "The tailnet hostname to expose the service as.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Open WebUI";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "LLM chat interface";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "open-webui.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
     };
   };
 

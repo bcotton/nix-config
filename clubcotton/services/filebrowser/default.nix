@@ -47,6 +47,22 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "File Browser";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Web-based file manager";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "filebrowser.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {

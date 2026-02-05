@@ -24,6 +24,14 @@ in {
 
   nixpkgs.config.allowUnfree = true;
 
+  # Workaround for scripts expecting FHS paths (e.g., nix-openclaw uses coreutils)
+  system.activationScripts.binCompat = ''
+    mkdir -p /bin
+    for cmd in cat chmod chown cp ln ls mkdir mv rm; do
+      ln -sf ${pkgs.coreutils}/bin/$cmd /bin/$cmd
+    done
+  '';
+
   environment.systemPackages = with pkgs; [
     inputs.isd.packages."${system}".default
     alsa-utils

@@ -66,6 +66,22 @@ in {
       default = "forgejo";
       description = "Tailscale hostname for the service";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Forgejo";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Self-hosted Git forge";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "forgejo.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
+    };
 
     # Database configuration
     database = {

@@ -22,6 +22,22 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Sonarr";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "TV series collection manager";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "sonarr.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Arr";
+    };
   };
   config = lib.mkIf cfg.enable {
     nixpkgs.config.permittedInsecurePackages = [

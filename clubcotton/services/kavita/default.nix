@@ -59,6 +59,22 @@ in {
       default = [];
       description = "List of users who should have access to the Kavita libraries";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Kavita";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Digital library for comics, manga, and books";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "kavita.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Media";
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [

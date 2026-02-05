@@ -54,6 +54,22 @@ in {
       type = types.str;
       default = "${service}";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Paperless-ngx";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Document management system";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "paperless-ngx.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {

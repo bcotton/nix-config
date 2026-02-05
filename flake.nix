@@ -61,6 +61,11 @@
       url = "github:musnix/musnix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-openclaw = {
+      url = "github:bcotton/nix-clawbot/install-templates-again";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {flake-parts, ...}:

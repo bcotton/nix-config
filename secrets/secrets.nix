@@ -3,8 +3,14 @@
 let
   bcotton = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA51nSUvq7WevwvTYzD1S2xSr9QU7DVuYu3k/BGZ7vJ0 bob.cotton@gmail.com";
   tomcotton = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKW08oClThlF1YJ+ey3y8XKm9yX/45EtaM/W7hx5Yvzb tomcotton@Toms-MacBook-Pro.local";
+  larry = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJLuhL6Z0u8AxfjSJoN4qLj8pFQvz6RaC2yAJ4xuGWam larry@nix-02";
   users = [bcotton tomcotton];
+  anthropic_users = [bcotton tomcotton larry];
   just_bob = [bcotton];
+  just_larry = [larry bcotton];
+
+  # Bot host system keys (for decrypting bot secrets at boot)
+  botSystems = [nix-01 nix-02 nix-03];
 
   admin = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMjeiDeFxI7BcbjDxtPyeWfsUWBW2HKTyjT8/X0719+p root@nixos";
   condo-01 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINIpIbNwuXjaydV3NuE7+sb+jnSM3jsCb/+lCV+X6MYX root@nix-04";
@@ -25,6 +31,7 @@ let
 in {
   "atuin.age".publicKeys = users ++ systems;
   "atuin-database.age".publicKeys = users ++ systems;
+  "anthropic-api-key.age".publicKeys = anthropic_users ++ botSystems;
   "bcotton-atuin-key.age".publicKeys = users ++ systems;
   "borg-passphrase.age".publicKeys = users ++ systems;
   "condo-ha-token.age".publicKeys = users ++ systems;
@@ -67,4 +74,14 @@ in {
   "wallabag.age".publicKeys = users ++ systems;
   "webdav.age".publicKeys = users ++ systems;
   "wireless-config.age".publicKeys = users ++ systems;
+
+  # LLM API keys (shared by llm-users, decryptable on bot hosts)
+  "openai-api-key.age".publicKeys = anthropic_users ++ botSystems;
+  "openrouter-api-key.age".publicKeys = anthropic_users ++ botSystems;
+
+  # Bot secrets (larry + bot host systems for decryption)
+  "forgejo-password-larry.age".publicKeys = just_larry ++ botSystems;
+  "forgejo-token-larry.age".publicKeys = just_larry ++ botSystems;
+  "moltbot-telegram-token.age".publicKeys = just_larry ++ botSystems;
+  "moltbot-gateway-token.age".publicKeys = just_larry ++ botSystems;
 }

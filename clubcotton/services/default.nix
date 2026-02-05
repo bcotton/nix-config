@@ -14,6 +14,7 @@
     ./forgejo
     ./freshrss
     ./harmonia
+    ./homepage
     ./hyprland
     ./immich
     ./jellyfin

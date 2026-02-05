@@ -48,7 +48,9 @@
     };
 
     # SSH configuration for rsync.net
-    sshCommand = "ssh -i /var/run/agenix/syncoid-ssh-key";
+    # ServerAliveInterval sends keepalive every 60s to prevent connection timeouts
+    # ServerAliveCountMax=3 means disconnect after 3 missed keepalives (3 min)
+    sshCommand = "ssh -i /var/run/agenix/syncoid-ssh-key -o ServerAliveInterval=60 -o ServerAliveCountMax=3";
 
     # Borg version on rsync.net
     remotePath = "borg14";
