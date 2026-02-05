@@ -107,19 +107,19 @@
       };
       nix-01 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
         ip = "192.168.5.210";
         displayName = "Nix-01";
       };
       nix-02 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
         ip = "192.168.5.212";
         displayName = "Nix-02";
       };
       nix-03 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
         ip = "192.168.5.214";
         displayName = "Nix-03";
       };

@@ -55,6 +55,7 @@ in {
   "nix-builder-ssh-pub.age".publicKeys = users ++ systems;
   "nut-client.age".publicKeys = users ++ systems;
   "obsidian-bcotton.age".publicKeys = users ++ systems; # Uncomment after creating with: agenix -e obsidian-bcotton.age
+  "obsidian-natalya.age".publicKeys = users ++ systems;
   "open-webui-database.age".publicKeys = users ++ systems;
   "open-webui.age".publicKeys = users ++ systems;
   "paperless.age".publicKeys = users ++ systems;

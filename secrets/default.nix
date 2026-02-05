@@ -209,6 +209,15 @@ in {
     mode = "0400";
   };
 
+  age.secrets."obsidian-natalya" = lib.mkIf (config.services.clubcotton.obsidian.enable
+    && (config.services.clubcotton.obsidian.instances ? natalya)
+    && config.services.clubcotton.obsidian.instances.natalya.basicAuth.enable) {
+    file = ./obsidian-natalya.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   age.secrets."scanner-user-private-ssh-key" = lib.mkIf config.services.clubcotton.scanner.enable {
     file = ./scanner-user-private-ssh-key.age;
     owner = "scanner";

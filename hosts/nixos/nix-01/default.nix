@@ -75,6 +75,18 @@ in {
           environmentFile = config.age.secrets.obsidian-bcotton.path;
         };
       };
+      instances.natalya = {
+        httpPort = 13002;
+        httpsPort = 13003;
+        user = "natalya";
+        group = "users";
+        vaultDir = "/home/natalya/obsidian-vaults";
+        basicAuth = {
+          enable = true;
+          username = "natalya";
+          environmentFile = config.age.secrets.obsidian-natalya.path;
+        };
+      };
     };
   };
 
