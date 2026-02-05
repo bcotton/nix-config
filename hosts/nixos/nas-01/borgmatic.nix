@@ -72,5 +72,20 @@
       "*/node_modules"
       "*/.cache"
     ];
+
+    # Disable default checks (we override in extraConfig)
+    checks = [];
+
+    # Limit repository check duration to prevent rsync.net timeouts
+    # Check will resume where it left off on subsequent runs
+    extraConfig = {
+      checks = [
+        {
+          name = "repository";
+          max_duration = 300; # 5 minutes max per check run
+        }
+        {name = "archives";}
+      ];
+    };
   };
 }
