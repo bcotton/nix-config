@@ -20,6 +20,7 @@
     ./kavita
     ./navidrome
     ./nix-cache-proxy
+    ./obsidian
     ./nut-client
     ./nut-server
     ./open-webui
