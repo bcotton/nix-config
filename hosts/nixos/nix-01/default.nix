@@ -65,6 +65,7 @@ in {
         user = "bcotton";
         group = "users";
         vaultDir = "/home/bcotton/obsidian-vaults";
+        sshDir = "/home/bcotton/.ssh";
         # To enable HTTP Basic Auth:
         # 1. Create the secret: agenix -e secrets/obsidian-bcotton.age
         # 2. Add content: PASSWORD=your-secret-password

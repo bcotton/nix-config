@@ -67,6 +67,17 @@ in {
             description = "Tailscale hostname for the service";
           };
 
+          sshDir = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = ''
+              Path to SSH directory containing keys for git operations.
+              Will be mounted read-only at /config/.ssh in the container.
+              Can be the user's ~/.ssh or a dedicated directory with specific keys.
+            '';
+            example = "/home/bcotton/.ssh";
+          };
+
           basicAuth = {
             enable = mkOption {
               type = types.bool;
@@ -137,10 +148,12 @@ in {
                 CUSTOM_USER = instanceCfg.basicAuth.username;
               };
             environmentFiles = optional (instanceCfg.basicAuth.enable && instanceCfg.basicAuth.environmentFile != null) instanceCfg.basicAuth.environmentFile;
-            volumes = [
-              "${instanceCfg.configDir}:/config"
-              "${instanceCfg.vaultDir}:/vaults"
-            ];
+            volumes =
+              [
+                "${instanceCfg.configDir}:/config"
+                "${instanceCfg.vaultDir}:/vaults"
+              ]
+              ++ optional (instanceCfg.sshDir != null) "${instanceCfg.sshDir}:/config/.ssh:ro";
             ports = [
               "${toString instanceCfg.httpPort}:3000"
               "${toString instanceCfg.httpsPort}:3001"
