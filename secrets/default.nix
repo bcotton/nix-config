@@ -252,8 +252,8 @@ in {
   # Cloudflare Tunnel token for secure internet exposure
   age.secrets."cloudflare-tunnel-token" = lib.mkIf config.services.clubcotton.cloudflare-tunnel.enable {
     file = ./cloudflare-tunnel-token.age;
-    owner = "root";
-    group = "root";
+    owner = "cloudflared";
+    group = "cloudflared";
     mode = "0400";
   };
 

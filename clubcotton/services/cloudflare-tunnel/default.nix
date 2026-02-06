@@ -37,11 +37,21 @@ in {
         Type = "simple";
         Restart = "always";
         RestartSec = 5;
-        DynamicUser = true;
+        User = "cloudflared";
+        Group = "cloudflared";
         NoNewPrivileges = true;
         ProtectSystem = "strict";
         ProtectHome = true;
       };
     };
+
+    # Create dedicated user for cloudflared
+    users.users.cloudflared = {
+      isSystemUser = true;
+      group = "cloudflared";
+      description = "Cloudflare Tunnel daemon user";
+    };
+
+    users.groups.cloudflared = {};
   };
 }
