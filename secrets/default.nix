@@ -249,6 +249,14 @@ in {
     group = "root";
   };
 
+  # Cloudflare Tunnel token for secure internet exposure
+  age.secrets."cloudflare-tunnel-token" = lib.mkIf config.services.clubcotton.cloudflare-tunnel.enable {
+    file = ./cloudflare-tunnel-token.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   # Harmonia binary cache signing key
   age.secrets."harmonia-signing-key" = lib.mkIf config.services.clubcotton.harmonia.enable {
     file = ./harmonia-signing-key.age;
