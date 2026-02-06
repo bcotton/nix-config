@@ -3,6 +3,7 @@
   pkgs,
   lib,
   unstablePkgs,
+  crushPackage,
   inputs,
   ...
 }: {
@@ -221,6 +222,7 @@
     pnpm
     nodejs_22
     claude-code # Anthropic's Claude Code CLI
+    crushPackage # AI coding agent
 
     # Nix tools
     nil # nix LSP

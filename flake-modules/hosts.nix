@@ -45,6 +45,7 @@
         inherit inputs unstablePkgs hostName nixosHosts;
         localPackages = self.legacyPackages.${system}.localPackages;
         workmuxPackage = inputs.workmux.packages.${system}.default;
+        crushPackage = inputs.nix-ai-tools.packages.${system}.crush;
       };
     };
 
@@ -337,6 +338,7 @@
               inherit inputs unstablePkgs hostName nixosHosts;
               localPackages = self.legacyPackages.${system}.localPackages;
               workmuxPackage = inputs.workmux.packages.${system}.default;
+              crushPackage = inputs.nix-ai-tools.packages.${system}.crush;
             };
           }
           ../hosts/common/common-packages.nix
