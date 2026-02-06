@@ -29,8 +29,12 @@ in {
       wants = ["network-online.target"];
       wantedBy = ["multi-user.target"];
 
+      script = ''
+        exec ${pkgs.cloudflared}/bin/cloudflared tunnel --no-autoupdate run --token "$(cat ${cfg.tokenFile})"
+      '';
+
       serviceConfig = {
-        ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel --no-autoupdate run --token $(cat ${cfg.tokenFile})";
+        Type = "simple";
         Restart = "always";
         RestartSec = 5;
         DynamicUser = true;
