@@ -33,7 +33,7 @@
 
   # Firewall Configuration
   # TODO: Set to true once firewall rules are properly configured
-  firewallEnable = false;
+  firewallEnable = true;
 
   # Tailscale Configuration
   tailscaleEnable = true;
