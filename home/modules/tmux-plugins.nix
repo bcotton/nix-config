@@ -279,7 +279,7 @@ in {
         # tmux-powerkit configuration
         set -g @powerkit_theme 'tokyo-night'
         set -g @powerkit_theme_variant 'night'
-        set -g @powerkit_plugins 'datetime,battery,cpu,memory,git,kubernetes'
+        set -g @powerkit_plugins 'datetime,battery,cpu,memory,git'
         set -g @powerkit_session_icon 'auto'
         set -g @powerkit_transparent 'true'
         set -g @powerkit_options_key 'P'
