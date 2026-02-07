@@ -15,7 +15,6 @@
     sourceDirectories = [
       "/var/lib"
       "/backups/postgresql"
-      "/media/photos"
       "/media/documents"
       "/media/tomcotton/data"
       "/media/tomcotton/audio-library/SFX_Library/My_Exports"
