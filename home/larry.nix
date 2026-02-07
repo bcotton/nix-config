@@ -76,6 +76,14 @@
 
       # tea completion if available (source the file directly to avoid "Fetching" output)
       [[ -f ~/.config/tea/autocomplete.zsh ]] && PROG=tea _CLI_ZSH_AUTOCOMPLETE_HACK=1 source ~/.config/tea/autocomplete.zsh
+      # pnpm
+      export PNPM_HOME="/home/larry/.local/share/pnpm"
+      case ":$PATH:" in
+        *":$PNPM_HOME:"*) ;;
+        *) export PATH="$PNPM_HOME:$PATH" ;;
+      esac
+      # pnpm end
+
     '';
   };
 
