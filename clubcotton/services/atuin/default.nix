@@ -18,6 +18,12 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Atuin.";
+    };
     homepage.name = lib.mkOption {
       type = lib.types.str;
       default = "Atuin";
@@ -54,5 +60,7 @@ in {
         toURL = "http://0.0.0.0:${toString config.services.atuin.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [config.services.atuin.port];
   };
 }

@@ -11,6 +11,12 @@ in {
   options.services.clubcotton.obsidian = {
     enable = mkEnableOption "Obsidian containerized web instances";
 
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall ports for all Obsidian instances.";
+    };
+
     instances = mkOption {
       type = types.attrsOf (types.submodule ({name, ...}: {
         options = {
@@ -192,5 +198,9 @@ in {
         )
         cfg.instances;
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall (
+      concatMap (instanceCfg: [instanceCfg.httpPort instanceCfg.httpsPort]) (attrValues cfg.instances)
+    );
   };
 }

@@ -70,6 +70,12 @@ in {
       default = "llm";
       description = "The tailnet hostname to expose the service as.";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Open WebUI.";
+    };
     homepage.name = lib.mkOption {
       type = lib.types.str;
       default = "Open WebUI";
@@ -113,5 +119,7 @@ in {
         toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [config.services.open-webui.port];
   };
 }

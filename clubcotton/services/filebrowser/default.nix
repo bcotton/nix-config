@@ -47,6 +47,12 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Filebrowser.";
+    };
     homepage.name = lib.mkOption {
       type = lib.types.str;
       default = "File Browser";
@@ -97,5 +103,7 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

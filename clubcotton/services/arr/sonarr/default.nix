@@ -46,6 +46,7 @@ in {
     ];
     services.${service} = {
       enable = true;
+      openFirewall = true;
       user = clubcotton.user;
       group = clubcotton.group;
     };

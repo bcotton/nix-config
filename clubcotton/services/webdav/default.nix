@@ -85,6 +85,18 @@ in {
   options.services.clubcotton.webdav = {
     enable = mkEnableOption "WebDAV server";
 
+    port = mkOption {
+      type = types.port;
+      default = 6065;
+      description = "Port for WebDAV server to listen on.";
+    };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for WebDAV.";
+    };
+
     users = mkOption {
       type = types.attrsOf userModule;
       default = {};
@@ -136,7 +148,7 @@ in {
       group = "share";
       settings = {
         address = "0.0.0.0";
-        port = 6065;
+        port = cfg.port;
         prefix = "/";
         debug = "false";
         log = {
@@ -165,5 +177,7 @@ in {
           cfg.users;
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

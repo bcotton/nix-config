@@ -381,7 +381,12 @@ in {
       ServerAliveInterval 60
   '';
 
-  networking.firewall.enable = variables.firewallEnable;
+  networking.firewall = {
+    enable = variables.firewallEnable;
+    # CUPS printing, NFS, rpcbind
+    allowedTCPPorts = [631 2049 111];
+    allowedUDPPorts = [631];
+  };
   networking.hostId = variables.hostId;
 
   # CUPS PDF service for paperless consumption

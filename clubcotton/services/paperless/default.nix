@@ -122,5 +122,8 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    # Open firewall for Paperless (no openFirewall option in upstream module)
+    networking.firewall.allowedTCPPorts = [cfg.port];
   };
 }

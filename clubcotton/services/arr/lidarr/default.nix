@@ -42,6 +42,7 @@ in {
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
+      openFirewall = true;
       user = clubcotton.user;
       group = clubcotton.group;
       package = unstablePkgs.${service};

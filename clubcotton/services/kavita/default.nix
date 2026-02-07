@@ -59,6 +59,12 @@ in {
       default = [];
       description = "List of users who should have access to the Kavita libraries";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Kavita.";
+    };
     homepage.name = lib.mkOption {
       type = lib.types.str;
       default = "Kavita";
@@ -98,6 +104,8 @@ in {
           IpAddresses = concatStringsSep "," cfg.bindAddresses;
         };
       };
+
+      networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
     }
 
     # Note: Tailscale/tsnsrv integration should be configured separately

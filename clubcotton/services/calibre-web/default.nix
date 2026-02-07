@@ -42,6 +42,7 @@ in {
   config = lib.mkIf cfg.enable {
     services.calibre-web = {
       enable = true;
+      openFirewall = true;
       listen = {
         ip = "0.0.0.0";
         port = 8112;
