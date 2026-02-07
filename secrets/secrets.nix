@@ -34,6 +34,7 @@ in {
   "anthropic-api-key.age".publicKeys = anthropic_users ++ botSystems;
   "bcotton-atuin-key.age".publicKeys = users ++ systems;
   "borg-passphrase.age".publicKeys = users ++ systems;
+  "cloudflare-tunnel-token.age".publicKeys = users ++ systems;
   "condo-ha-token.age".publicKeys = users ++ systems;
   "freshrss.age".publicKeys = users ++ systems;
   "freshrss-database.age".publicKeys = users ++ systems;

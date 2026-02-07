@@ -2,3 +2,14 @@ modules:
   http_2xx:
     prober: http
     timeout: 20s
+  dns_nas01:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "nas-01.lan"
+      query_type: "A"
+      valid_rcodes:
+        - NOERROR
+      validate_answer_rrs:
+        fail_if_not_matches_regexp:
+          - ".*192\\.168\\.5\\.42.*"

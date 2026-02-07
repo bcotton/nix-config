@@ -29,6 +29,17 @@ in {
     code-server.enable = true;
     nut-client.enable = true;
     bonob.enable = true;
+    # Cloudflare Tunnel for secure internet exposure
+    # To enable:
+    # 1. Create tunnel in Cloudflare Zero Trust dashboard
+    # 2. Create secret: agenix -e secrets/cloudflare-tunnel-token.age
+    # 3. Paste the tunnel token
+    # 4. Uncomment below and rebuild
+    cloudflare-tunnel = {
+      enable = true;
+      tokenFile = config.age.secrets.cloudflare-tunnel-token.path;
+    };
+
     forgejo-runner = {
       enable = true;
       instances = {

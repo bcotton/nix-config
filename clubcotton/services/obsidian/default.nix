@@ -184,21 +184,6 @@ in {
       )
       cfg.instances;
 
-    services.tsnsrv = {
-      enable = true;
-      defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-
-      services =
-        mapAttrs' (
-          name: instanceCfg:
-            nameValuePair instanceCfg.tailnetHostname {
-              ephemeral = true;
-              toURL = "http://127.0.0.1:${toString instanceCfg.httpPort}/";
-            }
-        )
-        cfg.instances;
-    };
-
     networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall (
       concatMap (instanceCfg: [instanceCfg.httpPort instanceCfg.httpsPort]) (attrValues cfg.instances)
     );

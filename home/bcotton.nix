@@ -6,6 +6,7 @@
   hostName ? "unknown",
   nixosHosts ? [],
   workmuxPackage,
+  crushPackage,
   inputs,
   ...
 }: {
@@ -625,6 +626,7 @@
 
       inputs.opencode.packages.${pkgs.system}.default
       inputs.beads.packages.${pkgs.system}.default
+      crushPackage
 
       procs
       unstablePkgs.sesh
