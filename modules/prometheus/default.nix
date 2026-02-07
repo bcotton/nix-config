@@ -160,6 +160,36 @@ in {
           ];
         }
         {
+          job_name = "dns_resolution";
+          metrics_path = "/probe";
+          params = {
+            module = ["dns_nas01"];
+          };
+          static_configs = [
+            {
+              targets = ["192.168.5.220:53"]; # dns-01.lan
+              labels = {
+                check = "nas-01.lan";
+                expected_ip = "192.168.5.42";
+              };
+            }
+          ];
+          relabel_configs = [
+            {
+              source_labels = ["__address__"];
+              target_label = "__param_target";
+            }
+            {
+              source_labels = ["__param_target"];
+              target_label = "dns_server";
+            }
+            {
+              target_label = "__address__";
+              replacement = "127.0.0.1:9115"; # blackbox exporter
+            }
+          ];
+        }
+        {
           job_name = "homeassistant_node";
           scrape_interval = "30s";
           static_configs = [
