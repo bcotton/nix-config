@@ -76,9 +76,11 @@
     # Disable default checks (we override in extraConfig)
     checks = [];
 
+    # Only check the most recent archive to avoid long-running checks
+    checkLast = 1;
+
     # Limit check duration to prevent rsync.net timeouts
     # Repository check resumes where it left off on subsequent runs
-    # Archives check limited to last 1 to avoid long-running checks
     extraConfig = {
       checks = [
         {
@@ -87,7 +89,6 @@
         }
         {
           name = "archives";
-          check_last = 1; # Only check the most recent archive
         }
       ];
     };
