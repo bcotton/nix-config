@@ -76,15 +76,19 @@
     # Disable default checks (we override in extraConfig)
     checks = [];
 
-    # Limit repository check duration to prevent rsync.net timeouts
-    # Check will resume where it left off on subsequent runs
+    # Limit check duration to prevent rsync.net timeouts
+    # Repository check resumes where it left off on subsequent runs
+    # Archives check limited to last 1 to avoid long-running checks
     extraConfig = {
       checks = [
         {
           name = "repository";
-          max_duration = 300; # 5 minutes max per check run
+          max_duration = 180; # 3 minutes max
         }
-        {name = "archives";}
+        {
+          name = "archives";
+          check_last = 1; # Only check the most recent archive
+        }
       ];
     };
   };
