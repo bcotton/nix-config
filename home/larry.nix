@@ -44,6 +44,7 @@
 
       # Git shortcuts
       gs = "git status";
+      gst = "git status";
       gd = "git diff";
       gdc = "git diff --cached";
       gl = "git log --oneline -20";
@@ -220,6 +221,7 @@
     # Git tools
     delta # beautiful diffs
     git-absorb # automatic fixup commits
+    lazygit # git UI
 
     # Forgejo/Git workflow
     tea # Gitea/Forgejo CLI
