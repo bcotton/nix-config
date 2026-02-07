@@ -35,10 +35,11 @@ in {
     # 2. Create secret: agenix -e secrets/cloudflare-tunnel-token.age
     # 3. Paste the tunnel token
     # 4. Uncomment below and rebuild
-    # cloudflare-tunnel = {
-    #   enable = true;
-    #   tokenFile = config.age.secrets.cloudflare-tunnel-token.path;
-    # };
+    cloudflare-tunnel = {
+      enable = true;
+      tokenFile = config.age.secrets.cloudflare-tunnel-token.path;
+    };
+
     forgejo-runner = {
       enable = true;
       instances = {
