@@ -64,7 +64,7 @@
         inherit pkgs;
       };
 
-      garage = pkgs.nixosTest (import ../modules/garage/test.nix {
+      garage = pkgs.nixosTest (import ../clubcotton/services/garage/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 

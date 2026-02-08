@@ -13,6 +13,7 @@
     ./filebrowser
     ./forgejo
     ./freshrss
+    ./garage
     ./harmonia
     ./hyprland
     ./immich
