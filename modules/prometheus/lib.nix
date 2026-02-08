@@ -1,5 +1,8 @@
 # Library of functions for generating Prometheus scrape configurations
 {lib}: let
+  # Import host variables library for reading per-host settings
+  commonLib = import ../../hosts/common/lib.nix;
+
   # Common domain suffix for tailscale services
   tailscaleDomain = ".bobtail-clownfish.ts.net";
 
@@ -40,20 +43,34 @@
   #   ename: The name of the exporter
   #   ecfg: The exporter's configuration
   # Returns: Scrape configuration for the exporter
-  mkScrapeConfigExporterF = hostname: ename: ecfg: {
+  # Now includes host_up_monitoring label for node exporters
+  mkScrapeConfigExporterF = hostname: ename: ecfg: let
+    variables = commonLib.getHostVariables hostname;
+    hostUpMonitoring = variables.hostUpMonitoringEnable or true;
+  in {
     job_name = "${hostname}-${ename}";
     scrape_interval = "30s";
     static_configs = [{targets = ["${hostname}:${toString ecfg.port}"];}];
-    relabel_configs = [
-      {
-        target_label = "instance";
-        replacement = "${hostname}";
-      }
-      {
-        target_label = "job";
-        replacement = "${ename}";
-      }
-    ];
+    relabel_configs =
+      [
+        {
+          target_label = "instance";
+          replacement = "${hostname}";
+        }
+        {
+          target_label = "job";
+          replacement = "${ename}";
+        }
+      ]
+      ++ (lib.optionals (ename == "node") [
+        {
+          target_label = "host_up_monitoring";
+          replacement =
+            if hostUpMonitoring
+            then "true"
+            else "false";
+        }
+      ]);
   };
 
   /*

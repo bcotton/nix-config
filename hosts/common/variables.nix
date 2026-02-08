@@ -2,6 +2,10 @@
   # Host-specific variables that can be imported and used across modules
   # Default values - override in hosts/<type>/<hostname>/variables.nix
 
+  # Host Up Monitoring - enable HostDown alerts for this host
+  # Set to false for hosts where downtime is expected or not critical
+  hostUpMonitoringEnable = true;
+
   # Bot hosts - hosts that run AI/LLM bot services (moltbot, etc.)
   botHosts = ["nix-01" "nix-02" "nix-03"];
 
