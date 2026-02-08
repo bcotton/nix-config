@@ -4,7 +4,7 @@
   ...
 }: {
   flake = let
-    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko tsnsrv vscode-server nixos-generators nix-builder-config musnix;
+    inherit (inputs) nixpkgs nixpkgs-unstable home-manager agenix nix-darwin disko disko-zfs tsnsrv vscode-server nixos-generators nix-builder-config musnix;
 
     # Package set generators
     genPkgs = system:
@@ -52,6 +52,7 @@
     # External modules used across NixOS systems
     externalNixOSModules = [
       inputs.disko.nixosModules.disko
+      inputs.disko-zfs.nixosModules.default
       inputs.tsnsrv.nixosModules.default
       inputs.vscode-server.nixosModules.default
       inputs.home-manager.nixosModules.home-manager

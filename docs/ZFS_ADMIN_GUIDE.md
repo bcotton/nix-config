@@ -177,6 +177,55 @@ zpool get all <poolname>
 
 ### Dataset Management
 
+#### Declarative Management with disko-zfs
+
+Datasets on nas-01 are managed declaratively via [disko-zfs](https://github.com/numtide/disko-zfs) in `hosts/nixos/nas-01/default.nix`. This means dataset creation and property enforcement happen automatically at system activation time.
+
+**How it works**:
+- disko-zfs auto-detects all disko-defined pools (rpool, ssdpool, mediapool, backuppool)
+- At activation, it creates any missing datasets and enforces declared properties
+- Changes are previewed via `nixos-rebuild dry-activate` before applying
+
+**Critical safety warnings**:
+
+1. **disko-zfs WILL DESTROY undeclared datasets.** Every dataset in a disko-managed pool must be listed in the `disko.zfs.settings.datasets` config. If you create a dataset manually with `zfs create`, you must immediately add it to the config or it will be destroyed on next activation.
+
+2. **disko-zfs WILL UNSET undeclared properties.** Any locally-set property (mountpoint, reservation, quota, com.sun:auto-snapshot, etc.) not declared in the config will be `zfs inherit`'d on next activation, reverting to the parent's value. For example, an undeclared `mountpoint` on `mediapool/local/photos` would revert from `/media/photos` to `none`.
+
+**Adding a new dataset**:
+```nix
+# In hosts/nixos/nas-01/default.nix, inside disko.zfs.settings.datasets:
+"mediapool/local/new-service" = {
+  properties = {
+    mountpoint = "/media/new-service";
+    compression = "lz4";
+    "com.sun:auto-snapshot" = "true";
+  };
+};
+```
+
+Then:
+```bash
+# Preview changes (ALWAYS do this first)
+sudo nixos-rebuild dry-activate --flake '.#nas-01'
+
+# Verify the output shows:
+#   - "zfs create mediapool/local/new-service" in Additive Commands
+#   - NO unexpected entries in Destructive Commands or zfs inherit lines
+
+# Apply
+sudo nixos-rebuild switch --flake '.#nas-01'
+```
+
+**Auditing current state vs config**:
+```bash
+# Show all locally-set properties (these must all be in the config)
+zfs get -s local -o name,property,value all ssdpool mediapool backuppool | grep -v '@'
+
+# Show all datasets (these must all be listed in the config)
+zfs list -t filesystem -o name -H -r ssdpool mediapool backuppool
+```
+
 #### Key Dataset Properties
 ```bash
 # View dataset properties
@@ -1015,13 +1064,18 @@ zfs send -w -i @previous @latest rpool/local/lib | \
 - Quarterly full pool recovery simulations
 - Document and test all recovery procedures
 
-#### 11. Configuration Management
+#### 11. Configuration Management ✅ IMPLEMENTED
 **Issue**: Manual configuration changes risk inconsistency
-**Enhancement**: Fully declarative ZFS management
+**Solution**: disko-zfs module integrated (2026-02-08)
 
-**Implementation**:
-- Extend NixOS modules to manage all ZFS properties
-- Implement configuration drift detection
+**What was done**:
+- Added `disko-zfs` flake input with disko/nixpkgs/flake-parts follows
+- NixOS module wired into all hosts via `externalNixOSModules` in `flake-modules/hosts.nix`
+- All nas-01 datasets declared in `hosts/nixos/nas-01/default.nix` with full property definitions
+- Properties match live state exactly (mountpoint, recordsize, quota, reservation, com.sun:auto-snapshot, etc.)
+
+**Remaining**:
+- Extend to other ZFS hosts (natalya-01, condo-01, nix-04) as needed
 - Automate pool feature upgrades
 
 ### Implementation Timeline

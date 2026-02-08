@@ -72,6 +72,23 @@ in {
 
   services.clubcotton.harmonia = {
     bindAddress = "0.0.0.0";
+    zfsDataset = {
+      name = "ssdpool/local/nix-cache";
+      properties = {
+        quota = "500G";
+        mountpoint = "/ssdpool/local/nix-cache";
+      };
+    };
+  };
+
+  services.clubcotton.nix-cache-proxy.zfsDataset = {
+    name = "ssdpool/local/nix-cache-proxy";
+    properties = {
+      quota = "100G";
+      mountpoint = "/ssdpool/local/nix-cache-proxy";
+      compression = "lz4";
+      atime = "off";
+    };
   };
 
   # Configure distributed build fleet
@@ -170,6 +187,14 @@ in {
 
   services.clubcotton.postgresql = {
     dataDir = "/db/postgresql/16";
+    zfsDataset = {
+      name = "ssdpool/local/database";
+      properties = {
+        recordsize = "8K";
+        mountpoint = "/db";
+        "com.sun:auto-snapshot" = "true";
+      };
+    };
     immich = {
       enable = true;
       passwordFile = config.age.secrets."immich-database".path;
@@ -327,6 +352,13 @@ in {
     domain = "nas-01";
     customPath = "/ssdpool/local/forgejo";
     tailnetHostname = "forgejo";
+    zfsDataset = {
+      name = "ssdpool/local/forgejo";
+      properties = {
+        mountpoint = "/ssdpool/local/forgejo";
+        "com.sun:auto-snapshot" = "true";
+      };
+    };
     database = {
       enable = true;
       # Database is managed by services.clubcotton.postgresql.forgejo
@@ -462,6 +494,153 @@ in {
   users.users.tomcotton.extraGroups = ["lp"];
   # Add cups user to paperless group for better file access
   users.users.cups.extraGroups = ["paperless"];
+
+  # Declarative ZFS dataset management via disko-zfs
+  # WARNING: disko-zfs auto-detects disko pools and will DESTROY undeclared
+  # datasets and INHERIT (unset) undeclared properties.
+  # Every existing dataset and its locally-set properties must be declared.
+  # Always run `nixos-rebuild dry-activate` before switching.
+  disko.zfs = {
+    enable = true;
+    settings.datasets = {
+      # --- ssdpool datasets ---
+      # NOTE: ssdpool/local/database, forgejo, nix-cache, nix-cache-proxy
+      # are declared by their respective service modules via zfsDataset option
+      "ssdpool/local" = {};
+      "ssdpool/local/reserved" = {
+        properties = {
+          reservation = "200G";
+          mountpoint = "none";
+        };
+      };
+
+      # --- mediapool datasets ---
+      "mediapool/local" = {};
+      "mediapool/local/books" = {
+        properties = {
+          mountpoint = "/media/books";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/documents" = {
+        properties = {
+          mountpoint = "/media/documents";
+          "com.sun:auto-snapshot" = "true";
+          "org.torsion.borgmatic:backup" = "auto";
+        };
+      };
+      "mediapool/local/movies" = {
+        properties = {
+          recordsize = "1M";
+          mountpoint = "/media/movies";
+          sharenfs = "rw=@192.168.5.0/24,sync,root_squash,no_subtree_check";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/music" = {
+        properties = {
+          recordsize = "1M";
+          mountpoint = "/media/music";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/photos" = {
+        properties.mountpoint = "/media/photos";
+      };
+      "mediapool/local/reserved" = {
+        properties = {
+          reservation = "600G";
+          mountpoint = "none";
+        };
+      };
+      "mediapool/local/shows" = {
+        properties = {
+          recordsize = "1M";
+          mountpoint = "/media/shows";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/tomcotton" = {
+        properties = {
+          mountpoint = "/media/tomcotton";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/tomcotton/audio-library" = {
+        properties = {
+          mountpoint = "/media/tomcotton/audio-library";
+          canmount = "on";
+          "com.sun:auto-snapshot" = "true";
+          "org.torsion.borgmatic:backup" = "auto";
+        };
+      };
+      "mediapool/local/tomcotton/cold-data" = {
+        properties = {
+          mountpoint = "/media/tomcotton/cold-data";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "mediapool/local/tomcotton/data" = {
+        properties = {
+          mountpoint = "/media/tomcotton/data";
+          "com.sun:auto-snapshot" = "true";
+          "org.torsion.borgmatic:backup" = "auto";
+        };
+      };
+      "mediapool/local/webdav" = {
+        properties.mountpoint = "/media/webdav";
+      };
+      "mediapool/local/youtube" = {
+        properties.mountpoint = "/media/youtube";
+      };
+
+      # --- backuppool datasets ---
+      "backuppool/local" = {
+        properties.mountpoint = "none";
+      };
+      "backuppool/local/backups" = {
+        properties = {
+          recordsize = "1M";
+          mountpoint = "legacy";
+          "com.sun:auto-snapshot" = "true";
+        };
+      };
+      "backuppool/local/bcotton" = {
+        properties.mountpoint = "/backups/bcotton";
+      };
+      "backuppool/local/cheryl" = {
+        properties.mountpoint = "/backups/cheryl";
+      };
+      "backuppool/local/nas-01" = {};
+      "backuppool/local/nas-01/database" = {};
+      "backuppool/local/nas-01/documents" = {};
+      "backuppool/local/nas-01/photos" = {};
+      "backuppool/local/nas-01/tomcotton-audio-library" = {};
+      "backuppool/local/nas-01/tomcotton-data" = {};
+      "backuppool/local/nas-01/var-lib" = {};
+      "backuppool/local/postgresql" = {
+        properties = {
+          mountpoint = "/backups/postgresql";
+          "org.torsion.borgmatic:backup" = "auto";
+        };
+      };
+      "backuppool/local/reserved" = {
+        properties = {
+          reservation = "600G";
+          mountpoint = "none";
+        };
+      };
+      "backuppool/local/tomcotton" = {
+        properties.mountpoint = "/backups/tomcotton";
+      };
+      "backuppool/local/tomcotton/toms-MBP" = {
+        properties.mountpoint = "/backups/tomcotton/toms-MBP";
+      };
+      "backuppool/local/tomcotton/toms-mini" = {
+        properties.mountpoint = "/backups/tomcotton/toms-mini";
+      };
+    };
+  };
 
   clubcotton.zfs_mirrored_root = {
     enable = true;

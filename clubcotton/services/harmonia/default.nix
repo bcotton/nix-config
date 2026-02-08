@@ -63,9 +63,34 @@ in {
       type = lib.types.str;
       default = "Infrastructure";
     };
+
+    zfsDataset = mkOption {
+      type = types.nullOr (types.submodule {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "ZFS dataset name (e.g. ssdpool/local/nix-cache)";
+          };
+          properties = mkOption {
+            type = types.attrsOf types.str;
+            default = {};
+            description = "ZFS properties to enforce on the dataset";
+          };
+        };
+      });
+      default = null;
+      description = "Optional ZFS dataset to declare via disko-zfs for this service's storage";
+    };
   };
 
   config = mkIf cfg.enable {
+    # Declare ZFS dataset if configured
+    disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
+      ${cfg.zfsDataset.name} = {
+        inherit (cfg.zfsDataset) properties;
+      };
+    };
+
     # Reference the agenix secret by default if no explicit path provided
     services.harmonia = {
       enable = true;

@@ -58,9 +58,34 @@ in {
       default = "nix-cache";
       description = "The tailnet hostname to expose the cache proxy as";
     };
+
+    zfsDataset = mkOption {
+      type = types.nullOr (types.submodule {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "ZFS dataset name (e.g. ssdpool/local/nix-cache-proxy)";
+          };
+          properties = mkOption {
+            type = types.attrsOf types.str;
+            default = {};
+            description = "ZFS properties to enforce on the dataset";
+          };
+        };
+      });
+      default = null;
+      description = "Optional ZFS dataset to declare via disko-zfs for this service's storage";
+    };
   };
 
   config = mkIf cfg.enable {
+    # Declare ZFS dataset if configured
+    disko.zfs.settings.datasets = lib.mkIf (cfg.zfsDataset != null) {
+      ${cfg.zfsDataset.name} = {
+        inherit (cfg.zfsDataset) properties;
+      };
+    };
+
     # Ensure cache directory exists using tmpfiles
     systemd.tmpfiles.rules = [
       "d ${cfg.cachePath} 0755 nginx nginx - -"
