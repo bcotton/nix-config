@@ -273,6 +273,14 @@ in {
     mode = "0400";
   };
 
+  # Garage RPC secret key
+  age.secrets."garage-rpc-secret" = lib.mkIf config.services.clubcotton.garage.enable {
+    file = ./garage-rpc-secret.age;
+    owner = "garage";
+    group = "garage";
+    mode = "0400";
+  };
+
   # Harmonia binary cache signing key
   age.secrets."harmonia-signing-key" = lib.mkIf config.services.clubcotton.harmonia.enable {
     file = ./harmonia-signing-key.age;

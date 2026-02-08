@@ -44,6 +44,7 @@ in {
   "forgejo-db-password.age".publicKeys = users ++ systems;
   "forgejo-database.age".publicKeys = users ++ systems;
   "forgejo-runner-token.age".publicKeys = users ++ systems;
+  "garage-rpc-secret.age".publicKeys = users ++ systems;
   "grafana-cloud.age".publicKeys = users ++ systems;
   "harmonia-signing-key.age".publicKeys = users ++ systems;
   "homeassistant-token.age".publicKeys = users ++ systems;

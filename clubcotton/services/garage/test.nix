@@ -8,7 +8,7 @@
       ...
     }: {
       imports = [
-        ./default.nix
+        ./service.nix
       ];
 
       # Create RPC secret for testing with proper permissions
@@ -23,7 +23,7 @@
       # Configure Garage with test settings
       services.clubcotton.garage = {
         enable = true;
-        replicationMode = "1"; # Single node, no replication
+        replicationFactor = 1; # Single node, no replication
         dataDir = "/var/lib/garage/data";
         metadataDir = "/var/lib/garage/meta";
         s3ApiBindAddr = "0.0.0.0:3900";
