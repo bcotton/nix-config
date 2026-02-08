@@ -1,3 +1,3 @@
 {
-  hostUpMonitoringEnable = false;
+  shouldScrapeMetrics = false;
 }

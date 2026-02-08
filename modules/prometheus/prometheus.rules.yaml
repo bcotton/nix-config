@@ -44,7 +44,7 @@ groups:
       summary: "Borg missing backup"
       description: "The instance {{ $labels.instance }} has not created a backup of the repo {{ $labels.repository }} in the last {{ $value }} seconds"
   - alert: HostDown
-    expr: up{job="node", host_up_monitoring="true"} == 0
+    expr: up{job="node"} == 0
     for: 15m
     labels:
       severity: critical

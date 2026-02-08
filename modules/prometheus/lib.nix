@@ -25,7 +25,10 @@
   #   hostName: The name of the host to check
   #   host: The NixOS configuration for the host
   # Returns: Attribute set of enabled exporters and their configurations
+  #          Returns empty set if shouldScrapeMetrics is false for the host
   enabledExportersF = hostName: host: let
+    variables = commonLib.getHostVariables hostName;
+    shouldScrape = variables.shouldScrapeMetrics or true;
     exporters = host.config.services.prometheus.exporters;
     mkExporter = name:
       if
@@ -35,7 +38,9 @@
       then {${name} = exporters.${name};}
       else {};
   in
-    lib.foldl' (acc: name: acc // (mkExporter name)) {} monitoredExporters;
+    if shouldScrape
+    then lib.foldl' (acc: name: acc // (mkExporter name)) {} monitoredExporters
+    else {};
 
   # Build the scrape config for a specific exporter on a host
   # Args:
@@ -43,34 +48,20 @@
   #   ename: The name of the exporter
   #   ecfg: The exporter's configuration
   # Returns: Scrape configuration for the exporter
-  # Now includes host_up_monitoring label for node exporters
-  mkScrapeConfigExporterF = hostname: ename: ecfg: let
-    variables = commonLib.getHostVariables hostname;
-    hostUpMonitoring = variables.hostUpMonitoringEnable or true;
-  in {
+  mkScrapeConfigExporterF = hostname: ename: ecfg: {
     job_name = "${hostname}-${ename}";
     scrape_interval = "30s";
     static_configs = [{targets = ["${hostname}:${toString ecfg.port}"];}];
-    relabel_configs =
-      [
-        {
-          target_label = "instance";
-          replacement = "${hostname}";
-        }
-        {
-          target_label = "job";
-          replacement = "${ename}";
-        }
-      ]
-      ++ (lib.optionals (ename == "node") [
-        {
-          target_label = "host_up_monitoring";
-          replacement =
-            if hostUpMonitoring
-            then "true"
-            else "false";
-        }
-      ]);
+    relabel_configs = [
+      {
+        target_label = "instance";
+        replacement = "${hostname}";
+      }
+      {
+        target_label = "job";
+        replacement = "${ename}";
+      }
+    ];
   };
 
   /*
@@ -84,8 +75,12 @@
   #   hostName: The name of the host to check
   #   host: The NixOS configuration for the host
   # Returns: Boolean indicating if tailscale is enabled
-  enabledTailscaleF = hostName: host:
-    if host.config.services.clubcotton.services.tailscale.enable or false
+  #          Returns false if shouldScrapeMetrics is false for the host
+  enabledTailscaleF = hostName: host: let
+    variables = commonLib.getHostVariables hostName;
+    shouldScrape = variables.shouldScrapeMetrics or true;
+  in
+    if shouldScrape && (host.config.services.clubcotton.services.tailscale.enable or false)
     then true
     else false;
 
