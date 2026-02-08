@@ -5,7 +5,7 @@
   ...
 }: {
   services.clubcotton.borgmatic = {
-    enable = true;
+    enable = false;
     verbosity = 2;
 
     # Enable Prometheus metrics

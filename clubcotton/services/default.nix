@@ -29,6 +29,7 @@
     ./open-webui
     ./paperless
     ./pinchflat
+    ./restic
     ./roon-server
     ./sabnzbd
     ./scanner

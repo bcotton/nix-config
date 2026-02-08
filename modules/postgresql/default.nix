@@ -85,9 +85,34 @@ in {
         A file containing SQL statements to execute on first startup.
       '';
     };
+
+    zfsDataset = mkOption {
+      type = types.nullOr (types.submodule {
+        options = {
+          name = mkOption {
+            type = types.str;
+            description = "ZFS dataset name (e.g. ssdpool/local/database)";
+          };
+          properties = mkOption {
+            type = types.attrsOf types.str;
+            default = {};
+            description = "ZFS properties to enforce on the dataset";
+          };
+        };
+      });
+      default = null;
+      description = "Optional ZFS dataset to declare via disko-zfs for PostgreSQL storage";
+    };
   };
 
   config = mkIf cfg.enable {
+    # Declare ZFS dataset if configured
+    disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
+      ${cfg.zfsDataset.name} = {
+        inherit (cfg.zfsDataset) properties;
+      };
+    };
+
     services.postgresql = {
       enable = true;
       package = cfg.package;

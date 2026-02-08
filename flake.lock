@@ -106,6 +106,32 @@
         "type": "github"
       }
     },
+    "disko-zfs": {
+      "inputs": {
+        "disko": [
+          "disko"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1770321885,
+        "narHash": "sha256-vstPxkv5z3CINTcgOUE6GLeoDkoUkNSzJRNRTPnxPXo=",
+        "owner": "numtide",
+        "repo": "disko-zfs",
+        "rev": "0b19393c25f2abc91b08a492f2650aadc34b91eb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "disko-zfs",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -804,6 +830,7 @@
         "agenix": "agenix",
         "beads": "beads",
         "disko": "disko",
+        "disko-zfs": "disko-zfs",
         "flake-parts": "flake-parts",
         "ghostty": "ghostty",
         "home-manager": "home-manager_3",

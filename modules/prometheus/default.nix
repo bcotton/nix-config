@@ -94,6 +94,16 @@ in {
           ];
         }
         {
+          job_name = "restic";
+          scrape_interval = "5m"; # Check every 5 minutes - backups run daily
+          scrape_timeout = "30s";
+          static_configs = [
+            {
+              targets = ["nas-01:9997"];
+            }
+          ];
+        }
+        {
           job_name = "unpoller";
           static_configs = [
             {
