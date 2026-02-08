@@ -119,6 +119,19 @@ in {
       '';
     };
 
+    adminApiBindAddr = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "0.0.0.0:3903";
+      description = "Address to bind for admin API (metrics, health). Disabled when null.";
+    };
+
+    metricsTokenFile = mkOption {
+      type = types.nullOr types.path;
+      default = null;
+      description = "Path to file containing bearer token for /metrics endpoint. Unauthenticated when null.";
+    };
+
     openFirewall = mkOption {
       type = types.bool;
       default = true;
@@ -188,6 +201,15 @@ in {
           bind_addr = cfg.s3WebBindAddr;
           root_domain = cfg.s3WebRootDomain;
         };
+      }
+      // optionalAttrs (cfg.adminApiBindAddr != null) {
+        admin =
+          {
+            api_bind_addr = cfg.adminApiBindAddr;
+          }
+          // optionalAttrs (cfg.metricsTokenFile != null) {
+            metrics_token_file = toString cfg.metricsTokenFile;
+          };
       });
 
     # Create data and metadata directories
@@ -259,7 +281,8 @@ in {
           (toInt (elemAt (splitString ":" cfg.s3ApiBindAddr) 1)) # S3 API port
           (toInt (elemAt (splitString ":" cfg.rpcBindAddr) 1)) # RPC port
         ]
-        ++ optional (cfg.s3WebBindAddr != null) (toInt (elemAt (splitString ":" cfg.s3WebBindAddr) 1)); # Web port
+        ++ optional (cfg.s3WebBindAddr != null) (toInt (elemAt (splitString ":" cfg.s3WebBindAddr) 1)) # Web port
+        ++ optional (cfg.adminApiBindAddr != null) (toInt (elemAt (splitString ":" cfg.adminApiBindAddr) 1)); # Admin API port
     };
 
     environment.systemPackages = [cfg.package];

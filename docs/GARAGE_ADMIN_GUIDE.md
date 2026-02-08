@@ -258,16 +258,78 @@ garage status
 garage stats
 ```
 
-### Future Plans
+### Prometheus Metrics
 
-- **Prometheus metrics**: Garage supports an admin API with metrics endpoint. Enable by adding `admin` section to the TOML config with `api_bind_addr` and `metrics_token`. The module could be extended with:
-  ```nix
-  adminApiBindAddr = "127.0.0.1:3903";
-  metricsToken = config.age.secrets."garage-metrics-token".path;
-  ```
-- **Grafana dashboard**: Community dashboards available for Garage metrics (bucket sizes, request rates, error rates, replication lag)
-- **Alerting**: Monitor for disk usage on the ZFS dataset, service restarts, and S3 error rates via Prometheus alertmanager
-- **Health check**: Add a simple HTTP check against the S3 API endpoint (expects 403/404 when no auth provided)
+Garage exposes native Prometheus metrics via the admin API on port 3903.
+
+**Endpoints:**
+- **Metrics**: `http://nas-01:3903/metrics` (Bearer token required)
+- **Health**: `http://nas-01:3903/health` (no auth needed)
+
+**NixOS Configuration:**
+
+```nix
+services.clubcotton.garage = {
+  # ... existing config ...
+  adminApiBindAddr = "0.0.0.0:3903";
+  metricsTokenFile = config.age.secrets."garage-metrics-token".path;
+};
+```
+
+**Secrets:**
+
+The metrics bearer token must be created and kept in sync between Garage and Prometheus:
+
+```bash
+# Create/edit the metrics token (same value used by both Garage and Prometheus)
+agenix -e garage-metrics-token.age
+# Content: a random hex string, e.g., output of: openssl rand -hex 32
+```
+
+**Key Metrics:**
+- `garage_build_info` - Build version information
+- `garage_local_disk_avail{volume=data|metadata}` - Available disk space
+- `garage_local_disk_total{volume=data|metadata}` - Total disk space
+- `cluster_healthy`, `cluster_available` - Cluster health status (0 or 1)
+- `api_s3_request_counter{api_endpoint}` - S3 API request counts
+- `api_s3_error_counter{api_endpoint,status_code}` - S3 API error counts
+- `block_resync_queue_length` - Block resync queue depth
+- `block_resync_errored_blocks` - Blocks that failed to resync (should be 0)
+
+**Testing manually:**
+
+```bash
+# With bearer token authentication:
+curl -H "Authorization: Bearer $(cat /run/agenix/garage-metrics-token)" http://localhost:3903/metrics
+
+# Quick health check (no auth):
+curl http://localhost:3903/health
+```
+
+### Grafana Dashboard
+
+A Garage dashboard ("Garage S3 Object Storage") is provisioned in Grafana showing:
+- Cluster health status (healthy, available, connected nodes)
+- Disk usage gauges for data and metadata volumes
+- S3 request/error rates and p95 latency by endpoint
+- Block manager I/O, resync queue, and errored blocks
+- RPC request rates, errors, and timeouts
+
+### Alerts
+
+The following Prometheus alerts are configured:
+
+| Alert | Severity | Description |
+|-------|----------|-------------|
+| GarageDown | critical | Admin API unreachable for 5 minutes |
+| GarageClusterUnhealthy | critical | Cluster reports unhealthy |
+| GarageClusterUnavailable | critical | Cluster unavailable for operations |
+| GarageDiskSpaceLow | warning | Data volume < 20% free |
+| GarageDiskSpaceCritical | critical | Data volume < 10% free |
+| GarageMetadataDiskSpaceLow | warning | Metadata volume < 20% free |
+| GarageHighS3ErrorRate | warning | Sustained S3 errors > 1/sec |
+| GarageBlockResyncErrors | warning | Errored blocks in resync |
+| GarageBlockResyncQueueHigh | warning | Resync queue > 1000 blocks |
 
 ## Troubleshooting
 

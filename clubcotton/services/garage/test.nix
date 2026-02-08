@@ -30,6 +30,7 @@
         rpcBindAddr = "0.0.0.0:3901";
         rpcSecretFile = "/etc/garage-rpc-secret";
         s3Region = "test-region";
+        adminApiBindAddr = "0.0.0.0:3903";
         openFirewall = true;
       };
 
@@ -66,6 +67,18 @@
 
     # Verify garage CLI works (garage is in systemPackages)
     garage.succeed("garage --version")
+
+    # Wait for admin API port
+    garage.wait_for_open_port(3903)
+
+    # Test that the admin API metrics endpoint responds with Prometheus metrics
+    output = garage.succeed("curl -s http://localhost:3903/metrics")
+    assert "garage_build_info" in output, "Expected garage_build_info metric in /metrics response"
+    assert "garage_local_disk_avail" in output, "Expected garage_local_disk_avail metric in /metrics response"
+    assert "cluster_healthy" in output, "Expected cluster_healthy metric in /metrics response"
+
+    # Test health endpoint
+    garage.succeed("curl -sf http://localhost:3903/health")
 
     print("All Garage tests passed!")
   '';

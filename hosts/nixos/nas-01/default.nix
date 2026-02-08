@@ -99,6 +99,10 @@ in {
     s3ApiBindAddr = "0.0.0.0:3900";
     rpcBindAddr = "0.0.0.0:3901";
     replicationFactor = 1;
+    adminApiBindAddr = "0.0.0.0:3903";
+    # To enable bearer token auth on /metrics:
+    # 1. agenix -e garage-metrics-token.age (content: openssl rand -hex 32)
+    # 2. Uncomment: metricsTokenFile = config.age.secrets."garage-metrics-token".path;
     zfsDataset = {
       name = "ssdpool/local/garage";
       properties = {

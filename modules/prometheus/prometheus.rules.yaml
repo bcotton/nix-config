@@ -505,3 +505,85 @@ groups:
     annotations:
       summary: "Nix build cache check is stale"
       description: "The Nix build and cache validation has not run in over 30 minutes on {{ $labels.instance }}"
+
+  # Garage S3 Object Storage Monitoring
+  - alert: GarageDown
+    expr: up{job="garage"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Garage S3 service is down"
+      description: "Garage admin API on {{ $labels.instance }} has been unreachable for 5 minutes"
+
+  - alert: GarageClusterUnhealthy
+    expr: cluster_healthy == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Garage cluster is unhealthy"
+      description: "Garage cluster on {{ $labels.instance }} reports unhealthy status"
+
+  - alert: GarageClusterUnavailable
+    expr: cluster_available == 0
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Garage cluster is unavailable"
+      description: "Garage cluster on {{ $labels.instance }} is not available for read/write operations"
+
+  - alert: GarageDiskSpaceLow
+    expr: (garage_local_disk_avail{volume="data"} / garage_local_disk_total{volume="data"}) < 0.2
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Garage data disk space low"
+      description: "Garage data volume on {{ $labels.instance }} has less than 20% disk space remaining"
+
+  - alert: GarageDiskSpaceCritical
+    expr: (garage_local_disk_avail{volume="data"} / garage_local_disk_total{volume="data"}) < 0.1
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Garage data disk space critical"
+      description: "Garage data volume on {{ $labels.instance }} has less than 10% disk space remaining"
+
+  - alert: GarageMetadataDiskSpaceLow
+    expr: (garage_local_disk_avail{volume="metadata"} / garage_local_disk_total{volume="metadata"}) < 0.2
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Garage metadata disk space low"
+      description: "Garage metadata volume on {{ $labels.instance }} has less than 20% disk space remaining"
+
+  - alert: GarageHighS3ErrorRate
+    expr: rate(api_s3_error_counter[5m]) > 1
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Garage S3 high error rate"
+      description: "Garage on {{ $labels.instance }} is returning S3 errors at {{ printf \"%.1f\" $value }}/sec"
+
+  - alert: GarageBlockResyncErrors
+    expr: block_resync_errored_blocks > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Garage has block resync errors"
+      description: "Garage on {{ $labels.instance }} has {{ $value }} errored blocks in resync"
+
+  - alert: GarageBlockResyncQueueHigh
+    expr: block_resync_queue_length > 1000
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Garage block resync queue is large"
+      description: "Garage on {{ $labels.instance }} has {{ $value }} blocks in the resync queue"
