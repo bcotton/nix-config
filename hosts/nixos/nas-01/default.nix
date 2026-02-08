@@ -40,6 +40,7 @@ in {
     filebrowser.enable = true;
     freshrss.enable = true;
     forgejo.enable = true;
+    garage.enable = true;
     harmonia.enable = true;
     immich.enable = true;
     jellyfin.enable = true;
@@ -88,6 +89,27 @@ in {
       mountpoint = "/ssdpool/local/nix-cache-proxy";
       compression = "lz4";
       atime = "off";
+    };
+  };
+
+  services.clubcotton.garage = {
+    dataDir = "/ssdpool/local/garage/data";
+    metadataDir = "/ssdpool/local/garage/meta";
+    rpcSecretFile = config.age.secrets."garage-rpc-secret".path;
+    s3ApiBindAddr = "0.0.0.0:3900";
+    rpcBindAddr = "0.0.0.0:3901";
+    replicationFactor = 1;
+    adminApiBindAddr = "0.0.0.0:3903";
+    # To enable bearer token auth on /metrics:
+    # 1. agenix -e garage-metrics-token.age (content: openssl rand -hex 32)
+    # 2. Uncomment: metricsTokenFile = config.age.secrets."garage-metrics-token".path;
+    zfsDataset = {
+      name = "ssdpool/local/garage";
+      properties = {
+        mountpoint = "/ssdpool/local/garage";
+        compression = "lz4";
+        atime = "off";
+      };
     };
   };
 
@@ -504,7 +526,7 @@ in {
     enable = true;
     settings.datasets = {
       # --- ssdpool datasets ---
-      # NOTE: ssdpool/local/database, forgejo, nix-cache, nix-cache-proxy
+      # NOTE: ssdpool/local/database, forgejo, garage, nix-cache, nix-cache-proxy
       # are declared by their respective service modules via zfsDataset option
       "ssdpool/local" = {};
       "ssdpool/local/reserved" = {

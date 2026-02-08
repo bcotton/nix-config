@@ -273,6 +273,33 @@ in {
     mode = "0400";
   };
 
+  # Garage RPC secret key
+  age.secrets."garage-rpc-secret" = lib.mkIf config.services.clubcotton.garage.enable {
+    file = ./garage-rpc-secret.age;
+    owner = "garage";
+    group = "garage";
+    mode = "0400";
+  };
+
+  # Garage metrics bearer token (shared between Garage and Prometheus)
+  # To enable: 1) agenix -e garage-metrics-token.age  2) uncomment in secrets.nix  3) uncomment below
+  # age.secrets."garage-metrics-token" = lib.mkIf (
+  #   (config.services.clubcotton.garage.enable
+  #     && config.services.clubcotton.garage.metricsTokenFile != null)
+  #   || config.services.prometheus.enable
+  # ) {
+  #   file = ./garage-metrics-token.age;
+  #   owner =
+  #     if config.services.prometheus.enable
+  #     then "prometheus"
+  #     else "garage";
+  #   group =
+  #     if config.services.prometheus.enable
+  #     then "prometheus"
+  #     else "garage";
+  #   mode = "0400";
+  # };
+
   # Harmonia binary cache signing key
   age.secrets."harmonia-signing-key" = lib.mkIf config.services.clubcotton.harmonia.enable {
     file = ./harmonia-signing-key.age;

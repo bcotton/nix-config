@@ -14,6 +14,7 @@
     ./filebrowser
     ./forgejo
     ./freshrss
+    ./garage
     ./harmonia
     ./homepage
     ./hyprland

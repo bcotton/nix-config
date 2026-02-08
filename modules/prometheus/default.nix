@@ -104,6 +104,21 @@ in {
           ];
         }
         {
+          job_name = "garage";
+          scrape_interval = "30s";
+          scrape_timeout = "10s";
+          metrics_path = "/metrics";
+          scheme = "http";
+          # To enable bearer token auth:
+          # 1. Create secret: agenix -e garage-metrics-token.age
+          # 2. Uncomment: bearer_token_file = config.age.secrets."garage-metrics-token".path;
+          static_configs = [
+            {
+              targets = ["nas-01:3903"];
+            }
+          ];
+        }
+        {
           job_name = "unpoller";
           static_configs = [
             {

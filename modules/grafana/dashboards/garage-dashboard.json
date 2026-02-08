@@ -1,0 +1,450 @@
+{
+  "__inputs": [],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.1.2"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Cluster Health",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "Unhealthy" }, "1": { "color": "green", "text": "Healthy" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Cluster Healthy",
+      "type": "stat",
+      "targets": [{ "expr": "cluster_healthy", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "Unavailable" }, "1": { "color": "green", "text": "Available" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Cluster Available",
+      "type": "stat",
+      "targets": [{ "expr": "cluster_available", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Connected Nodes",
+      "type": "stat",
+      "targets": [{ "expr": "cluster_connected_nodes", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Partitions All OK",
+      "type": "stat",
+      "targets": [{ "expr": "cluster_partitions_all_ok", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Replication Factor",
+      "type": "stat",
+      "targets": [{ "expr": "garage_replication_factor", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value" },
+      "title": "Version",
+      "type": "stat",
+      "targets": [{ "expr": "garage_build_info", "legendFormat": "{{ version }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 200,
+      "title": "Disk Usage",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.9 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 6 },
+      "id": 7,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "title": "Data Disk Usage",
+      "type": "gauge",
+      "targets": [{ "expr": "1 - (garage_local_disk_avail{volume=\"data\"} / garage_local_disk_total{volume=\"data\"})", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.7 }, { "color": "orange", "value": 0.8 }, { "color": "red", "value": 0.9 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 6 },
+      "id": 8,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "title": "Metadata Disk Usage",
+      "type": "gauge",
+      "targets": [{ "expr": "1 - (garage_local_disk_avail{volume=\"metadata\"} / garage_local_disk_total{volume=\"metadata\"})", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+      "id": 9,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Disk Space Available",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "garage_local_disk_avail{volume=\"data\"}", "legendFormat": "Data Available", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } },
+        { "expr": "garage_local_disk_avail{volume=\"metadata\"}", "legendFormat": "Metadata Available", "refId": "B", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 12 },
+      "id": 300,
+      "title": "S3 API",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never", "stacking": { "mode": "normal" } }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 13 },
+      "id": 10,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "S3 Request Rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "rate(api_s3_request_counter[5m])", "legendFormat": "{{ api_endpoint }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never", "stacking": { "mode": "normal" } }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 13 },
+      "id": 11,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "S3 Error Rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "rate(api_s3_error_counter[5m])", "legendFormat": "{{ api_endpoint }} ({{ status_code }})", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 13 },
+      "id": 12,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "S3 Request Duration (p95)",
+      "type": "timeseries",
+      "targets": [{ "expr": "histogram_quantile(0.95, rate(api_s3_request_duration_bucket[5m]))", "legendFormat": "{{ api_endpoint }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 400,
+      "title": "Block Manager",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 22 },
+      "id": 13,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Block I/O",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(block_bytes_read[5m])", "legendFormat": "Read", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } },
+        { "expr": "rate(block_bytes_written[5m])", "legendFormat": "Write", "refId": "B", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 22 },
+      "id": 14,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Block Resync Queue",
+      "type": "timeseries",
+      "targets": [{ "expr": "block_resync_queue_length", "legendFormat": "Queue Length", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 22 },
+      "id": 15,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Resync Errored Blocks",
+      "type": "stat",
+      "targets": [{ "expr": "block_resync_errored_blocks", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 22 },
+      "id": 16,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "RAM Buffer Free",
+      "type": "stat",
+      "targets": [{ "expr": "block_ram_buffer_free_kb * 1024", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 26 },
+      "id": 17,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Block Resync / Delete Rate",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(block_resync_counter[5m])", "legendFormat": "Resync", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } },
+        { "expr": "rate(block_delete_counter[5m])", "legendFormat": "Delete", "refId": "B", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
+      "id": 500,
+      "title": "RPC & Table Operations",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 31 },
+      "id": 18,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "RPC Request Rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(rate(rpc_netapp_request_counter[5m])) by (rpc_endpoint)", "legendFormat": "{{ rpc_endpoint }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 31 },
+      "id": 19,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "RPC Errors & Timeouts",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "sum(rate(rpc_netapp_error_counter[5m])) by (rpc_endpoint)", "legendFormat": "Error: {{ rpc_endpoint }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } },
+        { "expr": "sum(rate(rpc_timeout_counter[5m])) by (rpc_endpoint)", "legendFormat": "Timeout: {{ rpc_endpoint }}", "refId": "B", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineInterpolation": "smooth", "fillOpacity": 10, "showPoints": "never" }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 31 },
+      "id": 20,
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Table Queue Lengths",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "table_merkle_updater_todo_queue_length", "legendFormat": "Merkle: {{ table_name }}", "refId": "A", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } },
+        { "expr": "table_gc_todo_queue_length", "legendFormat": "GC: {{ table_name }}", "refId": "B", "datasource": { "type": "prometheus", "uid": "a9d7903c-3981-4738-b3e4-484f7d454d2e" } }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["garage", "s3", "storage"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Garage S3 Object Storage",
+  "uid": "garage-s3-overview",
+  "version": 1,
+  "weekStart": ""
+}
