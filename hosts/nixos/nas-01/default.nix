@@ -24,7 +24,7 @@ in {
     ../../../modules/prometheus/nix-build-cache-check.nix
     ../../../modules/systemd-network
     ../../../users/cheryl.nix
-    ./borgmatic.nix
+    ./restic.nix
     # Use unstable cups-pdf module TODO remove this once nixos-25.11 is released
     "${inputs.nixpkgs-unstable}/nixos/modules/services/printing/cups-pdf.nix"
   ];

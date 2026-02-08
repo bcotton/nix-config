@@ -230,14 +230,14 @@ in {
     group = "wallabag";
   };
 
-  age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable) {
+  age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable || config.services.clubcotton.restic.enable) {
     file = ./syncoid-ssh-key.age;
     owner =
-      if config.services.clubcotton.borgmatic.enable
+      if config.services.clubcotton.borgmatic.enable || config.services.clubcotton.restic.enable
       then "root"
       else "syncoid";
     group =
-      if config.services.clubcotton.borgmatic.enable
+      if config.services.clubcotton.borgmatic.enable || config.services.clubcotton.restic.enable
       then "root"
       else "syncoid";
     mode = "0400";
@@ -247,6 +247,22 @@ in {
     file = ./borg-passphrase.age;
     owner = "root";
     group = "root";
+  };
+
+  # Restic backup secrets
+  age.secrets."restic-password" = lib.mkIf config.services.clubcotton.restic.enable {
+    file = ./restic-password.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets."restic-b2-env" = lib.mkIf (config.services.clubcotton.restic.enable
+    && (config.services.clubcotton.restic.repositories ? b2)) {
+    file = ./restic-b2-env.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
   };
 
   # Cloudflare Tunnel token for secure internet exposure
