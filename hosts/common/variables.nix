@@ -2,6 +2,10 @@
   # Host-specific variables that can be imported and used across modules
   # Default values - override in hosts/<type>/<hostname>/variables.nix
 
+  # Metrics Scraping - enable Prometheus scraping for this host
+  # Set to false for hosts where monitoring is not needed
+  shouldScrapeMetrics = true;
+
   # Bot hosts - hosts that run AI/LLM bot services (moltbot, etc.)
   botHosts = ["nix-01" "nix-02" "nix-03"];
 
@@ -33,7 +37,7 @@
 
   # Firewall Configuration
   # TODO: Set to true once firewall rules are properly configured
-  firewallEnable = false;
+  firewallEnable = true;
 
   # Tailscale Configuration
   tailscaleEnable = true;

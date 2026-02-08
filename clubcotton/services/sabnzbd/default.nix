@@ -21,10 +21,27 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "SABnzbd";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Usenet download client";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "sabnzbd.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Downloads";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
+      openFirewall = true;
       user = clubcotton.user;
       group = clubcotton.group;
     };

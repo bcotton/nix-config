@@ -18,6 +18,28 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Atuin.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Atuin";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Shell history sync server";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "atuin.png";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {
@@ -38,5 +60,7 @@ in {
         toURL = "http://0.0.0.0:${toString config.services.atuin.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [config.services.atuin.port];
   };
 }

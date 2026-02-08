@@ -12,4 +12,7 @@
       };
     };
   };
+
+  # Open firewall for Prometheus metrics scraping
+  networking.firewall.allowedTCPPorts = [9100];
 }

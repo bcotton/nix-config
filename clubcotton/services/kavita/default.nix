@@ -59,6 +59,28 @@ in {
       default = [];
       description = "List of users who should have access to the Kavita libraries";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Kavita.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Kavita";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Digital library for comics, manga, and books";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "kavita.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Media";
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -82,6 +104,8 @@ in {
           IpAddresses = concatStringsSep "," cfg.bindAddresses;
         };
       };
+
+      networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
     }
 
     # Note: Tailscale/tsnsrv integration should be configured separately

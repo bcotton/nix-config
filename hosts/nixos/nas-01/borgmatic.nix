@@ -15,7 +15,6 @@
     sourceDirectories = [
       "/var/lib"
       "/backups/postgresql"
-      "/media/photos"
       "/media/documents"
       "/media/tomcotton/data"
       "/media/tomcotton/audio-library/SFX_Library/My_Exports"
@@ -48,7 +47,9 @@
     };
 
     # SSH configuration for rsync.net
-    sshCommand = "ssh -i /var/run/agenix/syncoid-ssh-key";
+    # ServerAliveInterval sends keepalive every 60s to prevent connection timeouts
+    # ServerAliveCountMax=3 means disconnect after 3 missed keepalives (3 min)
+    sshCommand = "ssh -i /var/run/agenix/syncoid-ssh-key -o ServerAliveInterval=60 -o ServerAliveCountMax=3";
 
     # Borg version on rsync.net
     remotePath = "borg14";
@@ -70,5 +71,25 @@
       "*/node_modules"
       "*/.cache"
     ];
+
+    # Disable default checks (we override in extraConfig)
+    checks = [];
+
+    # Only check the most recent archive to avoid long-running checks
+    checkLast = 1;
+
+    # Limit check duration to prevent rsync.net timeouts
+    # Repository check resumes where it left off on subsequent runs
+    extraConfig = {
+      checks = [
+        {
+          name = "repository";
+          max_duration = 180; # 3 minutes max
+        }
+        {
+          name = "archives";
+        }
+      ];
+    };
   };
 }

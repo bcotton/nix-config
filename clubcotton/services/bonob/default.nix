@@ -45,6 +45,12 @@ in {
       default = true;
       description = "Whether to enable Sonos device discovery";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Bonob.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -63,5 +69,7 @@ in {
       };
       ports = ["${toString cfg.port}:${toString cfg.port}"];
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

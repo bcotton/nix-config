@@ -22,10 +22,27 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Calibre-Web";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "E-book library browser";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "calibre-web.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Media";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.calibre-web = {
       enable = true;
+      openFirewall = true;
       listen = {
         ip = "0.0.0.0";
         port = 8112;

@@ -18,7 +18,7 @@ in {
 
     openFirewall = mkOption {
       type = types.bool;
-      default = false;
+      default = true;
       description = "Whether to open ports in the firewall for Immich.";
     };
 

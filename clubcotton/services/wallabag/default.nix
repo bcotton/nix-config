@@ -53,6 +53,28 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Wallabag.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Wallabag";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Read-it-later service";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "wallabag.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -97,5 +119,7 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

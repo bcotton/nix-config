@@ -53,6 +53,28 @@ in {
       default = "${service}";
       description = "Tailscale hostname for the service";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Pinchflat.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Pinchflat";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "YouTube media archiver";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "pinchflat.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Downloads";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -84,5 +106,7 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

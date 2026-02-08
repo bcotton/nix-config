@@ -119,6 +119,15 @@ groups:
     annotations:
       description: "Probe failed"
 
+  - alert: DnsResolutionFailed
+    expr: probe_success{job="dns_resolution", check="nas-01.lan"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "DNS resolution failed for nas-01.lan"
+      description: "nas-01.lan is not resolving to 192.168.5.42 on dns-01. This can cause service connectivity issues."
+
   - alert: ZfsPoolDegraded
     expr: zfs_pool_health > 0
     for: 2m

@@ -45,6 +45,7 @@
         inherit inputs unstablePkgs hostName nixosHosts;
         localPackages = self.legacyPackages.${system}.localPackages;
         workmuxPackage = inputs.workmux.packages.${system}.default;
+        crushPackage = inputs.nix-ai-tools.packages.${system}.crush;
       };
     };
 
@@ -74,68 +75,165 @@
     ];
 
     # NixOS host specifications - single source of truth for all NixOS hosts
-    # Adding a host here automatically includes it in nixosConfigurations and SSH RemoteForward
+    # Adding a host here automatically includes it in nixosConfigurations, SSH RemoteForward,
+    # and the homepage dashboard (if ip is specified)
+    #
+    # Homepage/Glances fields (optional):
+    #   ip          - IP address for Glances monitoring (enables Glances and adds to homepage)
+    #   displayName - Name shown on homepage (defaults to hostname)
+    #   glancesPort - Port for Glances (defaults to 61208)
+    #   icon        - Icon for homepage (defaults to "mdi-server")
     nixosHostSpecs = {
       admin = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+        ip = "192.168.5.98";
+        displayName = "Admin";
       };
       condo-01 = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+        # No IP - different network, not on homepage
       };
       natalya-01 = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+        # No IP - different network, not on homepage
       };
       nas-01 = {
         system = "x86_64-linux";
         usernames = ["bcotton" "tomcotton"];
+        ip = "192.168.5.42";
+        displayName = "NAS-01";
       };
       nix-01 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+        ip = "192.168.5.210";
+        displayName = "Nix-01";
       };
       nix-02 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+        ip = "192.168.5.212";
+        displayName = "Nix-02";
       };
       nix-03 = {
         system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry"];
+        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+        ip = "192.168.5.214";
+        displayName = "Nix-03";
       };
       nix-04 = {
         system = "x86_64-linux";
         usernames = ["bcotton" "tomcotton"];
+        ip = "192.168.5.54";
+        displayName = "Nix-04";
       };
       imac-01 = {
         system = "x86_64-linux";
         usernames = ["bcotton" "tomcotton"];
+        ip = "192.168.5.125";
+        displayName = "iMac-01";
       };
       imac-02 = {
         system = "x86_64-linux";
         usernames = ["bcotton" "tomcotton"];
+        ip = "192.168.5.153";
+        displayName = "iMac-02";
       };
       dns-01 = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+        ip = "192.168.5.220";
+        displayName = "DNS-01";
       };
       octoprint = {
         system = "x86_64-linux";
         usernames = ["bcotton" "tomcotton"];
+        ip = "192.168.5.49";
+        displayName = "OctoPrint";
       };
       frigate-host = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
+        ip = "192.168.20.174";
+        displayName = "Frigate";
       };
       nixbook-test = {
         system = "x86_64-linux";
         usernames = ["tomcotton"];
+        # No IP - laptop with DHCP, not on homepage
       };
     };
 
     # Derive host list from specs - used for SSH RemoteForward configuration
     nixosHosts = builtins.attrNames nixosHostSpecs;
+
+    # List of clubcotton service names to show on homepage
+    # Homepage metadata is read from each service's homepage.* options
+    # Adding a service here just requires it to have homepage.* options defined
+    homepageServiceList = [
+      # Arr Suite
+      "radarr"
+      "sonarr"
+      "lidarr"
+      "prowlarr"
+      "jellyseerr"
+      # Media
+      "jellyfin"
+      "navidrome"
+      "immich"
+      "calibre-web"
+      # Downloads
+      "sabnzbd"
+      "pinchflat"
+      # Content
+      "paperless"
+      "freshrss"
+      "wallabag"
+      "filebrowser"
+      # Infrastructure
+      "forgejo"
+      "atuin"
+      "open-webui"
+      "harmonia"
+    ];
+
+    # Services without standard clubcotton modules (need manual config)
+    # Includes: monitoring services, multi-instance services
+    homepageManualServices = {
+      # Monitoring (standard nixpkgs services, not clubcotton)
+      grafana = {
+        name = "Grafana";
+        category = "Monitoring";
+        icon = "grafana.svg";
+        description = "Metrics dashboards";
+        href = "http://admin:3000";
+      };
+      prometheus = {
+        name = "Prometheus";
+        category = "Monitoring";
+        icon = "prometheus.svg";
+        description = "Metrics collection";
+        href = "http://admin:9001";
+      };
+      # Multi-instance services (readarr uses instances, not standard options)
+      readarr-epub = {
+        name = "Readarr (Books)";
+        category = "Arr";
+        icon = "readarr.svg";
+        description = "E-book collection manager";
+        tailnetHostname = "readarr-epub";
+      };
+      readarr-audio = {
+        name = "Readarr (Audio)";
+        category = "Arr";
+        icon = "readarr.svg";
+        description = "Audiobook collection manager";
+        tailnetHostname = "readarr-audio";
+      };
+    };
 
     # NixOS system builder (consolidated from nixosSystem and nixosMinimalSystem)
     nixosSystem = {
@@ -176,6 +274,13 @@
           in {
             services.clubcotton.tailscale.enable = variables.tailscaleEnable;
           })
+          # Auto-enable Glances on hosts with an IP in nixosHostSpecs
+          ({hostName, ...}: let
+            hostSpec = nixosHostSpecs.${hostName} or {};
+            hasIp = hostSpec.ip or null != null;
+          in {
+            services.glances.enable = hasIp;
+          })
         ];
 
       # User modules
@@ -184,7 +289,7 @@
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit self system inputs hostName;
+          inherit self system inputs hostName nixosHostSpecs homepageServiceList homepageManualServices;
         };
         modules =
           commonModules
@@ -233,6 +338,7 @@
               inherit inputs unstablePkgs hostName nixosHosts;
               localPackages = self.legacyPackages.${system}.localPackages;
               workmuxPackage = inputs.workmux.packages.${system}.default;
+              crushPackage = inputs.nix-ai-tools.packages.${system}.crush;
             };
           }
           ../hosts/common/common-packages.nix

@@ -26,6 +26,7 @@ in {
   config = lib.mkIf cfg.enable {
     services.calibre-server = {
       enable = true;
+      openFirewall = true;
       port = 8111;
       libraries = [
         "/media/books/epub/calibre"

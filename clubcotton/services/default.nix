@@ -10,11 +10,13 @@
     ./borgmatic
     ./calibre
     ./calibre-web
+    ./cloudflare-tunnel
     ./filebrowser
     ./forgejo
     ./freshrss
     ./garage
     ./harmonia
+    ./homepage
     ./hyprland
     ./immich
     ./jellyfin

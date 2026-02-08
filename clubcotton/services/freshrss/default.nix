@@ -40,6 +40,28 @@ in {
       type = types.str;
       default = "${service}";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for FreshRSS.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "FreshRSS";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "RSS feed aggregator";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "freshrss.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -97,5 +119,7 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [cfg.port];
   };
 }

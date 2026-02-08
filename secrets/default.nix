@@ -195,6 +195,29 @@ in {
     file = ./nut-client.age;
   };
 
+  # Obsidian HTTP Basic Auth password (format: PASSWORD=secret)
+  # To enable:
+  # 1. Uncomment the entry in secrets/secrets.nix
+  # 2. Create the secret: agenix -e secrets/obsidian-bcotton.age
+  # 3. Add content: PASSWORD=your-secret-password
+  # 4. Uncomment this block
+  age.secrets."obsidian-bcotton" = lib.mkIf (config.services.clubcotton.obsidian.enable
+    && (config.services.clubcotton.obsidian.instances ? bcotton)) {
+    file = ./obsidian-bcotton.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
+  age.secrets."obsidian-natalya" = lib.mkIf (config.services.clubcotton.obsidian.enable
+    && (config.services.clubcotton.obsidian.instances ? natalya)
+    && config.services.clubcotton.obsidian.instances.natalya.basicAuth.enable) {
+    file = ./obsidian-natalya.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   age.secrets."scanner-user-private-ssh-key" = lib.mkIf config.services.clubcotton.scanner.enable {
     file = ./scanner-user-private-ssh-key.age;
     owner = "scanner";
@@ -224,6 +247,14 @@ in {
     file = ./borg-passphrase.age;
     owner = "root";
     group = "root";
+  };
+
+  # Cloudflare Tunnel token for secure internet exposure
+  age.secrets."cloudflare-tunnel-token" = lib.mkIf config.services.clubcotton.cloudflare-tunnel.enable {
+    file = ./cloudflare-tunnel-token.age;
+    owner = "cloudflared";
+    group = "cloudflared";
+    mode = "0400";
   };
 
   # Harmonia binary cache signing key

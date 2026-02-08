@@ -54,6 +54,22 @@ in {
       type = types.str;
       default = "${service}";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Paperless-ngx";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Document management system";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "paperless-ngx.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Content";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -106,5 +122,8 @@ in {
         toURL = "http://127.0.0.1:${toString cfg.port}/";
       };
     };
+
+    # Open firewall for Paperless (no openFirewall option in upstream module)
+    networking.firewall.allowedTCPPorts = [cfg.port];
   };
 }

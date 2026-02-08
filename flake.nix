@@ -66,6 +66,11 @@
       url = "github:bcotton/nix-clawbot/install-templates-again";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-ai-tools = {
+      url = "github:numtide/nix-ai-tools";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = inputs @ {flake-parts, ...}:

@@ -3,14 +3,9 @@
   pkgs,
   lib,
   unstablePkgs,
-  crushPackage,
   inputs,
   ...
 }: {
-  imports = [
-    inputs.nix-openclaw.homeManagerModules.openclaw
-  ];
-
   home.stateVersion = "24.05";
 
   programs.home-manager.enable = true;
@@ -22,7 +17,7 @@
 
   # Add pnpm local bin to user's shell PATH
   home.sessionPath = [
-    "/home/larry/node_modules/.bin"
+    "/home/natalya/node_modules/.bin"
   ];
 
   # ─────────────────────────────────────────────────────────────
@@ -44,7 +39,6 @@
 
       # Git shortcuts
       gs = "git status";
-      gst = "git status";
       gd = "git diff";
       gdc = "git diff --cached";
       gl = "git log --oneline -20";
@@ -53,8 +47,6 @@
       # Navigation
       ".." = "cd ..";
       "..." = "cd ../..";
-
-      # Forgejo - use `tea login default forgejo` to set default, --login is a subcommand flag
 
       # Safety
       rm = "rm -i";
@@ -77,14 +69,6 @@
 
       # tea completion if available (source the file directly to avoid "Fetching" output)
       [[ -f ~/.config/tea/autocomplete.zsh ]] && PROG=tea _CLI_ZSH_AUTOCOMPLETE_HACK=1 source ~/.config/tea/autocomplete.zsh
-      # pnpm
-      export PNPM_HOME="/home/larry/.local/share/pnpm"
-      case ":$PATH:" in
-        *":$PNPM_HOME:"*) ;;
-        *) export PATH="$PNPM_HOME:$PATH" ;;
-      esac
-      # pnpm end
-
     '';
   };
 
@@ -93,8 +77,8 @@
     settings = {
       add_newline = true;
       character = {
-        success_symbol = "[🎭](bold green)";
-        error_symbol = "[🎭](bold red)";
+        success_symbol = "[sparkle](bold green)";
+        error_symbol = "[sparkle](bold red)";
       };
       directory = {
         truncation_length = 3;
@@ -104,16 +88,16 @@
         symbol = " ";
       };
       git_status = {
-        conflicted = "⚔️ ";
-        ahead = "⬆️ ";
-        behind = "⬇️ ";
-        diverged = "↕️ ";
-        modified = "📝";
-        staged = "✅";
-        untracked = "❓";
+        conflicted = "! ";
+        ahead = "^ ";
+        behind = "v ";
+        diverged = "~ ";
+        modified = "* ";
+        staged = "+ ";
+        untracked = "? ";
       };
       nix_shell = {
-        symbol = "❄️ ";
+        symbol = "nix ";
       };
     };
   };
@@ -123,8 +107,8 @@
   # ─────────────────────────────────────────────────────────────
   programs.git = {
     enable = true;
-    userName = "Larry";
-    userEmail = "larry@nix-02";
+    userName = "Natalya";
+    userEmail = "natalya.verscheure@gmail.com";
 
     extraConfig = {
       init.defaultBranch = "main";
@@ -198,7 +182,7 @@
 
       # Status bar
       set -g status-style 'bg=#1e1e2e fg=#cdd6f4'
-      set -g status-left '#[fg=#89b4fa]🎭 #S '
+      set -g status-left '#[fg=#89b4fa]* #S '
       set -g status-right '#[fg=#a6adc8]%H:%M'
     '';
   };
@@ -221,7 +205,6 @@
     # Git tools
     delta # beautiful diffs
     git-absorb # automatic fixup commits
-    lazygit # git UI
 
     # Forgejo/Git workflow
     tea # Gitea/Forgejo CLI
@@ -231,8 +214,6 @@
     direnv # per-directory environments
     pnpm
     nodejs_22
-    claude-code # Anthropic's Claude Code CLI
-    crushPackage # AI coding agent
 
     # Nix tools
     nil # nix LSP

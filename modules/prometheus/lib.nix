@@ -1,5 +1,8 @@
 # Library of functions for generating Prometheus scrape configurations
 {lib}: let
+  # Import host variables library for reading per-host settings
+  commonLib = import ../../hosts/common/lib.nix;
+
   # Common domain suffix for tailscale services
   tailscaleDomain = ".bobtail-clownfish.ts.net";
 
@@ -22,7 +25,10 @@
   #   hostName: The name of the host to check
   #   host: The NixOS configuration for the host
   # Returns: Attribute set of enabled exporters and their configurations
+  #          Returns empty set if shouldScrapeMetrics is false for the host
   enabledExportersF = hostName: host: let
+    variables = commonLib.getHostVariables hostName;
+    shouldScrape = variables.shouldScrapeMetrics or true;
     exporters = host.config.services.prometheus.exporters;
     mkExporter = name:
       if
@@ -32,7 +38,9 @@
       then {${name} = exporters.${name};}
       else {};
   in
-    lib.foldl' (acc: name: acc // (mkExporter name)) {} monitoredExporters;
+    if shouldScrape
+    then lib.foldl' (acc: name: acc // (mkExporter name)) {} monitoredExporters
+    else {};
 
   # Build the scrape config for a specific exporter on a host
   # Args:
@@ -67,8 +75,12 @@
   #   hostName: The name of the host to check
   #   host: The NixOS configuration for the host
   # Returns: Boolean indicating if tailscale is enabled
-  enabledTailscaleF = hostName: host:
-    if host.config.services.clubcotton.services.tailscale.enable or false
+  #          Returns false if shouldScrapeMetrics is false for the host
+  enabledTailscaleF = hostName: host: let
+    variables = commonLib.getHostVariables hostName;
+    shouldScrape = variables.shouldScrapeMetrics or true;
+  in
+    if shouldScrape && (host.config.services.clubcotton.services.tailscale.enable or false)
     then true
     else false;
 

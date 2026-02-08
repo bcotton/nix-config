@@ -67,8 +67,30 @@ in {
 
     tailnetHostname = mkOption {
       type = types.str;
-      default = "";
-      description = "The tailnet hostname to expose the code-server as.";
+      default = "llm";
+      description = "The tailnet hostname to expose the service as.";
+    };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = true;
+      description = "Whether to open the firewall port for Open WebUI.";
+    };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Open WebUI";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "LLM chat interface";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "open-webui.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
     };
   };
 
@@ -97,5 +119,7 @@ in {
         toURL = "http://${config.services.open-webui.host}:${toString config.services.open-webui.port}/";
       };
     };
+
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [config.services.open-webui.port];
   };
 }

@@ -47,6 +47,22 @@ in {
       default = "nix-cache";
       description = "The tailnet hostname to expose the cache as";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Harmonia";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Nix binary cache server";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "nix.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Infrastructure";
+    };
   };
 
   config = mkIf cfg.enable {

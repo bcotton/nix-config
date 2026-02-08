@@ -34,6 +34,7 @@ in {
   "anthropic-api-key.age".publicKeys = anthropic_users ++ botSystems;
   "bcotton-atuin-key.age".publicKeys = users ++ systems;
   "borg-passphrase.age".publicKeys = users ++ systems;
+  "cloudflare-tunnel-token.age".publicKeys = users ++ systems;
   "condo-ha-token.age".publicKeys = users ++ systems;
   "freshrss.age".publicKeys = users ++ systems;
   "freshrss-database.age".publicKeys = users ++ systems;
@@ -54,6 +55,8 @@ in {
   "nix-builder-ssh-key.age".publicKeys = users ++ systems;
   "nix-builder-ssh-pub.age".publicKeys = users ++ systems;
   "nut-client.age".publicKeys = users ++ systems;
+  "obsidian-bcotton.age".publicKeys = users ++ systems; # Uncomment after creating with: agenix -e obsidian-bcotton.age
+  "obsidian-natalya.age".publicKeys = users ++ systems;
   "open-webui-database.age".publicKeys = users ++ systems;
   "open-webui.age".publicKeys = users ++ systems;
   "paperless.age".publicKeys = users ++ systems;

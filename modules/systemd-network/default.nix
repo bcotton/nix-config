@@ -8,14 +8,17 @@ with lib; let
   cfg = config.clubcotton.systemd-network;
 
   # Default VLAN configuration (used when vlanConfigs not specified)
+  # By default, VLANs have no IP (interface only) to avoid source address selection issues
   defaultVlans = [
     {
       id = 10;
       address = null;
+      dhcp = false;
     }
     {
       id = 20;
       address = null;
+      dhcp = false;
     }
   ];
 
@@ -99,13 +102,22 @@ in {
           address = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = "Static IP address for this VLAN (null for DHCP)";
+            description = "Static IP address for this VLAN (null to use dhcp option)";
             example = "192.168.10.220/24";
+          };
+          dhcp = mkOption {
+            type = types.bool;
+            default = false;
+            description = ''
+              Whether to use DHCP for this VLAN. Only applies when address is null.
+              When false and address is null, the interface exists but has no IP,
+              which is useful for bridging to VMs or avoiding source address issues.
+            '';
           };
         };
       });
       default = [];
-      description = "VLAN configurations. If empty, defaults to VLANs 10 and 20 with DHCP.";
+      description = "VLAN configurations. If empty, defaults to VLANs 10 and 20 with no IP (interface only).";
       example = [
         {
           id = 10;
@@ -113,7 +125,11 @@ in {
         }
         {
           id = 20;
-          address = "192.168.20.220/24";
+          dhcp = true; # Use DHCP instead of static
+        }
+        {
+          id = 30;
+          # No address and dhcp=false (default): interface exists but has no IP
         }
       ];
     };
@@ -308,10 +324,15 @@ in {
                   Address = vlan.address;
                   DHCP = "no";
                 }
-                else {
+                else if vlan.dhcp or false
+                then {
                   DHCP = "yes";
+                }
+                else {
+                  # No IP - interface only (for bridging or future use)
+                  DHCP = "no";
                 };
-              dhcpV4Config = mkIf (vlan.address == null) {
+              dhcpV4Config = mkIf (vlan.address == null && (vlan.dhcp or false)) {
                 RouteMetric = 1024; # Higher metric so native VLAN is preferred
                 UseDNS = false; # Don't override DNS from native VLAN
                 UseRoutes = false; # Don't add default routes
@@ -337,10 +358,15 @@ in {
                     Address = vlan.address;
                     DHCP = "no";
                   }
-                  else {
+                  else if vlan.dhcp or false
+                  then {
                     DHCP = "yes";
+                  }
+                  else {
+                    # No IP - interface only (for bridging or future use)
+                    DHCP = "no";
                   };
-                dhcpV4Config = mkIf (vlan.address == null) {
+                dhcpV4Config = mkIf (vlan.address == null && (vlan.dhcp or false)) {
                   RouteMetric = 1024;
                   UseDNS = false;
                   UseRoutes = false;
@@ -363,10 +389,15 @@ in {
                   Address = vlan.address;
                   DHCP = "no";
                 }
-                else {
+                else if vlan.dhcp or false
+                then {
                   DHCP = "yes";
+                }
+                else {
+                  # No IP - interface only (for bridging or future use)
+                  DHCP = "no";
                 };
-              dhcpV4Config = mkIf (vlan.address == null) {
+              dhcpV4Config = mkIf (vlan.address == null && (vlan.dhcp or false)) {
                 RouteMetric = 1024;
                 UseDNS = false;
                 UseRoutes = false;

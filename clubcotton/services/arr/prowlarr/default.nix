@@ -22,10 +22,27 @@ in {
       default = "${service}";
       description = "The tailnet hostname to expose the code-server as.";
     };
+    homepage.name = lib.mkOption {
+      type = lib.types.str;
+      default = "Prowlarr";
+    };
+    homepage.description = lib.mkOption {
+      type = lib.types.str;
+      default = "Indexer manager for *arr apps";
+    };
+    homepage.icon = lib.mkOption {
+      type = lib.types.str;
+      default = "prowlarr.svg";
+    };
+    homepage.category = lib.mkOption {
+      type = lib.types.str;
+      default = "Arr";
+    };
   };
   config = lib.mkIf cfg.enable {
     services.${service} = {
       enable = true;
+      openFirewall = true;
       package = unstablePkgs.prowlarr;
     };
     services.tsnsrv = {

@@ -6,6 +6,7 @@
   hostName ? "unknown",
   nixosHosts ? [],
   workmuxPackage,
+  crushPackage,
   inputs,
   ...
 }: {
@@ -264,7 +265,7 @@
     # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra =
       ''
-        export BAT_PAGER="moar"
+        export BAT_PAGER="moar --mousemode=select"
         export BAT_STYLE="plain"
         export BAT_THEME="Visual Studio Dark+"
         export DFT_DISPLAY=side-by-side
@@ -625,6 +626,7 @@
 
       inputs.opencode.packages.${pkgs.system}.default
       inputs.beads.packages.${pkgs.system}.default
+      crushPackage
 
       procs
       unstablePkgs.sesh
