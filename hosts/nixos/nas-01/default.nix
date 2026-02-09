@@ -47,6 +47,7 @@ in {
     jellyseerr.enable = true;
     mimir.enable = true;
     kavita.enable = false;
+    loki.enable = true;
     lidarr.enable = true;
     navidrome.enable = true;
     nix-cache-proxy.enable = true;
@@ -84,8 +85,13 @@ in {
   };
 
   services.clubcotton.mimir = {
-    s3.endpoint = "nas-01:3900"; # Adjust when garage is deployed
+    s3.endpoint = "nas-01:3900";
     s3.environmentFile = config.age.secrets."mimir-s3".path;
+  };
+
+  services.clubcotton.loki = {
+    s3.endpoint = "nas-01:3900";
+    s3.environmentFile = config.age.secrets."loki-s3".path;
   };
 
   services.clubcotton.nix-cache-proxy.zfsDataset = {

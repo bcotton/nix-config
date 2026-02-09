@@ -238,6 +238,14 @@ in {
     mode = "0400";
   };
 
+  # Loki S3 credentials (format: LOKI_S3_ACCESS_KEY_ID=... LOKI_S3_SECRET_ACCESS_KEY=...)
+  age.secrets."loki-s3" = lib.mkIf config.services.clubcotton.loki.enable {
+    file = ./loki-s3.age;
+    owner = "loki";
+    group = "loki";
+    mode = "0400";
+  };
+
   age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable || config.services.clubcotton.restic.enable) {
     file = ./syncoid-ssh-key.age;
     owner =

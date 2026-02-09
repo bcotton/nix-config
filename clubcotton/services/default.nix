@@ -21,6 +21,7 @@
     ./immich
     ./jellyfin
     ./kavita
+    ./loki
     ./mimir
     ./navidrome
     ./nix-cache-proxy

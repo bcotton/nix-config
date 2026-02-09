@@ -94,4 +94,7 @@ in {
 
   # Mimir S3 credentials (for Garage backend)
   "mimir-s3.age".publicKeys = users ++ systems;
+
+  # Loki S3 credentials (for Garage backend)
+  "loki-s3.age".publicKeys = users ++ systems;
 }

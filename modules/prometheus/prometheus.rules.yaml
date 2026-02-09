@@ -660,3 +660,76 @@ groups:
     annotations:
       summary: "Mimir S3 block load failures"
       description: "Mimir on {{ $labels.instance }} is failing to load blocks from S3 storage"
+
+  # Grafana Loki Monitoring
+  - alert: LokiDown
+    expr: up{job="loki"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Loki is down"
+      description: "Loki on {{ $labels.instance }} has been unreachable for 5 minutes"
+
+  - alert: LokiIngestionFailures
+    expr: rate(loki_ingester_chunks_flushed_total{job="loki",reason="error"}[5m]) > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Loki chunk flush failures"
+      description: "Loki on {{ $labels.instance }} is failing to flush chunks at {{ printf \"%.1f\" $value }}/sec"
+
+  - alert: LokiRequestErrors
+    expr: rate(loki_request_duration_seconds_count{job="loki",status_code=~"5.."}[5m]) > 0.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Loki returning server errors"
+      description: "Loki on {{ $labels.instance }} is returning 5xx errors at {{ printf \"%.1f\" $value }}/sec for {{ $labels.route }}"
+
+  - alert: LokiHighMemoryUsage
+    expr: process_resident_memory_bytes{job="loki"} / 1073741824 > 4
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Loki high memory usage"
+      description: "Loki on {{ $labels.instance }} is using {{ printf \"%.1f\" $value }}GB of memory"
+
+  - alert: LokiCompactorFailed
+    expr: increase(loki_compactor_runs_failed_total{job="loki"}[1h]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Loki compaction failures"
+      description: "Loki compactor on {{ $labels.instance }} has had failed runs in the last hour"
+
+  - alert: LokiIngesterWALCorruption
+    expr: increase(loki_ingester_wal_corruptions_total{job="loki"}[1h]) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Loki WAL corruption detected"
+      description: "Loki ingester on {{ $labels.instance }} has detected WAL corruption"
+
+  - alert: LokiPanics
+    expr: increase(loki_panic_total{job="loki"}[1h]) > 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Loki panics detected"
+      description: "Loki on {{ $labels.instance }} has experienced {{ $value }} panics in the last hour"
+
+  - alert: LokiRingUnhealthy
+    expr: loki_ring_members{job="loki",state="Unhealthy"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Loki ring has unhealthy members"
+      description: "Loki ring on {{ $labels.instance }} has {{ $value }} unhealthy members"

@@ -42,6 +42,14 @@
           url = "http://nas-01.lan:9009/prometheus";
           isDefault = false;
         }
+        {
+          name = "Loki";
+          type = "loki";
+          access = "proxy";
+          uid = "loki-datasource";
+          url = "http://nas-01.lan:3100";
+          isDefault = false;
+        }
       ];
 
       dashboards.settings.providers = [
