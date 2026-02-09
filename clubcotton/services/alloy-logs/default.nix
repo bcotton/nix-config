@@ -141,5 +141,15 @@ in {
         cp "${alloyConfig}" "$out/config.alloy"
       '';
     };
+
+    # DynamicUser=true (set by the upstream alloy module) implies PrivateTmp,
+    # so Alloy can't see files under /tmp. Bind-mount each fileTarget's parent
+    # directory read-only into the service namespace.
+    systemd.services.alloy.serviceConfig.BindReadOnlyPaths = let
+      # Extract parent directory from a glob path (strip the filename/glob portion)
+      parentDir = path: dirOf path;
+      dirs = unique (map (t: parentDir t.path) cfg.fileTargets);
+    in
+      mkIf (cfg.fileTargets != []) dirs;
   };
 }
