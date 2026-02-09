@@ -12,6 +12,33 @@ with lib; let
     concatStringsSep "\n"
     (mapAttrsToList (k: v: ''${k} = "${v}",'') cfg.extraLabels);
 
+  # Generate file match + source blocks for each file target
+  mkFileTargetLabels = target: let
+    allLabels =
+      {
+        job = target.job;
+        hostname = config.networking.hostName;
+      }
+      // target.extraLabels;
+  in
+    concatStringsSep "\n" (mapAttrsToList (k: v: ''${k} = "${v}",'') allLabels);
+
+  mkFileSourceBlock = target: ''
+    local.file_match "${target.job}" {
+      path_targets = [{
+        __path__ = "${target.path}",
+    ${mkFileTargetLabels target}
+      }]
+    }
+
+    loki.source.file "${target.job}" {
+      targets    = local.file_match.${target.job}.targets
+      forward_to = [loki.write.default.receiver]
+    }
+  '';
+
+  fileSourceBlocks = concatStringsSep "\n" (map mkFileSourceBlock cfg.fileTargets);
+
   alloyConfig = pkgs.writeText "config.alloy" ''
     loki.source.journal "systemd" {
       forward_to    = [loki.write.default.receiver]
@@ -32,6 +59,10 @@ with lib; let
         target_label  = "unit"
       }
       rule {
+        source_labels = ["__journal__systemd_user_unit"]
+        target_label  = "user_unit"
+      }
+      rule {
         source_labels = ["__journal_syslog_identifier"]
         target_label  = "syslog_identifier"
       }
@@ -44,6 +75,8 @@ with lib; let
         target_label  = "priority"
       }
     }
+
+    ${fileSourceBlocks}
 
     loki.write "default" {
       endpoint {
@@ -71,6 +104,28 @@ in {
       type = types.attrsOf types.str;
       default = {};
       description = "Additional static labels to attach to all log entries.";
+    };
+
+    fileTargets = mkOption {
+      type = types.listOf (types.submodule {
+        options = {
+          job = mkOption {
+            type = types.str;
+            description = "Job name used as Alloy component identifier and Loki label.";
+          };
+          path = mkOption {
+            type = types.str;
+            description = "Glob pattern for log files to tail (e.g. /var/log/app/*.log).";
+          };
+          extraLabels = mkOption {
+            type = types.attrsOf types.str;
+            default = {};
+            description = "Additional labels to attach to entries from these files.";
+          };
+        };
+      });
+      default = [];
+      description = "File paths to tail and forward to Loki.";
     };
   };
 
