@@ -154,8 +154,8 @@ in {
 
         limits_config = {
           retention_period = cfg.retentionPeriod;
-          ingestion_rate_mb = 16;
-          ingestion_burst_size_mb = 32;
+          ingestion_rate_mb = 32;
+          ingestion_burst_size_mb = 64;
           max_streams_per_user = 10000;
           max_global_streams_per_user = 10000;
           max_query_parallelism = 16;
@@ -180,7 +180,17 @@ in {
 
     systemd.services.loki.serviceConfig = {
       EnvironmentFile = cfg.s3.environmentFile;
+      DynamicUser = lib.mkForce false;
+      User = "loki";
+      Group = "loki";
     };
+
+    users.users.loki = {
+      isSystemUser = true;
+      group = "loki";
+      home = cfg.dataDir;
+    };
+    users.groups.loki = {};
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0750 loki loki - -"

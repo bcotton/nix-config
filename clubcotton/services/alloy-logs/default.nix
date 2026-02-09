@@ -14,7 +14,7 @@ with lib; let
 
   alloyConfig = pkgs.writeText "config.alloy" ''
     loki.source.journal "systemd" {
-      forward_to    = [loki.relabel.journal.receiver]
+      forward_to    = [loki.write.default.receiver]
       relabel_rules = loki.relabel.journal.rules
       path          = "/var/log/journal"
       labels        = {

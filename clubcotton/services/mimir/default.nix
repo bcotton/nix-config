@@ -117,6 +117,9 @@ in {
 
         limits = {
           compactor_blocks_retention_period = cfg.retentionPeriod;
+          ingestion_rate = 50000;
+          ingestion_burst_size = 500000;
+          max_global_series_per_user = 300000;
         };
 
         ingester = {
@@ -141,7 +144,21 @@ in {
 
     systemd.services.mimir.serviceConfig = {
       EnvironmentFile = cfg.s3.environmentFile;
+      # The upstream module sets DynamicUser=true, which allocates a
+      # transient UID that conflicts with the static mimir user our
+      # tmpfiles rules expect.  Disable it so the service runs as
+      # the static mimir user consistently.
+      DynamicUser = lib.mkForce false;
+      User = "mimir";
+      Group = "mimir";
     };
+
+    users.users.mimir = {
+      isSystemUser = true;
+      group = "mimir";
+      home = cfg.dataDir;
+    };
+    users.groups.mimir = {};
 
     systemd.tmpfiles.rules = [
       "d ${cfg.dataDir} 0750 mimir mimir - -"
