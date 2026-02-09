@@ -75,16 +75,26 @@
       ../modules/zfs
     ];
 
+    # Load host variables for enriching specs
+    commonLib = import ../hosts/common/lib.nix;
+
     # NixOS host specifications - single source of truth for all NixOS hosts
     # Adding a host here automatically includes it in nixosConfigurations, SSH RemoteForward,
-    # and the homepage dashboard (if ip is specified)
+    # and the homepage dashboard (if ip is specified and shouldMonitor is true)
     #
     # Homepage/Glances fields (optional):
     #   ip          - IP address for Glances monitoring (enables Glances and adds to homepage)
     #   displayName - Name shown on homepage (defaults to hostname)
     #   glancesPort - Port for Glances (defaults to 61208)
     #   icon        - Icon for homepage (defaults to "mdi-server")
-    nixosHostSpecs = {
+    #
+    # Auto-derived fields:
+    #   shouldMonitor - From host variables shouldScrapeMetrics (controls homepage/Glances inclusion)
+    nixosHostSpecs = builtins.mapAttrs (name: spec:
+      spec // {
+        shouldMonitor = (commonLib.getHostVariables name).shouldScrapeMetrics or true;
+      }
+    ) {
       admin = {
         system = "x86_64-linux";
         usernames = ["bcotton"];
@@ -234,6 +244,14 @@
         description = "Audiobook collection manager";
         tailnetHostname = "readarr-audio";
       };
+      # Infrastructure (non-clubcotton services)
+      technitium = {
+        name = "Technitium";
+        category = "Infrastructure";
+        icon = "technitium-dns-server.svg";
+        description = "DNS & DHCP server";
+        href = "http://dns-01:5380";
+      };
     };
 
     # NixOS system builder (consolidated from nixosSystem and nixosMinimalSystem)
@@ -275,13 +293,15 @@
           in {
             services.clubcotton.tailscale.enable = variables.tailscaleEnable;
           })
-          # Auto-enable Glances on hosts with an IP in nixosHostSpecs
+          # Auto-enable Glances on hosts with an IP and monitoring enabled
           ({hostName, ...}: let
             hostSpec = nixosHostSpecs.${hostName} or {};
             hasIp = hostSpec.ip or null != null;
+            shouldMonitor = hostSpec.shouldMonitor or true;
+            enableGlances = hasIp && shouldMonitor;
           in {
-            services.glances.enable = hasIp;
-            services.glances.openFirewall = hasIp;
+            services.glances.enable = enableGlances;
+            services.glances.openFirewall = enableGlances;
           })
         ];
 
