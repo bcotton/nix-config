@@ -536,6 +536,10 @@
       # Menu selection: show list and highlight current selection
       zstyle ':completion:*' menu select
 
+      # Cache expensive completions (e.g. systemctl, journalctl unit lists)
+      zstyle ':completion:*' use-cache on
+      zstyle ':completion:*' cache-path "$HOME/.zsh/cache"
+
       # Prioritize local directories in cd/z completion over cdpath and zoxide
       zstyle ':completion:*:(cd|z):*' tag-order 'local-directories' 'directory-stack' 'named-directories' 'path-directories'
 
