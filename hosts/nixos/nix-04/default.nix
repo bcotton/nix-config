@@ -24,6 +24,7 @@ in {
   ];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     freshrss.enable = false;
     paperless.enable = false;
     filebrowser.enable = false;

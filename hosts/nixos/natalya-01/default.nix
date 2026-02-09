@@ -24,6 +24,8 @@ in {
   ];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
+    alloy-logs.lokiEndpoint = "http://loki.bobtail-clownfish.ts.net/loki/api/v1/push";
     tailscale.enable = true;
   };
 

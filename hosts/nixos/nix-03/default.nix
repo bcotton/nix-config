@@ -25,6 +25,7 @@ in {
   ];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     tailscale.enable = true;
     nut-client.enable = true;
     forgejo-runner = {

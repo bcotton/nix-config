@@ -4,6 +4,7 @@
   ...
 }: {
   imports = [
+    ./alloy-logs
     ./arr
     ./atuin
     ./bonob

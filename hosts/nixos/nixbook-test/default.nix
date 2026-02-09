@@ -21,6 +21,7 @@
   ];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     tailscale.enable = true;
   };
 

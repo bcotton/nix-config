@@ -34,6 +34,7 @@ in {
   disabledModules = ["services/printing/cups-pdf.nix"];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     atuin.enable = true;
     calibre.enable = true;
     calibre-web.enable = true;

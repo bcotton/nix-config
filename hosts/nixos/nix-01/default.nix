@@ -26,6 +26,7 @@ in {
   ];
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     code-server.enable = true;
     nut-client.enable = true;
     bonob.enable = true;

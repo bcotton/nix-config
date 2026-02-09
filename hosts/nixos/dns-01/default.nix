@@ -33,6 +33,7 @@ in {
   '';
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     nut-client.enable = true;
 
     # Technitium DNS Server

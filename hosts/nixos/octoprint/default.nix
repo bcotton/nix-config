@@ -112,6 +112,10 @@ in {
   #   enableSSHSupport = true;
   # };
 
+  services.clubcotton = {
+    alloy-logs.enable = true;
+  };
+
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.

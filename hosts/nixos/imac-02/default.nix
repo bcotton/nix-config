@@ -29,6 +29,7 @@ in {
   hardware.bluetooth.powerOnBoot = true;
 
   services.clubcotton = {
+    alloy-logs.enable = true;
     scanner.enable = true;
     tailscale.enable = true;
   };

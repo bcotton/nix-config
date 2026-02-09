@@ -90,6 +90,10 @@ in {
     };
   };
 
+  services.clubcotton = {
+    alloy-logs.enable = true;
+  };
+
   environment.systemPackages = with pkgs; [
     firefox
     code-cursor
