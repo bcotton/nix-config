@@ -281,6 +281,7 @@
             hasIp = hostSpec.ip or null != null;
           in {
             services.glances.enable = hasIp;
+            services.glances.openFirewall = hasIp;
           })
         ];
 

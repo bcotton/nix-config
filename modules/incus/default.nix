@@ -4,6 +4,7 @@
   ...
 }: {
   networking.nftables.enable = true;
+  networking.firewall.allowedTCPPorts = [8443];
 
   virtualisation.incus.enable = true;
   virtualisation.incus.package = pkgs.incus;
