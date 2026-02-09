@@ -94,7 +94,7 @@ in {
         group = "users";
         vaultDir = "/home/natalya/obsidian-vaults";
         basicAuth = {
-          enable = true;
+          enable = false;
           username = "natalya";
           environmentFile = config.age.secrets.obsidian-natalya.path;
         };
