@@ -189,7 +189,14 @@ in {
           params = {
             module = ["http_2xx"];
           };
-          static_configs = scrapeConfigs.tsnsrvBlackboxConfigs;
+          static_configs =
+            scrapeConfigs.tsnsrvBlackboxConfigs
+            ++ [
+              {
+                # Loki returns 404 at /, so probe /ready instead
+                targets = ["https://loki${promLib.tailscaleDomain}/ready"];
+              }
+            ];
           relabel_configs = [
             {
               source_labels = ["__address__"];
