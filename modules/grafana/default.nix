@@ -38,6 +38,7 @@
           name = "Mimir";
           type = "prometheus";
           access = "proxy";
+          uid = "PAE45454D0EDB9216";
           url = "http://nas-01.lan:9009/prometheus";
           isDefault = false;
         }

@@ -103,6 +103,17 @@ in {
           ];
         }
         {
+          job_name = "mimir";
+          scrape_interval = "30s";
+          scrape_timeout = "10s";
+          metrics_path = "/metrics";
+          static_configs = [
+            {
+              targets = ["nas-01:9009"];
+            }
+          ];
+        }
+        {
           job_name = "garage";
           scrape_interval = "30s";
           scrape_timeout = "10s";

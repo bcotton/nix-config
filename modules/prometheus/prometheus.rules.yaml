@@ -587,3 +587,76 @@ groups:
     annotations:
       summary: "Garage block resync queue is large"
       description: "Garage on {{ $labels.instance }} has {{ $value }} blocks in the resync queue"
+
+  # Grafana Mimir Monitoring
+  - alert: MimirDown
+    expr: up{job="mimir"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Mimir is down"
+      description: "Mimir on {{ $labels.instance }} has been unreachable for 5 minutes"
+
+  - alert: MimirIngestionFailures
+    expr: rate(cortex_ingester_ingested_samples_failures_total{job="mimir"}[5m]) > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Mimir sample ingestion failures"
+      description: "Mimir on {{ $labels.instance }} is failing to ingest samples at {{ printf \"%.1f\" $value }}/sec"
+
+  - alert: MimirCompactionFailed
+    expr: increase(cortex_compactor_runs_failed_total{job="mimir"}[1h]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Mimir compaction failures"
+      description: "Mimir compactor on {{ $labels.instance }} has had failed runs in the last hour"
+
+  - alert: MimirHighMemoryUsage
+    expr: process_resident_memory_bytes{job="mimir"} / 1073741824 > 4
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Mimir high memory usage"
+      description: "Mimir on {{ $labels.instance }} is using {{ printf \"%.1f\" $value }}GB of memory"
+
+  - alert: MimirRequestErrors
+    expr: rate(cortex_request_duration_seconds_count{job="mimir",status_code=~"5.."}[5m]) > 0.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Mimir returning server errors"
+      description: "Mimir on {{ $labels.instance }} is returning 5xx errors at {{ printf \"%.1f\" $value }}/sec for {{ $labels.route }}"
+
+  - alert: MimirRemoteWriteFailing
+    expr: rate(prometheus_remote_storage_failed_samples_total{remote_name="mimir"}[5m]) > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Prometheus remote write to Mimir is failing"
+      description: "Prometheus is failing to send samples to Mimir at {{ printf \"%.1f\" $value }}/sec"
+
+  - alert: MimirRemoteWriteQueueFull
+    expr: prometheus_remote_storage_shards_max{remote_name="mimir"} - prometheus_remote_storage_shards{remote_name="mimir"} <= 0
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Prometheus remote write to Mimir queue is at max shards"
+      description: "All remote write shards to Mimir are in use - samples may be dropped"
+
+  - alert: MimirBlockLoadFailures
+    expr: increase(cortex_bucket_store_block_load_failures_total{job="mimir"}[1h]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Mimir S3 block load failures"
+      description: "Mimir on {{ $labels.instance }} is failing to load blocks from S3 storage"
