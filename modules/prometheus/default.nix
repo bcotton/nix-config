@@ -38,13 +38,12 @@ in {
       (builtins.readFile ./prometheus.rules.yaml)
     ];
 
-    # Send to the local Alloy instance for forwarding to Grafana Cloud
-    # remoteWrite = [
-    #   {
-    #     name = "alloy";
-    #     url = "http://localhost:9999/api/v1/metrics/write";
-    #   }
-    # ];
+    remoteWrite = [
+      {
+        name = "mimir";
+        url = "http://nas-01.lan:9009/api/v1/push";
+      }
+    ];
 
     exporters = {
       blackbox = {

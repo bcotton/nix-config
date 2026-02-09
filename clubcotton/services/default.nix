@@ -20,6 +20,7 @@
     ./immich
     ./jellyfin
     ./kavita
+    ./mimir
     ./navidrome
     ./nix-cache-proxy
     ./obsidian

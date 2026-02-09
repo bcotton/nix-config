@@ -88,4 +88,7 @@ in {
   "forgejo-token-larry.age".publicKeys = just_larry ++ botSystems;
   "moltbot-telegram-token.age".publicKeys = just_larry ++ botSystems;
   "moltbot-gateway-token.age".publicKeys = just_larry ++ botSystems;
+
+  # Mimir S3 credentials (for Garage backend)
+  "mimir-s3.age".publicKeys = users ++ systems;
 }

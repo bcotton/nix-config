@@ -34,6 +34,13 @@
           url = "http://localhost:${toString config.services.prometheus.port}";
           isDefault = true;
         }
+        {
+          name = "Mimir";
+          type = "prometheus";
+          access = "proxy";
+          url = "http://nas-01.lan:9009/prometheus";
+          isDefault = false;
+        }
       ];
 
       dashboards.settings.providers = [

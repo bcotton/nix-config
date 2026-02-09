@@ -44,6 +44,7 @@ in {
     immich.enable = true;
     jellyfin.enable = true;
     jellyseerr.enable = true;
+    mimir.enable = true;
     kavita.enable = false;
     lidarr.enable = true;
     navidrome.enable = true;
@@ -79,6 +80,11 @@ in {
         mountpoint = "/ssdpool/local/nix-cache";
       };
     };
+  };
+
+  services.clubcotton.mimir = {
+    s3.endpoint = "nas-01:3900"; # Adjust when garage is deployed
+    s3.environmentFile = config.age.secrets."mimir-s3".path;
   };
 
   services.clubcotton.nix-cache-proxy.zfsDataset = {

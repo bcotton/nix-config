@@ -230,6 +230,14 @@ in {
     group = "wallabag";
   };
 
+  # Mimir S3 credentials (format: MIMIR_S3_ACCESS_KEY_ID=... MIMIR_S3_SECRET_ACCESS_KEY=...)
+  age.secrets."mimir-s3" = lib.mkIf config.services.clubcotton.mimir.enable {
+    file = ./mimir-s3.age;
+    owner = "mimir";
+    group = "mimir";
+    mode = "0400";
+  };
+
   age.secrets."syncoid-ssh-key" = lib.mkIf (config.services.clubcotton.syncoid.enable || config.services.clubcotton.borgmatic.enable || config.services.clubcotton.restic.enable) {
     file = ./syncoid-ssh-key.age;
     owner =
