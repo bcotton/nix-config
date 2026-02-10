@@ -42,6 +42,22 @@ jobs:
             # Install npm dependencies
             npm ci
 
+            # Diagnostic: does playwright-core crash with waitUntil:load?
+            timeout 60 node -e "
+              const pw = require(\"playwright-core\");
+              (async () => {
+                const b = await pw.chromium.launch({args:[\"--no-sandbox\",\"--disable-dev-shm-usage\",\"--disable-gpu\"]});
+                const p = await b.newPage({ignoreHTTPSErrors:true});
+                p.on(\"crash\", () => console.error(\"DIAG: PAGE CRASHED\"));
+                console.log(\"DIAG: navigating with waitUntil:load...\");
+                const r = await p.goto(\"https://navidrome.bobtail-clownfish.ts.net/\",{timeout:20000,waitUntil:\"load\"});
+                console.log(\"DIAG: goto done:\",r?.status(),p.url());
+                await new Promise(r => setTimeout(r, 5000));
+                console.log(\"DIAG: no crash after 5s, URL:\",p.url());
+                await b.close();
+              })().catch(e=>console.error(\"DIAG error:\",e.message?.split(String.fromCharCode(10))[0]));
+            " || echo "Diagnostic timed out (non-fatal)"
+
             # Run only navidrome tests for now
             node node_modules/@playwright/test/cli.js test \
               --project=setup-navidrome --project=navidrome
