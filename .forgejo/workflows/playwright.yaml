@@ -42,6 +42,39 @@ jobs:
             # Install npm dependencies
             npm ci
 
+            # Quick diagnostic: test Chromium can navigate at all
+            timeout 60 node -e "
+              const pw = require(\"playwright-core\");
+              (async () => {
+                console.log(\"Launching Chromium...\");
+                const browser = await pw.chromium.launch({
+                  args: [\"--no-sandbox\", \"--disable-setuid-sandbox\",
+                         \"--disable-dev-shm-usage\", \"--disable-gpu\"]
+                });
+                const page = await browser.newPage({ ignoreHTTPSErrors: true });
+
+                // Test 1: basic navigation
+                await page.goto(\"data:text/html,<h1>test</h1>\");
+                console.log(\"data: URL works, url=\", page.url());
+
+                // Test 2: public HTTPS
+                try {
+                  const r = await page.goto(\"https://google.com\", { timeout: 15000 });
+                  console.log(\"google.com: status=\", r?.status(), \"url=\", page.url());
+                } catch(e) { console.log(\"google.com FAILED:\", e.message); }
+
+                // Test 3: tailscale HTTPS
+                try {
+                  const r = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 15000 });
+                  console.log(\"navidrome: status=\", r?.status(), \"url=\", page.url());
+                } catch(e) { console.log(\"navidrome FAILED:\", e.message); }
+
+                await browser.close();
+                console.log(\"Diagnostic done.\");
+              })().catch(e => console.error(\"FATAL:\", e.message));
+            " || echo "Diagnostic timed out or failed"
+            echo ""
+
             # Run only navidrome tests for CI debugging
             node node_modules/@playwright/test/cli.js test \
               --project=setup-navidrome --project=navidrome
