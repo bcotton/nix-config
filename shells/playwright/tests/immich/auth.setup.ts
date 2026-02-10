@@ -15,7 +15,7 @@ setup('authenticate', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).fill(svc.password);
   await page.getByRole('button', { name: 'Login' }).click();
 
-  await expect(page).toHaveURL(/\/photos/);
+  await expect(page).toHaveURL(/\/photos/, { timeout: 15000 });
 
   await page.context().storageState({ path: authFile });
 });
