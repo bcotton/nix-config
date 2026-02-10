@@ -654,6 +654,7 @@
       golangci-lint
       localPackages.playwright-cli
       shellcheck
+      tea
       terraform
       trufflehog
       # zizmor  # not in nixpkgs yet

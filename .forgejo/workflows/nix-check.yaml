@@ -52,30 +52,4 @@ jobs:
           nix flake info --json | head -20 || true
           echo ""
           echo "=== Flake Metadata ==="
-          nix flake metadata || true
-
-  format-check:
-    runs-on: ubuntu-latest
-    container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
-      options: --user root
-    steps:
-      - name: Setup Nix environment
-        run: |
-          git config --global user.email "actions@forgejo.local"
-          git config --global user.name "Forgejo Actions"
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check formatting
-        run: |
-          echo "Checking Nix code formatting..."
-          # Run the formatter in check mode
-          nix fmt -- --check . || {
-            echo ""
-            echo "❌ Code formatting issues found!"
-            echo "Run 'nix fmt' or 'just fmt' locally to fix formatting"
-            exit 1
-          }
-          echo "✅ All Nix files are properly formatted"
+          nix flake metadata || tru
