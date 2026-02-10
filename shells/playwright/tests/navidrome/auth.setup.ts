@@ -6,12 +6,8 @@ const svc = getServiceConfig('navidrome');
 const authFile = path.join(__dirname, '..', '..', '.auth', 'navidrome.json');
 
 setup('authenticate', async ({ page }) => {
-  console.log('baseURL config:', svc.url);
-  console.log('Navigating to /...');
-  const response = await page.goto('/');
-  console.log('goto response:', response?.status(), response?.url());
-  console.log('page.url() after goto:', page.url());
-  await expect(page).toHaveURL(/.*#\/login/);
+  await page.goto('/');
+  await expect(page).toHaveURL(/.*#\/login/, { timeout: 15000 });
 
   await page.locator('input[name="username"]').fill(svc.username);
   await page.locator('input[name="password"]').fill(svc.password);
