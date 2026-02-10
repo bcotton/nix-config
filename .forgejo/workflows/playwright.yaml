@@ -44,8 +44,7 @@ jobs:
             # Install npm dependencies
             npm ci
 
-            # Run only navidrome tests for now
-            node node_modules/@playwright/test/cli.js test \
-              --project=setup-navidrome --project=navidrome
+            # Run all service smoke tests
+            npm test
           '
 
