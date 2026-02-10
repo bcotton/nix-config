@@ -66,6 +66,14 @@
       # Starship prompt
       eval "$(starship init zsh)"
 
+      # Wire up completions for aliased commands
+      compdef ls=eza
+      compdef ll=eza
+      compdef lt=eza
+      compdef cat=bat
+      compdef grep=rg
+      compdef find=fd
+
       # Better history
       setopt HIST_IGNORE_DUPS
       setopt HIST_IGNORE_SPACE

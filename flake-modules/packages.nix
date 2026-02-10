@@ -32,6 +32,8 @@
         remote-notify = pkgs.callPackage ../pkgs/remote-notify {};
         # osc52-copy: Copy to clipboard via OSC52 escape sequence (for tmux-fingers)
         osc52-copy = pkgs.callPackage ../pkgs/osc52-copy {};
+        # playwright-cli: Token-efficient browser automation CLI for AI coding agents
+        playwright-cli = pkgs.callPackage ../pkgs/playwright-cli {};
       };
 
     # Expose localPackages via legacyPackages for backward compatibility
@@ -44,7 +46,7 @@
         inherit (config.packages) browser-opener clipboard-receiver notification-receiver arc-tab-archiver;
       }
       // lib.optionalAttrs pkgs.stdenv.isLinux {
-        inherit (config.packages) xdg-open-remote remote-copy remote-notify osc52-copy;
+        inherit (config.packages) xdg-open-remote remote-copy remote-notify osc52-copy playwright-cli;
       };
   };
 }

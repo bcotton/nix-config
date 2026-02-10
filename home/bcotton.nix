@@ -3,6 +3,7 @@
   pkgs,
   lib,
   unstablePkgs,
+  localPackages,
   hostName ? "unknown",
   nixosHosts ? [],
   workmuxPackage,
@@ -616,6 +617,7 @@
       ]))
       # unstablePkgs.aider-chat
       _1password-cli
+      bitwarden-cli
       bottom
       claude-code
       devenv
@@ -650,6 +652,7 @@
       # Development tools
       azure-cli
       golangci-lint
+      localPackages.playwright-cli
       shellcheck
       terraform
       trufflehog
