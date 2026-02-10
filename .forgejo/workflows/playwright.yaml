@@ -28,6 +28,12 @@ jobs:
         run: |
           echo "${{ secrets.SMOKE_TEST_CREDS }}" > shells/playwright/.env
 
+      - name: Debug - verify .env contents
+        run: |
+          echo "=== .env file ==="
+          cat shells/playwright/.env
+          echo "=== end ==="
+
       - name: Enter Playwright shell and run tests
         timeout-minutes: 10
         run: |
