@@ -97,4 +97,7 @@ in {
 
   # Loki S3 credentials (for Garage backend)
   "loki-s3.age".publicKeys = users ++ systems;
+
+  # Smoke test credentials for Playwright CI tests
+  "smoke-test-creds.age".publicKeys = users ++ systems;
 }

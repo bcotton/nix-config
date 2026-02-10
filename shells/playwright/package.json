@@ -9,6 +9,7 @@
     "report": "node node_modules/@playwright/test/cli.js show-report"
   },
   "devDependencies": {
-    "@playwright/test": "1.57.0"
+    "@playwright/test": "1.57.0",
+    "dotenv": "^17.2.4"
   }
 }

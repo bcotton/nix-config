@@ -23,6 +23,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup smoke test credentials
+        run: |
+          echo "${{ secrets.SMOKE_TEST_CREDS }}" > shells/playwright/.env
+
       - name: Enter Playwright shell and run tests
         run: |
           cd shells/playwright
