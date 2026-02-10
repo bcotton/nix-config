@@ -13,7 +13,7 @@ export const SERVICES: Record<string, ServiceConfig> = {
   grafana: {
     name: 'Grafana',
     envPrefix: 'GRAFANA',
-    defaultUrl: 'http://admin:3000',
+    defaultUrl: 'https://grafana.bobtail-clownfish.ts.net',
   },
   jellyfin: {
     name: 'Jellyfin',
