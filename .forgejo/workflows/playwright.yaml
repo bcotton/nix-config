@@ -28,18 +28,6 @@ jobs:
         run: |
           echo "${{ secrets.SMOKE_TEST_CREDS }}" > shells/playwright/.env
 
-      - name: Network diagnostics
-        run: |
-          echo "=== Network Diagnostics ==="
-          echo "--- /etc/resolv.conf ---"
-          cat /etc/resolv.conf || true
-          echo ""
-          echo "--- DNS resolution via getent ---"
-          getent hosts navidrome.bobtail-clownfish.ts.net || echo "getent failed"
-          echo ""
-          echo "--- Connectivity test via bash /dev/tcp ---"
-          timeout 10 bash -c 'echo > /dev/tcp/navidrome.bobtail-clownfish.ts.net/443 && echo "TCP connect OK"' 2>&1 || echo "TCP connect FAILED"
-
       - name: Enter Playwright shell and run tests
         run: |
           cd shells/playwright
@@ -47,6 +35,37 @@ jobs:
             echo "=== Playwright Environment ==="
             echo "Node version: $(node --version)"
             echo "Browser path: $PLAYWRIGHT_BROWSERS_PATH"
+            echo "SSL_CERT_FILE: ${SSL_CERT_FILE:-unset}"
+            echo "NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-unset}"
+            echo ""
+
+            echo "=== Node.js fetch test ==="
+            node -e "
+              fetch(\"https://navidrome.bobtail-clownfish.ts.net/\")
+                .then(r => console.log(\"Node fetch: HTTP\", r.status))
+                .catch(e => console.error(\"Node fetch error:\", e.message, e.cause || \"\"));
+            " || true
+            echo ""
+
+            echo "=== Chromium direct launch test ==="
+            node -e "
+              const { chromium } = require(\"playwright\");
+              (async () => {
+                const browser = await chromium.launch({
+                  args: [\"--no-sandbox\", \"--disable-setuid-sandbox\", \"--disable-dev-shm-usage\", \"--disable-gpu\"]
+                });
+                const page = await browser.newPage({ ignoreHTTPSErrors: true });
+                try {
+                  const resp = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 30000 });
+                  console.log(\"Chromium status:\", resp?.status());
+                  console.log(\"Chromium url:\", page.url());
+                } catch(e) {
+                  console.error(\"Chromium error:\", e.message);
+                }
+                await browser.close();
+              })();
+            " || true
+            echo ""
 
             # Install npm dependencies
             npm ci
