@@ -50,6 +50,11 @@ export const SERVICES: Record<string, ServiceConfig> = {
     envPrefix: 'OPENWEBUI',
     defaultUrl: 'https://llm.bobtail-clownfish.ts.net',
   },
+  sabnzbd: {
+    name: 'SABnzbd',
+    envPrefix: 'SABNZBD',
+    defaultUrl: 'https://sabnzbd.bobtail-clownfish.ts.net',
+  },
 };
 
 export function getServiceConfig(serviceKey: string) {
