@@ -42,37 +42,38 @@ jobs:
             # Install npm dependencies
             npm ci
 
-            # Quick diagnostic: test Chromium can navigate at all
+            # Quick diagnostic: test Chromium navigation with verbose logging
             timeout 60 node -e "
               const pw = require(\"playwright-core\");
               (async () => {
-                console.log(\"Launching Chromium...\");
+                console.log(\"Launching Chromium with verbose logging...\");
                 const browser = await pw.chromium.launch({
                   args: [\"--no-sandbox\", \"--disable-setuid-sandbox\",
-                         \"--disable-dev-shm-usage\", \"--disable-gpu\"]
+                         \"--disable-dev-shm-usage\", \"--disable-gpu\",
+                         \"--enable-logging=stderr\", \"--v=1\"]
                 });
                 const page = await browser.newPage({ ignoreHTTPSErrors: true });
 
-                // Test 1: basic navigation
+                // Test 1: data URL (no network)
                 await page.goto(\"data:text/html,<h1>test</h1>\");
-                console.log(\"data: URL works, url=\", page.url());
+                console.log(\"TEST data: OK, url=\", page.url());
 
-                // Test 2: public HTTPS
+                // Test 2: HTTP (not HTTPS) - test network without TLS
                 try {
-                  const r = await page.goto(\"https://google.com\", { timeout: 15000 });
-                  console.log(\"google.com: status=\", r?.status(), \"url=\", page.url());
-                } catch(e) { console.log(\"google.com FAILED:\", e.message); }
+                  const r = await page.goto(\"http://httpbin.org/get\", { timeout: 15000 });
+                  console.log(\"TEST http: status=\", r?.status(), \"url=\", page.url());
+                } catch(e) { console.log(\"TEST http FAILED:\", e.message.split(\"\\\n\")[0]); }
 
-                // Test 3: tailscale HTTPS
+                // Test 3: HTTPS
                 try {
-                  const r = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 15000 });
-                  console.log(\"navidrome: status=\", r?.status(), \"url=\", page.url());
-                } catch(e) { console.log(\"navidrome FAILED:\", e.message); }
+                  const r = await page.goto(\"https://httpbin.org/get\", { timeout: 15000 });
+                  console.log(\"TEST https: status=\", r?.status(), \"url=\", page.url());
+                } catch(e) { console.log(\"TEST https FAILED:\", e.message.split(\"\\\n\")[0]); }
 
                 await browser.close();
                 console.log(\"Diagnostic done.\");
               })().catch(e => console.error(\"FATAL:\", e.message));
-            " || echo "Diagnostic timed out or failed"
+            " 2>&1 | grep -E 'TEST |FATAL|Launching|Diagnostic|ERROR|CRASH|crash|nss|ssl|cert|NSS' || true
             echo ""
 
             # Run only navidrome tests for CI debugging
