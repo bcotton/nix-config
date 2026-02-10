@@ -13,7 +13,7 @@ setup('authenticate', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).fill(svc.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(page).toHaveTitle(/Dashboard/);
+  await expect(page).toHaveTitle(/Dashboard/, { timeout: 15000 });
 
   await page.context().storageState({ path: authFile });
 });

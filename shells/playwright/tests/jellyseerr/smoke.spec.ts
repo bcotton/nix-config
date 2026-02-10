@@ -26,13 +26,13 @@ test.describe('Jellyseerr smoke tests', () => {
 
   test('navigate to Movies', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Movies' }).click();
+    await page.getByRole('link', { name: 'Movies', exact: true }).click();
     await expect(page).toHaveURL(/\/discover\/movies/);
   });
 
   test('navigate to Series', async ({ page }) => {
     await page.goto('/');
-    await page.getByRole('link', { name: 'Series' }).click();
+    await page.getByRole('link', { name: 'Series', exact: true }).click();
     await expect(page).toHaveURL(/\/discover\/tv/);
   });
 
