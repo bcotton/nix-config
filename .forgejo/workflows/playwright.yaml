@@ -73,7 +73,7 @@ jobs:
                 await browser.close();
                 console.log(\"Diagnostic done.\");
               })().catch(e => console.error(\"FATAL:\", e.message));
-            " 2>&1 | grep -E 'TEST |FATAL|Launching|Diagnostic|ERROR|CRASH|crash|nss|ssl|cert|NSS' || true
+            " 2>&1 || echo "Diagnostic failed"
             echo ""
 
             # Run only navidrome tests for CI debugging
