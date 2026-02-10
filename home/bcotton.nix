@@ -172,6 +172,11 @@
   # list of programs
   # https://mipmip.github.io/home-manager-option-search
 
+  programs.mise = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
