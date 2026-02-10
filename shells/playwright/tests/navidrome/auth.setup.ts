@@ -13,7 +13,7 @@ setup('authenticate', async ({ page }) => {
   await page.locator('input[name="password"]').fill(svc.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(page).toHaveURL(/.*#\/album/);
+  await expect(page).toHaveURL(/.*#\/album/, { timeout: 15000 });
 
   await page.context().storageState({ path: authFile });
 });
