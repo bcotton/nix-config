@@ -10,7 +10,11 @@ export const SERVICES: Record<string, ServiceConfig> = {
     envPrefix: 'NAVIDROME',
     defaultUrl: 'https://navidrome.bobtail-clownfish.ts.net',
   },
-  // grafana: LAN-only (http://admin:3000), no Tailscale proxy — skipped in CI
+  grafana: {
+    name: 'Grafana',
+    envPrefix: 'GRAFANA',
+    defaultUrl: 'https://grafana.bobtail-clownfish.ts.net',
+  },
   jellyfin: {
     name: 'Jellyfin',
     envPrefix: 'JELLYFIN',

@@ -140,8 +140,8 @@ relative_time() {
 cmd_list() {
   local limit="$1" status_filter="$2" branch_filter="$3" show_jobs="$4"
   # Over-fetch to account for client-side filtering and grouping
-  local fetch_limit=$((limit * 15))
-  (( fetch_limit < 50 )) && fetch_limit=50
+  local fetch_limit=$((limit * 5))
+  (( fetch_limit < 20)) && fetch_limit=20
 
   local data
   data=$(api_get "repos/${REPO}/actions/tasks?limit=${fetch_limit}") || {
@@ -204,7 +204,7 @@ cmd_list() {
 cmd_show() {
   local run_number="$1"
   local data
-  data=$(api_get "repos/${REPO}/actions/tasks?limit=50") || {
+  data=$(api_get "repos/${REPO}/actions/tasks?limit=20") || {
     log_error "API request failed"
     exit 1
   }
