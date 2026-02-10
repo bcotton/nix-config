@@ -64,11 +64,18 @@ jobs:
                   console.log(\"TEST http: status=\", r?.status(), \"url=\", page.url());
                 } catch(e) { console.log(\"TEST http FAILED:\", e.message.split(\"\\\n\")[0]); }
 
-                // Test 3: HTTPS
+                // Test 3: HTTPS public
                 try {
                   const r = await page.goto(\"https://httpbin.org/get\", { timeout: 15000 });
-                  console.log(\"TEST https: status=\", r?.status(), \"url=\", page.url());
-                } catch(e) { console.log(\"TEST https FAILED:\", e.message.split(\"\\\n\")[0]); }
+                  console.log(\"TEST https-public: status=\", r?.status(), \"url=\", page.url());
+                } catch(e) { console.log(\"TEST https-public FAILED:\", e.message.split(\"\\\n\")[0]); }
+
+                // Test 4: Tailscale .ts.net URL (the actual target)
+                try {
+                  const r = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 15000 });
+                  console.log(\"TEST tailscale: status=\", r?.status(), \"url=\", page.url());
+                  console.log(\"TEST tailscale title:\", await page.title());
+                } catch(e) { console.log(\"TEST tailscale FAILED:\", e.message.split(\"\\\n\")[0]); }
 
                 await browser.close();
                 console.log(\"Diagnostic done.\");
