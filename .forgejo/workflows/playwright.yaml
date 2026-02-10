@@ -26,13 +26,9 @@ jobs:
 
       - name: Setup smoke test credentials
         run: |
-          echo "${{ secrets.SMOKE_TEST_CREDS }}" > shells/playwright/.env
-
-      - name: Debug - verify .env contents
-        run: |
-          echo "=== .env file ==="
-          cat shells/playwright/.env
-          echo "=== end ==="
+          cat > shells/playwright/.env <<'ENVEOF'
+          ${{ secrets.SMOKE_TEST_CREDS }}
+          ENVEOF
 
       - name: Enter Playwright shell and run tests
         timeout-minutes: 10
