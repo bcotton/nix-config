@@ -54,6 +54,21 @@ nixos-rebuild switch --flake .#hostname \
   --build-host localhost
 ```
 
+### CI / Forgejo Actions
+
+```bash
+just ci                      # List recent Forgejo Action runs
+just ci -n 20                # List last 20 runs
+just ci -s failure           # Show only failed runs
+just ci -b main              # Filter by branch
+just ci show 401             # Show details of run #401
+just ci logs 401             # Show logs for run #401
+just ci logs 401 1           # Show logs for job index 1 of run #401
+```
+
+The script reads your API token from the `tea` CLI config at `~/.config/tea/config.yml`.
+Override with `FORGEJO_TOKEN` env var if needed.
+
 ### Testing
 
 ```bash

@@ -130,6 +130,14 @@ nas-01-console:
   echo ""
   ssh -N -L 8443:192.168.5.143:443 admin
 
+# List recent Forgejo CI runs
+# Usage: just ci              (list recent runs)
+#        just ci -s failure   (show only failures)
+#        just ci show 401     (show run details)
+#        just ci logs 401     (show run logs)
+ci *args="":
+  ./scripts/forgejo-runs.sh {{args}}
+
 w-dconfdump:
   dconf dump / > tmp/w-dconf
 w-dconf2nix:

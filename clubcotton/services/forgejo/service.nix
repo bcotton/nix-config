@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }:
@@ -183,183 +184,187 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    # Declare ZFS dataset if configured
-    disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
-      ${cfg.zfsDataset.name} = {
-        inherit (cfg.zfsDataset) properties;
-      };
-    };
-
-    # Ensure user exists
-    users.users.${cfg.user} = {
-      isSystemUser = true;
-      group = cfg.group;
-      home = cfg.stateDir;
-      createHome = true;
-      description = "Forgejo user";
-    };
-
-    # Ensure group exists
-    users.groups.${cfg.group} = {};
-
-    # Use centralized PostgreSQL configuration module
-    # Enable via services.clubcotton.postgresql.forgejo.enable = true
-    # This ensures proper database setup, password management, and backup integration
-
-    # Create directories
-    systemd.tmpfiles.rules =
-      [
-        "d '${cfg.stateDir}' 0750 ${cfg.user} ${cfg.group} - -"
-      ]
-      ++ optionals (cfg.customPath != null) [
-        "d '${cfg.customPath}' 0750 ${cfg.user} ${cfg.group} - -"
-        "d '${cfg.customPath}/repositories' 0750 ${cfg.user} ${cfg.group} - -"
-        "d '${cfg.customPath}/lfs' 0750 ${cfg.user} ${cfg.group} - -"
-        "d '${cfg.customPath}/data' 0750 ${cfg.user} ${cfg.group} - -"
-        "d '${cfg.customPath}/packages' 0750 ${cfg.user} ${cfg.group} - -"
-      ];
-
-    # Forgejo service
-    services.forgejo = {
-      enable = true;
-      package = cfg.package;
-      user = cfg.user;
-      group = cfg.group;
-      stateDir = cfg.stateDir;
-
-      database = {
-        type = "postgres";
-        host = cfg.database.host;
-        port = cfg.database.port;
-        name = cfg.database.name;
-        user = cfg.database.user;
-        passwordFile = cfg.database.passwordFile;
-      };
-
-      settings = {
-        server = {
-          DOMAIN = cfg.domain;
-          HTTP_PORT = cfg.port;
-          ROOT_URL =
-            if (cfg.tailnetHostname != null && cfg.tailnetHostname != "")
-            then "https://${cfg.tailnetHostname}.bobtail-clownfish.ts.net/"
-            else "http://${cfg.domain}:${toString cfg.port}/";
-          SSH_DOMAIN = cfg.domain;
-          SSH_PORT = cfg.sshPort;
-          START_SSH_SERVER = true;
-          BUILTIN_SSH_SERVER_USER = cfg.user;
-          # Bind to all interfaces for local network access
-          HTTP_ADDR = "0.0.0.0";
-          SSH_LISTEN_HOST = "0.0.0.0";
-          SSH_LISTEN_PORT = cfg.sshPort;
-        };
-
-        service = {
-          DISABLE_REGISTRATION = true;
-          REQUIRE_SIGNIN_VIEW = false;
-          DEFAULT_KEEP_EMAIL_PRIVATE = true;
-          DEFAULT_ALLOW_CREATE_ORGANIZATION = true;
-          DEFAULT_ENABLE_TIMETRACKING = true;
-        };
-
-        repository = {
-          ROOT = mkIf (cfg.customPath != null) (mkForce "${cfg.customPath}/repositories");
-          DEFAULT_BRANCH = "main";
-          DEFAULT_PRIVATE = "private";
-          ENABLE_PUSH_CREATE_USER = true;
-          ENABLE_PUSH_CREATE_ORG = true;
-        };
-
-        "repository.local" = mkIf cfg.features.lfs {
-          LOCAL_COPY_PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/data";
-        };
-
-        lfs = mkIf cfg.features.lfs {
-          ENABLE = true;
-          PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/lfs";
-          STORAGE_TYPE = "local";
-        };
-
-        actions = mkIf cfg.features.actions {
-          ENABLED = true;
-          DEFAULT_ACTIONS_URL = "https://code.forgejo.org";
-        };
-
-        metrics = {
-          ENABLED = true;
-        };
-
-        packages = mkIf cfg.features.packages {
-          ENABLED = true;
-          STORAGE_TYPE = "local";
-          MINIO_BASE_PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/packages";
-        };
-
-        federation = mkIf cfg.features.federation {
-          ENABLED = true;
-        };
-
-        session = {
-          PROVIDER = "db";
-          COOKIE_SECURE = false; # Set to true if using HTTPS
-        };
-
-        log = {
-          MODE = "console";
-          LEVEL = "Info";
-        };
-
-        security = {
-          INSTALL_LOCK = true;
-          MIN_PASSWORD_LENGTH = 8;
-          PASSWORD_COMPLEXITY = "lower,upper,digit";
+  config = mkIf cfg.enable (lib.mkMerge [
+    # Declare ZFS dataset if configured (only when disko module is available)
+    (lib.optionalAttrs (options ? disko) {
+      disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
+        ${cfg.zfsDataset.name} = {
+          inherit (cfg.zfsDataset) properties;
         };
       };
-    };
+    })
 
-    # Ensure Forgejo starts after PostgreSQL when database is enabled
-    # and add custom path to ReadWritePaths if configured
-    systemd.services.forgejo = mkMerge [
-      (mkIf cfg.database.enable {
-        after = ["postgresql.service"];
-        requires = ["postgresql.service"];
-      })
-      (mkIf (cfg.customPath != null) {
-        after = ["systemd-tmpfiles-setup.service"];
-        serviceConfig.ReadWritePaths = [
-          cfg.customPath
-          "${cfg.customPath}/repositories"
-          "${cfg.customPath}/lfs"
-          "${cfg.customPath}/data"
-          "${cfg.customPath}/packages"
+    {
+      # Ensure user exists
+      users.users.${cfg.user} = {
+        isSystemUser = true;
+        group = cfg.group;
+        home = cfg.stateDir;
+        createHome = true;
+        description = "Forgejo user";
+      };
+
+      # Ensure group exists
+      users.groups.${cfg.group} = {};
+
+      # Use centralized PostgreSQL configuration module
+      # Enable via services.clubcotton.postgresql.forgejo.enable = true
+      # This ensures proper database setup, password management, and backup integration
+
+      # Create directories
+      systemd.tmpfiles.rules =
+        [
+          "d '${cfg.stateDir}' 0750 ${cfg.user} ${cfg.group} - -"
+        ]
+        ++ optionals (cfg.customPath != null) [
+          "d '${cfg.customPath}' 0750 ${cfg.user} ${cfg.group} - -"
+          "d '${cfg.customPath}/repositories' 0750 ${cfg.user} ${cfg.group} - -"
+          "d '${cfg.customPath}/lfs' 0750 ${cfg.user} ${cfg.group} - -"
+          "d '${cfg.customPath}/data' 0750 ${cfg.user} ${cfg.group} - -"
+          "d '${cfg.customPath}/packages' 0750 ${cfg.user} ${cfg.group} - -"
         ];
-      })
-    ];
 
-    # Tailscale service
-    services.tsnsrv = mkMerge [
-      (mkIf (cfg.tailnetHostname != null && cfg.tailnetHostname != "") {
+      # Forgejo service
+      services.forgejo = {
         enable = true;
-        defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
-        services = optionalAttrs (cfg.tailnetHostname != null && cfg.tailnetHostname != "") {
-          "${cfg.tailnetHostname}" = {
-            ephemeral = true;
-            toURL = "http://127.0.0.1:${toString cfg.port}/";
+        package = cfg.package;
+        user = cfg.user;
+        group = cfg.group;
+        stateDir = cfg.stateDir;
+
+        database = {
+          type = "postgres";
+          host = cfg.database.host;
+          port = cfg.database.port;
+          name = cfg.database.name;
+          user = cfg.database.user;
+          passwordFile = cfg.database.passwordFile;
+        };
+
+        settings = {
+          server = {
+            DOMAIN = cfg.domain;
+            HTTP_PORT = cfg.port;
+            ROOT_URL =
+              if (cfg.tailnetHostname != null && cfg.tailnetHostname != "")
+              then "https://${cfg.tailnetHostname}.bobtail-clownfish.ts.net/"
+              else "http://${cfg.domain}:${toString cfg.port}/";
+            SSH_DOMAIN = cfg.domain;
+            SSH_PORT = cfg.sshPort;
+            START_SSH_SERVER = true;
+            BUILTIN_SSH_SERVER_USER = cfg.user;
+            # Bind to all interfaces for local network access
+            HTTP_ADDR = "0.0.0.0";
+            SSH_LISTEN_HOST = "0.0.0.0";
+            SSH_LISTEN_PORT = cfg.sshPort;
+          };
+
+          service = {
+            DISABLE_REGISTRATION = true;
+            REQUIRE_SIGNIN_VIEW = false;
+            DEFAULT_KEEP_EMAIL_PRIVATE = true;
+            DEFAULT_ALLOW_CREATE_ORGANIZATION = true;
+            DEFAULT_ENABLE_TIMETRACKING = true;
+          };
+
+          repository = {
+            ROOT = mkIf (cfg.customPath != null) (mkForce "${cfg.customPath}/repositories");
+            DEFAULT_BRANCH = "main";
+            DEFAULT_PRIVATE = "private";
+            ENABLE_PUSH_CREATE_USER = true;
+            ENABLE_PUSH_CREATE_ORG = true;
+          };
+
+          "repository.local" = mkIf cfg.features.lfs {
+            LOCAL_COPY_PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/data";
+          };
+
+          lfs = mkIf cfg.features.lfs {
+            ENABLE = true;
+            PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/lfs";
+            STORAGE_TYPE = "local";
+          };
+
+          actions = mkIf cfg.features.actions {
+            ENABLED = true;
+            DEFAULT_ACTIONS_URL = "https://code.forgejo.org";
+          };
+
+          metrics = {
+            ENABLED = true;
+          };
+
+          packages = mkIf cfg.features.packages {
+            ENABLED = true;
+            STORAGE_TYPE = "local";
+            MINIO_BASE_PATH = mkIf (cfg.customPath != null) "${cfg.customPath}/packages";
+          };
+
+          federation = mkIf cfg.features.federation {
+            ENABLED = true;
+          };
+
+          session = {
+            PROVIDER = "db";
+            COOKIE_SECURE = false; # Set to true if using HTTPS
+          };
+
+          log = {
+            MODE = "console";
+            LEVEL = "Info";
+          };
+
+          security = {
+            INSTALL_LOCK = true;
+            MIN_PASSWORD_LENGTH = 8;
+            PASSWORD_COMPLEXITY = "lower,upper,digit";
           };
         };
-      })
-    ];
+      };
 
-    # Open firewall for local network access
-    networking.firewall.allowedTCPPorts = [cfg.port cfg.sshPort];
+      # Ensure Forgejo starts after PostgreSQL when database is enabled
+      # and add custom path to ReadWritePaths if configured
+      systemd.services.forgejo = mkMerge [
+        (mkIf cfg.database.enable {
+          after = ["postgresql.service"];
+          requires = ["postgresql.service"];
+        })
+        (mkIf (cfg.customPath != null) {
+          after = ["systemd-tmpfiles-setup.service"];
+          serviceConfig.ReadWritePaths = [
+            cfg.customPath
+            "${cfg.customPath}/repositories"
+            "${cfg.customPath}/lfs"
+            "${cfg.customPath}/data"
+            "${cfg.customPath}/packages"
+          ];
+        })
+      ];
 
-    # Service assertions
-    assertions = [
-      {
-        assertion = cfg.database.enable -> cfg.database.passwordFile != null;
-        message = "Database password file must be specified when local PostgreSQL is enabled";
-      }
-    ];
-  };
+      # Tailscale service
+      services.tsnsrv = mkMerge [
+        (mkIf (cfg.tailnetHostname != null && cfg.tailnetHostname != "") {
+          enable = true;
+          defaults.authKeyPath = clubcotton.tailscaleAuthKeyPath;
+          services = optionalAttrs (cfg.tailnetHostname != null && cfg.tailnetHostname != "") {
+            "${cfg.tailnetHostname}" = {
+              ephemeral = true;
+              toURL = "http://127.0.0.1:${toString cfg.port}/";
+            };
+          };
+        })
+      ];
+
+      # Open firewall for local network access
+      networking.firewall.allowedTCPPorts = [cfg.port cfg.sshPort];
+
+      # Service assertions
+      assertions = [
+        {
+          assertion = cfg.database.enable -> cfg.database.passwordFile != null;
+          message = "Database password file must be specified when local PostgreSQL is enabled";
+        }
+      ];
+    }
+  ]);
 }

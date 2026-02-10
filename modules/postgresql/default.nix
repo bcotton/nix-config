@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }:
@@ -105,61 +106,65 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    # Declare ZFS dataset if configured
-    disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
-      ${cfg.zfsDataset.name} = {
-        inherit (cfg.zfsDataset) properties;
-      };
-    };
-
-    services.postgresql = {
-      enable = true;
-      package = cfg.package;
-      dataDir = cfg.dataDir;
-      enableTCPIP = cfg.enableTCPIP;
-      authentication = cfg.authentication;
-      settings = {
-        port = cfg.port;
-        listen_addresses =
-          if cfg.enableTCPIP
-          then "*"
-          else "localhost";
-        password_encryption = "scram-sha-256";
-      };
-    };
-
-    services.prometheus.exporters.postgres = {
-      enable = true;
-      runAsLocalSuperUser = true;
-    };
-
-    services.postgresqlBackup = {
-      enable = true;
-      databases = config.services.postgresql.ensureDatabases;
-      location = "/backups/postgresql";
-    };
-
-    systemd.services = {
-      postgresql-datadir = mkIf (cfg.dataDir != "/var/lib/postgresql/${cfg.package.psqlSchema}") {
-        description = "Create PostgreSQL Data Directory";
-        before = ["postgresql.service"];
-        requiredBy = ["postgresql.service"];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
+  config = mkIf cfg.enable (lib.mkMerge [
+    # Declare ZFS dataset if configured (only when disko module is available)
+    (lib.optionalAttrs (options ? disko) {
+      disko.zfs.settings.datasets = mkIf (cfg.zfsDataset != null) {
+        ${cfg.zfsDataset.name} = {
+          inherit (cfg.zfsDataset) properties;
         };
-        script = ''
-          if [ ! -d ${cfg.dataDir} ]; then
-            mkdir -p ${cfg.dataDir}
-            chown postgres:postgres ${cfg.dataDir}
-          fi
+      };
+    })
+
+    {
+      services.postgresql = {
+        enable = true;
+        package = cfg.package;
+        dataDir = cfg.dataDir;
+        enableTCPIP = cfg.enableTCPIP;
+        authentication = cfg.authentication;
+        settings = {
+          port = cfg.port;
+          listen_addresses =
+            if cfg.enableTCPIP
+            then "*"
+            else "localhost";
+          password_encryption = "scram-sha-256";
+        };
+      };
+
+      services.prometheus.exporters.postgres = {
+        enable = true;
+        runAsLocalSuperUser = true;
+      };
+
+      services.postgresqlBackup = {
+        enable = true;
+        databases = config.services.postgresql.ensureDatabases;
+        location = "/backups/postgresql";
+      };
+
+      systemd.services = {
+        postgresql-datadir = mkIf (cfg.dataDir != "/var/lib/postgresql/${cfg.package.psqlSchema}") {
+          description = "Create PostgreSQL Data Directory";
+          before = ["postgresql.service"];
+          requiredBy = ["postgresql.service"];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = ''
+            if [ ! -d ${cfg.dataDir} ]; then
+              mkdir -p ${cfg.dataDir}
+              chown postgres:postgres ${cfg.dataDir}
+            fi
+          '';
+        };
+
+        postgresql.postStart = mkIf (cfg.postStartCommands != []) ''
+          ${concatStringsSep "\n" cfg.postStartCommands}
         '';
       };
-
-      postgresql.postStart = mkIf (cfg.postStartCommands != []) ''
-        ${concatStringsSep "\n" cfg.postStartCommands}
-      '';
-    };
-  };
+    }
+  ]);
 }
