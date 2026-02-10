@@ -36,39 +36,35 @@ jobs:
             echo "Node version: $(node --version)"
             echo "Browser path: $PLAYWRIGHT_BROWSERS_PATH"
             echo "SSL_CERT_FILE: ${SSL_CERT_FILE:-unset}"
-            echo "NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-unset}"
             echo ""
 
-            echo "=== Node.js fetch test ==="
-            node -e "
-              fetch(\"https://navidrome.bobtail-clownfish.ts.net/\")
-                .then(r => console.log(\"Node fetch: HTTP\", r.status))
-                .catch(e => console.error(\"Node fetch error:\", e.message, e.cause || \"\"));
-            " || true
-            echo ""
+            # Install npm dependencies first
+            npm ci
 
-            echo "=== Chromium direct launch test ==="
+            echo "=== Chromium direct launch test (ignoreHTTPSErrors: true) ==="
             node -e "
-              const { chromium } = require(\"playwright\");
+              const { chromium } = require(\"@playwright/test\").default || require(\"playwright-core\");
               (async () => {
                 const browser = await chromium.launch({
                   args: [\"--no-sandbox\", \"--disable-setuid-sandbox\", \"--disable-dev-shm-usage\", \"--disable-gpu\"]
                 });
                 const page = await browser.newPage({ ignoreHTTPSErrors: true });
+                page.on(\"console\", msg => console.log(\"  PAGE CONSOLE:\", msg.type(), msg.text()));
+                page.on(\"pageerror\", err => console.log(\"  PAGE ERROR:\", err.message));
+                page.on(\"requestfailed\", req => console.log(\"  REQ FAILED:\", req.url(), req.failure()?.errorText));
                 try {
-                  const resp = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 30000 });
-                  console.log(\"Chromium status:\", resp?.status());
-                  console.log(\"Chromium url:\", page.url());
+                  console.log(\"Navigating to navidrome...\");
+                  const resp = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 30000, waitUntil: \"domcontentloaded\" });
+                  console.log(\"Response status:\", resp?.status());
+                  console.log(\"Page URL:\", page.url());
+                  console.log(\"Page title:\", await page.title());
                 } catch(e) {
-                  console.error(\"Chromium error:\", e.message);
+                  console.error(\"Navigation error:\", e.message);
                 }
                 await browser.close();
               })();
             " || true
             echo ""
-
-            # Install npm dependencies
-            npm ci
 
             # Run only navidrome tests for CI debugging
             node node_modules/@playwright/test/cli.js test \

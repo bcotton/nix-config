@@ -63,6 +63,7 @@ export default defineConfig({
   ],
   use: {
     trace: 'on-first-retry',
+    ignoreHTTPSErrors: true,
   },
   projects: [...setupProjects, ...testProjects],
 });
