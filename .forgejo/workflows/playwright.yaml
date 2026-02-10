@@ -42,17 +42,18 @@ jobs:
             # Install npm dependencies
             npm ci
 
-            # Warm up Chromium (first launch in container can fail without this)
-            node -e "
+            # Warm up Chromium with real HTTPS navigation
+            # First Chromium launch in container needs network stack exercise
+            timeout 30 node -e "
               const pw = require(\"playwright-core\");
               (async () => {
-                const b = await pw.chromium.launch({args:[\"--no-sandbox\",\"--disable-dev-shm-usage\"]});
-                const p = await b.newPage();
-                await p.goto(\"data:text/html,<h1>ok</h1>\");
-                console.log(\"Chromium warm-up OK\");
+                const b = await pw.chromium.launch({args:[\"--no-sandbox\",\"--disable-dev-shm-usage\",\"--disable-gpu\"]});
+                const p = await b.newPage({ignoreHTTPSErrors:true});
+                const r = await p.goto(\"https://navidrome.bobtail-clownfish.ts.net/\",{timeout:20000,waitUntil:\"commit\"});
+                console.log(\"Chromium warm-up:\",r?.status(),p.url());
                 await b.close();
-              })();
-            "
+              })().catch(e=>console.error(\"Warm-up error:\",e.message));
+            " || echo "Warm-up timed out (non-fatal)"
 
             # Run only navidrome tests for now
             node node_modules/@playwright/test/cli.js test \
