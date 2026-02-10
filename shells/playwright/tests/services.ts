@@ -60,6 +60,11 @@ export const SERVICES: Record<string, ServiceConfig> = {
     envPrefix: 'JELLYSEERR',
     defaultUrl: 'https://jellyseerr.bobtail-clownfish.ts.net',
   },
+  immich: {
+    name: 'Immich',
+    envPrefix: 'IMMICH',
+    defaultUrl: 'https://immich.bobtail-clownfish.ts.net',
+  },
 };
 
 export function getServiceConfig(serviceKey: string) {
