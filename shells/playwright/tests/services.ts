@@ -20,6 +20,36 @@ export const SERVICES: Record<string, ServiceConfig> = {
     envPrefix: 'JELLYFIN',
     defaultUrl: 'https://jellyfin.bobtail-clownfish.ts.net',
   },
+  lidarr: {
+    name: 'Lidarr',
+    envPrefix: 'LIDARR',
+    defaultUrl: 'https://lidarr.bobtail-clownfish.ts.net',
+  },
+  radarr: {
+    name: 'Radarr',
+    envPrefix: 'RADARR',
+    defaultUrl: 'https://radarr.bobtail-clownfish.ts.net',
+  },
+  prowlarr: {
+    name: 'Prowlarr',
+    envPrefix: 'PROWLARR',
+    defaultUrl: 'https://prowlarr.bobtail-clownfish.ts.net',
+  },
+  sonarr: {
+    name: 'Sonarr',
+    envPrefix: 'SONARR',
+    defaultUrl: 'https://sonarr.bobtail-clownfish.ts.net',
+  },
+  forgejo: {
+    name: 'Forgejo',
+    envPrefix: 'FORGEJO',
+    defaultUrl: 'https://forgejo.bobtail-clownfish.ts.net',
+  },
+  openwebui: {
+    name: 'Open WebUI',
+    envPrefix: 'OPENWEBUI',
+    defaultUrl: 'https://llm.bobtail-clownfish.ts.net',
+  },
 };
 
 export function getServiceConfig(serviceKey: string) {
