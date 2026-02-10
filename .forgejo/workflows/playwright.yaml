@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
-      options: --user root --dns 100.100.100.100
+      options: --user root --ipc=host
     steps:
       - name: Setup Nix environment
         run: |
