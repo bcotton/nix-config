@@ -29,6 +29,7 @@ jobs:
           echo "${{ secrets.SMOKE_TEST_CREDS }}" > shells/playwright/.env
 
       - name: Enter Playwright shell and run tests
+        timeout-minutes: 10
         run: |
           cd shells/playwright
           nix develop --command bash -c '
@@ -38,33 +39,8 @@ jobs:
             echo "SSL_CERT_FILE: ${SSL_CERT_FILE:-unset}"
             echo ""
 
-            # Install npm dependencies first
+            # Install npm dependencies
             npm ci
-
-            echo "=== Chromium direct launch test (ignoreHTTPSErrors: true) ==="
-            node -e "
-              const { chromium } = require(\"@playwright/test\").default || require(\"playwright-core\");
-              (async () => {
-                const browser = await chromium.launch({
-                  args: [\"--no-sandbox\", \"--disable-setuid-sandbox\", \"--disable-dev-shm-usage\", \"--disable-gpu\"]
-                });
-                const page = await browser.newPage({ ignoreHTTPSErrors: true });
-                page.on(\"console\", msg => console.log(\"  PAGE CONSOLE:\", msg.type(), msg.text()));
-                page.on(\"pageerror\", err => console.log(\"  PAGE ERROR:\", err.message));
-                page.on(\"requestfailed\", req => console.log(\"  REQ FAILED:\", req.url(), req.failure()?.errorText));
-                try {
-                  console.log(\"Navigating to navidrome...\");
-                  const resp = await page.goto(\"https://navidrome.bobtail-clownfish.ts.net/\", { timeout: 30000, waitUntil: \"domcontentloaded\" });
-                  console.log(\"Response status:\", resp?.status());
-                  console.log(\"Page URL:\", page.url());
-                  console.log(\"Page title:\", await page.title());
-                } catch(e) {
-                  console.error(\"Navigation error:\", e.message);
-                }
-                await browser.close();
-              })();
-            " || true
-            echo ""
 
             # Run only navidrome tests for CI debugging
             node node_modules/@playwright/test/cli.js test \
