@@ -90,93 +90,96 @@
     #
     # Auto-derived fields:
     #   shouldMonitor - From host variables shouldScrapeMetrics (controls homepage/Glances inclusion)
-    nixosHostSpecs = builtins.mapAttrs (name: spec:
-      spec // {
-        shouldMonitor = (commonLib.getHostVariables name).shouldScrapeMetrics or true;
-      }
-    ) {
-      admin = {
-        system = "x86_64-linux";
-        usernames = ["bcotton"];
-        ip = "192.168.5.98";
-        displayName = "Admin";
+    nixosHostSpecs =
+      builtins.mapAttrs (
+        name: spec:
+          spec
+          // {
+            shouldMonitor = (commonLib.getHostVariables name).shouldScrapeMetrics or true;
+          }
+      ) {
+        admin = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          ip = "192.168.5.98";
+          displayName = "Admin";
+        };
+        condo-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          # No IP - different network, not on homepage
+        };
+        natalya-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          # No IP - different network, not on homepage
+        };
+        nas-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton"];
+          ip = "192.168.5.42";
+          displayName = "NAS-01";
+        };
+        nix-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+          ip = "192.168.5.210";
+          displayName = "Nix-01";
+        };
+        nix-02 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+          ip = "192.168.5.212";
+          displayName = "Nix-02";
+        };
+        nix-03 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton" "larry" "natalya"];
+          ip = "192.168.5.214";
+          displayName = "Nix-03";
+        };
+        nix-04 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton"];
+          ip = "192.168.5.54";
+          displayName = "Nix-04";
+        };
+        imac-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton"];
+          ip = "192.168.5.125";
+          displayName = "iMac-01";
+        };
+        imac-02 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton"];
+          ip = "192.168.5.153";
+          displayName = "iMac-02";
+        };
+        dns-01 = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          ip = "192.168.5.220";
+          displayName = "DNS-01";
+        };
+        octoprint = {
+          system = "x86_64-linux";
+          usernames = ["bcotton" "tomcotton"];
+          ip = "192.168.5.49";
+          displayName = "OctoPrint";
+        };
+        frigate-host = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          ip = "192.168.20.174";
+          displayName = "Frigate";
+        };
+        nixbook-test = {
+          system = "x86_64-linux";
+          usernames = ["tomcotton"];
+          # No IP - laptop with DHCP, not on homepage
+        };
       };
-      condo-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton"];
-        # No IP - different network, not on homepage
-      };
-      natalya-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton"];
-        # No IP - different network, not on homepage
-      };
-      nas-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
-        ip = "192.168.5.42";
-        displayName = "NAS-01";
-      };
-      nix-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
-        ip = "192.168.5.210";
-        displayName = "Nix-01";
-      };
-      nix-02 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
-        ip = "192.168.5.212";
-        displayName = "Nix-02";
-      };
-      nix-03 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton" "larry" "natalya"];
-        ip = "192.168.5.214";
-        displayName = "Nix-03";
-      };
-      nix-04 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
-        ip = "192.168.5.54";
-        displayName = "Nix-04";
-      };
-      imac-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
-        ip = "192.168.5.125";
-        displayName = "iMac-01";
-      };
-      imac-02 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
-        ip = "192.168.5.153";
-        displayName = "iMac-02";
-      };
-      dns-01 = {
-        system = "x86_64-linux";
-        usernames = ["bcotton"];
-        ip = "192.168.5.220";
-        displayName = "DNS-01";
-      };
-      octoprint = {
-        system = "x86_64-linux";
-        usernames = ["bcotton" "tomcotton"];
-        ip = "192.168.5.49";
-        displayName = "OctoPrint";
-      };
-      frigate-host = {
-        system = "x86_64-linux";
-        usernames = ["bcotton"];
-        ip = "192.168.20.174";
-        displayName = "Frigate";
-      };
-      nixbook-test = {
-        system = "x86_64-linux";
-        usernames = ["tomcotton"];
-        # No IP - laptop with DHCP, not on homepage
-      };
-    };
 
     # Derive host list from specs - used for SSH RemoteForward configuration
     nixosHosts = builtins.attrNames nixosHostSpecs;

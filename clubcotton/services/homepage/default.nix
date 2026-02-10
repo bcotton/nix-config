@@ -13,9 +13,12 @@
 
   # Generate hosts from nixosHostSpecs - only include hosts with an IP
   # Filter first (hosts with IP), then map to expected format
-  hostsWithIp = lib.filterAttrs (_name: spec:
-    (spec.ip or null != null) && (spec.shouldMonitor or true)
-  ) nixosHostSpecs;
+  hostsWithIp =
+    lib.filterAttrs (
+      _name: spec:
+        (spec.ip or null != null) && (spec.shouldMonitor or true)
+    )
+    nixosHostSpecs;
   hostsFromSpecs =
     lib.mapAttrs (
       name: spec: {
