@@ -652,7 +652,6 @@
       # Development tools
       azure-cli
       golangci-lint
-      localPackages.playwright-cli
       shellcheck
       tea
       terraform
@@ -685,6 +684,9 @@
     ++ lib.optionals stdenv.isDarwin [
       # macOS-only: tmux clipboard integration
       reattach-to-user-namespace
+    ]
+    ++ lib.optionals stdenv.isLinux [
+      localPackages.playwright-cli
     ]
     ++ [
       # Additional tools
