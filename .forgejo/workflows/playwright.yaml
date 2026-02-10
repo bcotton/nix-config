@@ -42,6 +42,18 @@ jobs:
             # Install npm dependencies
             npm ci
 
+            # Warm up Chromium (first launch in container can fail without this)
+            node -e "
+              const pw = require(\"playwright-core\");
+              (async () => {
+                const b = await pw.chromium.launch({args:[\"--no-sandbox\",\"--disable-dev-shm-usage\"]});
+                const p = await b.newPage();
+                await p.goto(\"data:text/html,<h1>ok</h1>\");
+                console.log(\"Chromium warm-up OK\");
+                await b.close();
+              })();
+            "
+
             # Run only navidrome tests for now
             node node_modules/@playwright/test/cli.js test \
               --project=setup-navidrome --project=navidrome
