@@ -657,8 +657,10 @@
       # Development tools
       azure-cli
       golangci-lint
+      nodejs_24
       shellcheck
       tea
+      yarn
       terraform
       trufflehog
       # zizmor  # not in nixpkgs yet
