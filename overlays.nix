@@ -39,6 +39,9 @@
 
         (lib.optionalAttrs ((config.programs.git.enable or false) && (config.programs.git.delta.enable or false))
           ((import ./overlays/delta.nix {inherit config pkgs lib unstablePkgs;}) final prev))
+
+        (lib.optionalAttrs (config.services.grafana.enable or false)
+          ((import ./overlays/grafana.nix {inherit config pkgs lib unstablePkgs;}) final prev))
       ])
   ];
 }

@@ -74,6 +74,10 @@ with lib; let
         source_labels = ["__journal_priority_keyword"]
         target_label  = "priority"
       }
+      rule {
+        source_labels = ["__journal_priority_keyword"]
+        target_label  = "level"
+      }
     }
 
     ${fileSourceBlocks}
