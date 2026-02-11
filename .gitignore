@@ -8,3 +8,4 @@ nixos.qcow2
 .aider*
 .DS_Store
 Session.vim
+.env

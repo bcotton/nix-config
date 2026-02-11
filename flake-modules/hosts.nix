@@ -223,7 +223,7 @@
         category = "Monitoring";
         icon = "grafana.svg";
         description = "Metrics dashboards";
-        href = "http://admin:3000";
+        href = "https://grafana.bobtail-clownfish.ts.net";
       };
       prometheus = {
         name = "Prometheus";

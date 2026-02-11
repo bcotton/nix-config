@@ -63,4 +63,13 @@
       ];
     };
   };
+
+  services.tsnsrv = {
+    enable = true;
+    defaults.authKeyPath = config.clubcotton.tailscaleAuthKeyPath;
+    services."grafana" = {
+      ephemeral = true;
+      toURL = "http://127.0.0.1:3000/";
+    };
+  };
 }

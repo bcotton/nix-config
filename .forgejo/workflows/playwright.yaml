@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - playwrite-in-nix
+      - playwrite-cli-tests
   pull_request:
   workflow_dispatch:
 
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
-      options: --user root
+      options: --user root --ipc=host --cap-add=NET_ADMIN --device /dev/net/tun
     steps:
       - name: Setup Nix environment
         run: |
@@ -23,18 +24,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup smoke test credentials
+        run: |
+          cat > shells/playwright/.env <<'ENVEOF'
+          ${{ secrets.SMOKE_TEST_CREDS }}
+          ENVEOF
+
       - name: Enter Playwright shell and run tests
+        timeout-minutes: 10
         run: |
           cd shells/playwright
           nix develop --command bash -c '
             echo "=== Playwright Environment ==="
             echo "Node version: $(node --version)"
             echo "Browser path: $PLAYWRIGHT_BROWSERS_PATH"
+            echo "SSL_CERT_FILE: ${SSL_CERT_FILE:-unset}"
+            echo ""
 
             # Install npm dependencies
             npm ci
 
-            # Run Playwright tests via npm script (avoids /usr/bin/env issue)
+            # Run all service smoke tests
             npm test
           '
 
