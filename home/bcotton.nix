@@ -380,6 +380,9 @@
       ltr = "ll -snew";
       watch = "viddy ";
 
+      # Networking
+      ports = "sudo ss -tunlp";
+
       # Kubernetes
       k = "kubectl";
       kctx = "kubectx";
@@ -391,7 +394,11 @@
       source ${pkgs.zsh-defer}/share/zsh-defer/zsh-defer.plugin.zsh
 
       # Defer heavy initializations until after prompt displays
-      zsh-defer -c 'eval "$(atuin init zsh --disable-up-arrow)"'
+      zsh-defer -c '[[ -r ${
+        if pkgs.stdenv.isDarwin
+        then config.programs.atuin-config.darwinKeyPath
+        else config.programs.atuin-config.nixosKeyPath
+      } ]] && eval "$(atuin init zsh --disable-up-arrow)"'
 
       if [[ "$CLAUDECODE" != "1" ]]; then
         zsh-defer -c 'eval "$(zoxide init zsh)"; alias cd="z"'
