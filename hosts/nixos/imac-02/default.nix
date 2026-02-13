@@ -28,6 +28,12 @@ in {
   hardware.bluetooth.enable = true;
   hardware.bluetooth.powerOnBoot = true;
 
+  # Only monitor the ZFS root NVMe disk, skip auto-discovery which picks up
+  # /dev/nvme0 (controller node, permission denied)
+  services.prometheus.exporters.smartctl.devices = [
+    "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_Plus_2TB_S59CNM0R836896T"
+  ];
+
   services.clubcotton = {
     alloy-logs.enable = true;
     scanner.enable = true;
