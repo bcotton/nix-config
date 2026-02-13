@@ -663,8 +663,10 @@
 
       # Development tools
       azure-cli
+      devbox
       golangci-lint
       nodejs_24
+      mise
       shellcheck
       tea
       yarn
