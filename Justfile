@@ -138,6 +138,25 @@ nas-01-console:
 ci *args="":
   ./scripts/forgejo-runs.sh {{args}}
 
+# Build an Incus VM image (qcow2 + metadata) for importing into Incus
+build-incus-image host="incus-testing":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  echo "Building {{host}} qcow2 image..."
+  nix build '.#nixosConfigurations.{{host}}.config.system.build.qemuImage' -o result-qemu-image
+  echo "Building {{host}} metadata..."
+  nix build '.#nixosConfigurations.{{host}}.config.system.build.metadata' -o result-metadata
+  echo ""
+  echo "Image artifacts:"
+  ls -lh result-qemu-image/nixos.qcow2
+  ls -lh result-metadata/tarball/
+  echo ""
+  echo "To import into Incus:"
+  echo "  incus image import result-metadata/tarball/*.tar.xz result-qemu-image/nixos.qcow2 --alias nixos-{{host}}"
+  echo ""
+  echo "To launch:"
+  echo "  incus launch nixos-{{host}} {{host}} --vm -c security.secureboot=false -c security.nesting=true -c limits.cpu=4 -c limits.memory=8GiB -d root,size=50GiB"
+
 w-dconfdump:
   dconf dump / > tmp/w-dconf
 w-dconf2nix:

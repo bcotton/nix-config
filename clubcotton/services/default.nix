@@ -20,6 +20,7 @@
     ./homepage
     ./hyprland
     ./immich
+    ./incus-vm
     ./jellyfin
     ./kavita
     ./loki
