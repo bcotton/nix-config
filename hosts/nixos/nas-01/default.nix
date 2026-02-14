@@ -62,6 +62,7 @@ in {
     prowlarr.enable = true;
     radarr.enable = true;
     readarr.enable = true;
+    redis.enable = true;
     roon-server.enable = false;
     sabnzbd.enable = true;
     scanner.enable = true;
@@ -86,6 +87,26 @@ in {
       properties = {
         quota = "500G";
         mountpoint = "/ssdpool/local/nix-cache";
+      };
+    };
+  };
+
+  services.clubcotton.redis = {
+    bindAddress = "0.0.0.0";
+    openFirewall = true;
+    maxMemory = "4gb";
+    # To enable authentication:
+    # 1. agenix -e redis-password.age  (add a strong password)
+    requirePassFile = config.age.secrets.redis-password.path;
+    zfsDataset = {
+      name = "ssdpool/local/redis";
+      properties = {
+        recordsize = "64K";
+        mountpoint = "/ssdpool/local/redis";
+        compression = "lz4";
+        atime = "off";
+        quota = "50G";
+        "com.sun:auto-snapshot" = "true";
       };
     };
   };
@@ -666,6 +687,7 @@ in {
       "backuppool/local/nas-01/photos" = {};
       "backuppool/local/nas-01/tomcotton-audio-library" = {};
       "backuppool/local/nas-01/tomcotton-data" = {};
+      "backuppool/local/nas-01/redis" = {};
       "backuppool/local/nas-01/var-lib" = {};
       "backuppool/local/postgresql" = {
         properties = {
@@ -763,6 +785,9 @@ in {
       useTemplate = ["backup"];
     };
     datasets."ssdpool/local/nix-cache" = {
+      useTemplate = ["backup"];
+    };
+    datasets."ssdpool/local/redis" = {
       useTemplate = ["backup"];
     };
     datasets."mediapool/local/photos" = {

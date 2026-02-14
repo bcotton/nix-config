@@ -270,6 +270,15 @@ in {
     group = "root";
   };
 
+  # Redis password
+  # To enable: 1) agenix -e redis-password.age  2) uncomment below  3) uncomment requirePassFile in nas-01
+  age.secrets."redis-password" = lib.mkIf config.services.clubcotton.redis.enable {
+    file = ./redis-password.age;
+    owner = "redis-clubcotton";
+    group = "redis-clubcotton";
+    mode = "0400";
+  };
+
   # Restic backup secrets
   age.secrets."restic-password" = lib.mkIf config.services.clubcotton.restic.enable {
     file = ./restic-password.age;

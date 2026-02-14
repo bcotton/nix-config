@@ -17,6 +17,7 @@
     "node"
     "zfs"
     "postgres"
+    "redis"
     "smartctl"
   ];
 

@@ -47,6 +47,11 @@ trace target_host=hostname: (build target_host "--show-trace")
 switch target_host=hostname:
   sudo nixos-rebuild switch --flake .#{{target_host}}
 
+# Build and dry-activate to show what would change without switching
+[linux]
+dry-activate target_host=hostname:
+  sudo nixos-rebuild dry-activate --flake .#{{target_host}}
+
 # Safely switch network configuration with automatic rollback
 # This should be run ON the target host, not remotely
 [linux]

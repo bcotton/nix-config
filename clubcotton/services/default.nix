@@ -36,6 +36,7 @@
     ./open-webui
     ./paperless
     ./pinchflat
+    ./redis
     ./restic
     ./roon-server
     ./sabnzbd

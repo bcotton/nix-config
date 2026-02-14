@@ -588,6 +588,79 @@ groups:
       summary: "Garage block resync queue is large"
       description: "Garage on {{ $labels.instance }} has {{ $value }} blocks in the resync queue"
 
+  # Redis Monitoring
+  - alert: RedisDown
+    expr: redis_up == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Redis is down"
+      description: "Redis on {{ $labels.instance }} has been unreachable for 5 minutes"
+
+  - alert: RedisHighMemoryUsage
+    expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis memory usage high"
+      description: "Redis on {{ $labels.instance }} is using {{ printf \"%.1f\" $value }}% of max memory"
+
+  - alert: RedisMemoryCritical
+    expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Redis memory usage critical"
+      description: "Redis on {{ $labels.instance }} is at {{ printf \"%.1f\" $value }}% of max memory - writes may be rejected"
+
+  - alert: RedisHighClientConnections
+    expr: redis_connected_clients > 500
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis high client connections"
+      description: "Redis on {{ $labels.instance }} has {{ $value }} connected clients"
+
+  - alert: RedisRejectedConnections
+    expr: increase(redis_rejected_connections_total[5m]) > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis rejecting connections"
+      description: "Redis on {{ $labels.instance }} has rejected {{ $value }} connections in the last 5 minutes"
+
+  - alert: RedisRdbSaveFailed
+    expr: redis_rdb_last_bgsave_status == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis RDB save failed"
+      description: "Last Redis RDB background save failed on {{ $labels.instance }}"
+
+  - alert: RedisAofRewriteFailed
+    expr: redis_aof_last_rewrite_status == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis AOF rewrite failed"
+      description: "Last Redis AOF rewrite failed on {{ $labels.instance }}"
+
+  - alert: RedisHighKeyEviction
+    expr: rate(redis_evicted_keys_total[5m]) > 10
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Redis evicting keys"
+      description: "Redis on {{ $labels.instance }} is evicting {{ printf \"%.1f\" $value }} keys/sec"
+
   # Grafana Mimir Monitoring
   - alert: MimirDown
     expr: up{job="mimir"} == 0

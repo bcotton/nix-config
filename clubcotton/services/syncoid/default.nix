@@ -36,6 +36,10 @@ in {
           source = "ssdpool/local/database";
           target = "backuppool/local/nas-01/database";
         };
+        redis = {
+          source = "ssdpool/local/redis";
+          target = "backuppool/local/nas-01/redis";
+        };
         photos = {
           source = "mediapool/local/photos";
           target = "backuppool/local/nas-01/photos";

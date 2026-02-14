@@ -220,6 +220,7 @@ cd secrets && agenix -e service-name.age
   - Pre-commit hook runs `just fmt` to ensure all code is formatted before commit
   - No need to run 'just fmt', unless you want to syntax check the code
 - Don't forget to 'git add' new files before building with nix. This will save you an error step
+- **ZFS dataset safety**: When adding or modifying a `zfsDataset` option in a service module, always run `just dry-activate <hostname>` (requires root) before deploying. Review the output for any destructive ZFS actions (dataset destroy/rollback). The disko-zfs module auto-detects pools and will **destroy undeclared datasets**, so verify no existing datasets are accidentally dropped.
 
 
 
