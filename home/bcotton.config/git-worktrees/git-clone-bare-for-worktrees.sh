@@ -10,5 +10,6 @@ default_branch=$(git ls-remote --symref "$url" HEAD | awk '/^ref:/ {sub(/refs\/h
 
 # Clone into name/default-branch/
 git clone "$url" "$name/$default_branch"
+git -C "$name/$default_branch" config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 
 echo "Cloned into: $name/$default_branch"
