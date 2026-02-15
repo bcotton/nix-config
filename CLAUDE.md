@@ -189,6 +189,25 @@ agenix -e new-secret.age
 
 See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
 
+### Generating Secret Values
+
+When a service needs a random secret key (e.g., session secret, API key), provide the user with shell commands to generate it:
+
+```bash
+# Generate a random hex secret (64 chars)
+openssl rand -hex 32
+
+# Generate a random base64 secret
+openssl rand -base64 32
+```
+
+The generated value goes into the agenix-encrypted file in the format the service expects. For example, services using `environmentFile` expect `KEY=value` format:
+
+```bash
+cd secrets && agenix -e service-name.age
+# Content: SERVICE_SECRET_KEY=<paste-generated-value>
+```
+
 ## Development Notes
 
 - All configurations support both stable and unstable nixpkgs channels, this is setup in flake.nix
