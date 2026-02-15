@@ -687,7 +687,9 @@ in {
       "backuppool/local/nas-01/photos" = {};
       "backuppool/local/nas-01/tomcotton-audio-library" = {};
       "backuppool/local/nas-01/tomcotton-data" = {};
-      "backuppool/local/nas-01/redis" = {};
+      # Note: backuppool/local/nas-01/redis is NOT declared here because
+      # syncoid initial replication requires the target dataset to not exist.
+      # Syncoid creates it automatically on first run.
       "backuppool/local/nas-01/var-lib" = {};
       "backuppool/local/postgresql" = {
         properties = {

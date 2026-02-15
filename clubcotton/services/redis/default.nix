@@ -146,7 +146,7 @@ in {
       # Fix exporter systemd service:
       # - Add AF_INET so the exporter can listen on TCP for Prometheus scrapes
       # - Add redis-clubcotton group so it can access the unix socket
-      # - Pass password via environment if authentication is configured
+      # - Pass password via LoadCredential + wrapped ExecStart if authentication is configured
       systemd.services.prometheus-redis-exporter = lib.mkMerge [
         {
           serviceConfig = {
@@ -154,18 +154,24 @@ in {
             SupplementaryGroups = ["redis-clubcotton"];
           };
         }
-        (mkIf (cfg.requirePassFile != null) {
-          # The redis_exporter reads REDIS_PASSWORD env var, but agenix files
-          # contain just the raw password. Wrap it in the expected env var.
-          serviceConfig.ExecStartPre = let
-            script = pkgs.writeShellScript "redis-exporter-env" ''
-              echo "REDIS_PASSWORD=$(cat ${cfg.requirePassFile})" > /run/prometheus-redis-exporter/env
-              chmod 600 /run/prometheus-redis-exporter/env
+        (mkIf (cfg.requirePassFile != null) (let
+          exporterCfg = config.services.prometheus.exporters.redis;
+        in {
+          # Use LoadCredential to securely inject the password file into the
+          # service's credential directory (readable by the service user).
+          # Then wrap ExecStart to set REDIS_PASSWORD before exec'ing the exporter.
+          # (EnvironmentFile + ExecStartPre doesn't work because systemd loads
+          # EnvironmentFile before running ExecStartPre)
+          serviceConfig.LoadCredential = ["redis-password:${cfg.requirePassFile}"];
+          serviceConfig.ExecStart = mkForce (let
+            script = pkgs.writeShellScript "redis-exporter-start" ''
+              export REDIS_PASSWORD="$(cat "$CREDENTIALS_DIRECTORY/redis-password")"
+              exec ${pkgs.prometheus-redis-exporter}/bin/redis_exporter \
+                -web.listen-address ${exporterCfg.listenAddress}:${toString exporterCfg.port} \
+                -redis.addr "unix:///run/redis-clubcotton/redis.sock"
             '';
-          in "+${script}";
-          serviceConfig.EnvironmentFile = mkForce "/run/prometheus-redis-exporter/env";
-          serviceConfig.RuntimeDirectory = "prometheus-redis-exporter";
-        })
+          in "${script}");
+        }))
       ];
     }
   ]);
