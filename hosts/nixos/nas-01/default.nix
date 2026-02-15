@@ -66,6 +66,8 @@ in {
     sonarr.enable = true;
     syncoid.enable = true;
     tailscale.enable = true;
+    ntfy.enable = true;
+    ntfy.baseURL = "https://ntfy.bobtail-clownfish.ts.net";
     wallabag.enable = true;
     webdav.enable = true;
   };
