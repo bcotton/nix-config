@@ -21,7 +21,7 @@ in {
     hyprpaper
     hyprsunset
     mako
-    rofi-wayland
+    rofi
     slurp
     swappy
     swaybg

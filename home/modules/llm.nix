@@ -159,10 +159,34 @@
   # Get list of enabled plugins
   enabledPlugins = lib.filterAttrs (name: enabled: enabled) cfg.plugins;
 
-  # Build the llm package with selected plugins from unstable
-  llmWithPlugins = unstablePkgs.llm.withPlugins (
-    lib.mapAttrs' (name: _: lib.nameValuePair name true) enabledPlugins
-  );
+  # Override python3 with fixed llm-anthropic (upstream tests are stale)
+  fixedPython3 = unstablePkgs.python3.override {
+    packageOverrides = pyFinal: pyPrev: {
+      llm-anthropic = pyPrev.llm-anthropic.overridePythonAttrs {
+        doCheck = false;
+      };
+    };
+  };
+
+  # Build llm with plugins using fixedPython3.withPackages directly.
+  # We bypass llm's withPlugins passthru because it closes over the
+  # original python interpreter and doesn't pick up packageOverrides.
+  fixedLlm = fixedPython3.pkgs.toPythonApplication fixedPython3.pkgs.llm;
+
+  enabledPluginNames = builtins.attrNames enabledPlugins;
+  llmWithPlugins = let
+    env = fixedPython3.withPackages (
+      ps:
+        [ps.llm] ++ map (name: ps.${name}) enabledPluginNames
+    );
+  in
+    unstablePkgs.runCommand "llm-with-plugins" {
+      nativeBuildInputs = [unstablePkgs.makeBinaryWrapper];
+    } ''
+      mkdir -p $out/bin
+      makeBinaryWrapper ${env}/bin/llm $out/bin/llm \
+        --set PYTHONNOUSERSITE 1
+    '';
 in {
   options.programs.llm = {
     enable = lib.mkEnableOption "llm CLI tool with plugin support";
@@ -174,7 +198,7 @@ in {
       default =
         if enabledPlugins != {}
         then llmWithPlugins
-        else unstablePkgs.llm;
+        else fixedLlm;
       defaultText = lib.literalExpression "unstablePkgs.llm.withPlugins { ... }";
       description = "The llm package to use (from unstable). Automatically configured with selected plugins.";
     };

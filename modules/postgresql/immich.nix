@@ -48,23 +48,8 @@ in {
       extensions = ps: with ps; [vectorchord pgvector];
     };
 
-    # https://discourse.nixos.org/t/set-password-for-a-postgresql-user-from-a-file-agenix/41377/13
-    # TODO: use agenix for the password
-    # password_file_path = config.environment.etc."immich-secrets".path;
-    systemd.services.postgresql.postStart = mkIf (cfg.immich.passwordFile != null) (let
-      password_file_path = cfg.immich.passwordFile;
-    in ''
-      $PSQL -tA <<'EOF'
-        DO $$
-        DECLARE password TEXT;
-        BEGIN
-          password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
-          EXECUTE format('ALTER ROLE "${cfg.immich.database}" WITH PASSWORD '''%s''';', password);
-        END $$;
-      EOF
-    '');
-
     services.clubcotton.postgresql.postStartCommands = let
+      psql = "${lib.getExe' config.services.postgresql.package "psql"} -p ${toString cfg.port}";
       sqlFile = pkgs.writeText "immich-pgvectors-setup.sql" ''
         CREATE EXTENSION IF NOT EXISTS unaccent;
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -83,9 +68,20 @@ in {
         ALTER EXTENSION vchord UPDATE;
         ALTER EXTENSION vector UPDATE;
       '';
+      passwordCmd = optionalString (cfg.immich.passwordFile != null) ''
+        ${psql} -tA <<'EOF'
+          DO $$
+          DECLARE password TEXT;
+          BEGIN
+            password := trim(both from replace(pg_read_file('${cfg.immich.passwordFile}'), E'\n', '''));
+            EXECUTE format('ALTER ROLE "${cfg.immich.database}" WITH PASSWORD '''%s''';', password);
+          END $$;
+        EOF
+      '';
     in [
+      passwordCmd
       ''
-        ${lib.getExe' config.services.postgresql.package "psql"} -p ${toString cfg.port} -d "${cfg.immich.database}" -f "${sqlFile}"
+        ${psql} -d "${cfg.immich.database}" -f "${sqlFile}"
       ''
     ];
   };

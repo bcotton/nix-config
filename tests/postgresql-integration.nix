@@ -17,6 +17,7 @@
     postgres = {
       config,
       pkgs,
+      lib,
       ...
     }: {
       _module.args.unstablePkgs = unstablePkgs;
@@ -71,11 +72,13 @@
 
       # Grant superuser permissions to test-immich user for integration testing
       # This allows Immich to dynamically create extensions like vchord
-      systemd.services.postgresql.postStart = pkgs.lib.mkAfter ''
-        $PSQL -tA <<'EOF'
-          ALTER USER "test-immich" WITH SUPERUSER;
-        EOF
-      '';
+      services.clubcotton.postgresql.postStartCommands = [
+        ''
+          ${lib.getExe' pkgs.postgresql_16 "psql"} -p 5433 -tA <<'EOF'
+            ALTER USER "test-immich" WITH SUPERUSER;
+          EOF
+        ''
+      ];
 
       # Open firewall for PostgreSQL
       networking.firewall.allowedTCPPorts = [5433];
@@ -223,6 +226,9 @@
         postgres.succeed(
             "sudo -u postgres psql -p 5433 -c '\\l' | grep template1"
         )
+
+    with subtest("Wait for custom setup to complete"):
+        postgres.wait_for_unit("postgresql-custom-setup.service")
 
     with subtest("Immich database and user are created"):
         postgres.succeed(

@@ -49,11 +49,11 @@
       dig
       dua # Modern Unix `du`
       duf # Modern Unix `df`
-      du-dust # Modern Unix `du`
+      dust # Modern Unix `du`
       # direnv # programs.direnv
       #docker
       drill
-      du-dust
+      dust
       dua
       duf
       entr # Modern Unix `watch`
@@ -63,7 +63,7 @@
       #  fira-mono
       fd
       gh
-      go_1_23
+      go_1_24
       glow
       go-migrate
       gron

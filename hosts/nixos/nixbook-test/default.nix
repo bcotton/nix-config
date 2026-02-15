@@ -71,6 +71,7 @@
     "broadcom-sta-6.30.223.271-57-6.6.30-rt30"
     "broadcom-sta-6.30.223.271-57-5.15.183-rt85"
     "broadcom-sta-6.30.223.271-57-6.6.87-rt54"
+    "broadcom-sta-6.30.223.271-59-6.6.112-rt63"
   ];
 
   networking = {
