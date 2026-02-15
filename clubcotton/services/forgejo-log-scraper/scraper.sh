@@ -238,7 +238,7 @@ process_file() {
       }
 
       escaped = json_escape($0)
-      printf "[\"" line_ns "\",\"" escaped "\"]\n" > batch_file
+      print "[\"" line_ns "\",\"" escaped "\"]" > batch_file
 
       if (line_count % batch_size == 0) {
         close(batch_file)
