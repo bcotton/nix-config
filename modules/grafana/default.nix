@@ -21,6 +21,16 @@
         version = "0.0.9";
         zipHash = "sha256-GiZCE9/ZXuRCukVIfVWvrv0GUEioiseAv7sOLwk128Q=";
       })
+      (grafanaPlugin {
+        pname = "grafana-lokiexplore-app";
+        version = "1.0.35";
+        zipHash = "sha256-9iK0h1LRl3PNvu70Aa0cQb8nhqezOKu3PAE2GsRR11s=";
+      })
+      (grafanaPlugin {
+        pname = "grafana-metricsdrilldown-app";
+        version = "1.0.30";
+        zipHash = "sha256-Il7XV9+ooheasqJIqRmcXWB5mLwEePk4nLP0c4H0Ims=";
+      })
     ];
 
     provision = {

@@ -1,12 +1,6 @@
 name: Playwright Tests
 
 on:
-  push:
-    branches:
-      - main
-      - playwrite-in-nix
-      - playwrite-cli-tests
-  pull_request:
   workflow_dispatch:
 
 jobs:

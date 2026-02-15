@@ -90,6 +90,12 @@ in {
     };
   };
 
+  # Only monitor the ZFS root disk, skip auto-discovery which picks up
+  # /dev/nvme0 (controller node, permission denied) and /dev/sda (no SMART)
+  services.prometheus.exporters.smartctl.devices = [
+    "/dev/disk/by-id/wwn-0x5002538655584d30"
+  ];
+
   services.clubcotton = {
     alloy-logs.enable = true;
   };
