@@ -7,32 +7,78 @@ LOG_BASE_DIR="${LOG_BASE_DIR:?LOG_BASE_DIR must be set}"
 LOKI_ENDPOINT="${LOKI_ENDPOINT:?LOKI_ENDPOINT must be set}"
 STATE_DIR="${STATE_DIR:?STATE_DIR must be set}"
 
-BATCH_SIZE=500
+BATCH_SIZE="${BATCH_SIZE:-500}"
+MAX_PARALLEL="${MAX_PARALLEL:-4}"
+DB_FILE="${STATE_DIR}/processed.db"
 
 log() { echo "[$(date -Iseconds)] $*" >&2; }
 
-# Convert ISO timestamp to nanosecond epoch for Loki
-ts_to_nanos() {
-  local ts="$1"
-  # Strip sub-second precision beyond what date can handle, keep the Z
-  local clean_ts
-  clean_ts=$(echo "$ts" | sed -E 's/\.[0-9]+Z$/Z/')
-  local epoch
-  epoch=$(date -d "$clean_ts" +%s 2>/dev/null) || {
-    echo "0"
-    return
-  }
-  echo "${epoch}000000000"
+# --- SQLite state tracking ---
+
+
+# Run a SQL statement with busy timeout set on every connection
+sql() {
+  sqlite3 -cmd '.timeout 5000' "$DB_FILE" "$1"
 }
 
-# Regex patterns stored in variables to avoid shell parsing issues
+init_db() {
+  sql "CREATE TABLE IF NOT EXISTS processed (dedup_key TEXT PRIMARY KEY NOT NULL);"
+  sql "PRAGMA journal_mode=WAL;" >/dev/null
+}
+
+is_processed() {
+  local key="$1"
+  local count
+  count=$(sql "SELECT COUNT(*) FROM processed WHERE dedup_key='${key//\'/\'\'}';")
+  [[ "$count" -gt 0 ]]
+}
+
+mark_processed() {
+  local key="$1"
+  sql "INSERT OR IGNORE INTO processed (dedup_key) VALUES ('${key//\'/\'\'}');"
+}
+
+migrate_flat_file() {
+  local flat_file="${STATE_DIR}/processed"
+  local migration_marker="${STATE_DIR}/.migrated"
+
+  # Skip if already migrated or no flat file exists
+  if [[ -f "$migration_marker" ]] || [[ ! -f "$flat_file" ]]; then
+    return 0
+  fi
+
+  if [[ ! -s "$flat_file" ]]; then
+    touch "$migration_marker"
+    return 0
+  fi
+
+  local count
+  count=$(wc -l < "$flat_file")
+  log "Migrating $count entries from flat file to SQLite..."
+
+  {
+    echo ".timeout 5000"
+    echo "BEGIN TRANSACTION;"
+    while IFS= read -r key; do
+      [[ -z "$key" ]] && continue
+      echo "INSERT OR IGNORE INTO processed (dedup_key) VALUES ('${key//\'/\'\'}');"
+    done < "$flat_file"
+    echo "COMMIT;"
+  } | sqlite3 "$DB_FILE"
+
+  touch "$migration_marker"
+  log "Migration complete"
+}
+
+# --- Regex patterns ---
+
 RE_RUNNER='^[0-9T:.Z-]+[[:space:]]([^(]+)[(]version:'
 RE_JOB='of job ([^,]+),'
 RE_EVENT='be triggered by event: ([^[:space:]]+)'
 RE_TIMESTAMP='^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})[.0-9]*Z'
 
-# Push a batch of values (JSON lines file) to Loki
-# Args: values_file owner repo task_id_str job_name event_type runner_name batch_label
+# --- Push a batch of values (JSON lines file) to Loki ---
+
 push_batch() {
   local values_file="$1" owner="$2" repo="$3" task_id_str="$4"
   local job_name="$5" event_type="$6" runner_name="$7" batch_label="$8"
@@ -100,6 +146,8 @@ push_batch() {
   fi
 }
 
+# --- Process a single log file ---
+
 process_file() {
   local filepath="$1"
 
@@ -117,23 +165,21 @@ process_file() {
   repo=$(echo "$rel_path" | cut -d/ -f2)
   task_id_str=$(basename "$filepath" .log.zst)
 
-  # Build a unique key for dedup (owner/repo/task_id is globally unique)
-  local state_file="${STATE_DIR}/processed"
   local dedup_key="${owner}/${repo}/${task_id_str}"
 
   # Check if already processed
-  if [[ -f "$state_file" ]] && grep -qF "$dedup_key" "$state_file"; then
+  if is_processed "$dedup_key"; then
     return 0
   fi
 
-  # Create temp files upfront for cleanup
-  local tmpfile values_file
+  # Create temp files and batch directory for cleanup
+  local tmpfile batch_dir
   tmpfile=$(mktemp)
-  values_file=$(mktemp)
+  batch_dir=$(mktemp -d)
   # shellcheck disable=SC2064
-  trap "rm -f '$tmpfile' '$values_file'" RETURN
+  trap "rm -f '$tmpfile'; rm -rf '$batch_dir'" RETURN
 
-  # Decompress to temp file to avoid holding large content in a variable
+  # Decompress to temp file
   if ! zstd -d -c "$filepath" > "$tmpfile" 2>/dev/null; then
     log "ERROR: failed to decompress $filepath"
     return 1
@@ -141,12 +187,11 @@ process_file() {
 
   if [[ ! -s "$tmpfile" ]]; then
     log "WARNING: empty log file $filepath, skipping"
-    echo "$dedup_key" >> "$state_file"
+    mark_processed "$dedup_key"
     return 0
   fi
 
   # Parse first line for metadata
-  # Format: "2026-02-09T15:51:33.3466208Z nix-03-runner-2(version:v7.0.0) received task 1280 of job playwright, be triggered by event: push"
   local first_line
   first_line=$(head -1 "$tmpfile")
 
@@ -165,7 +210,6 @@ process_file() {
   fi
 
   # Quick age check: if the first line's timestamp is older than 6 days, skip
-  # (Loki's reject_old_samples_max_age is typically ~7 days)
   if [[ "$first_line" =~ $RE_TIMESTAMP ]]; then
     local first_epoch
     first_epoch=$(date -d "${BASH_REMATCH[1]}Z" +%s 2>/dev/null) || first_epoch=0
@@ -173,84 +217,129 @@ process_file() {
     cutoff_epoch=$(date -d '6 days ago' +%s)
     if (( first_epoch > 0 && first_epoch < cutoff_epoch )); then
       log "WARNING: skipping $dedup_key - log timestamps too old for Loki (first line: ${BASH_REMATCH[1]})"
-      echo "$dedup_key" >> "$state_file"
+      mark_processed "$dedup_key"
       return 0
     fi
   fi
 
-  # Build Loki values as JSON lines in a temp file (one [ts, line] per line)
-  # This avoids accumulating a large JSON array in a shell variable
-  local line_count=0
-  local batch_count=0
+  # Use gawk to process all log lines in a single invocation:
+  # - Extract timestamps via mktime (no per-line date subprocess)
+  # - JSON-escape each line
+  # - Write batch files directly (one per BATCH_SIZE lines)
+  # - Output metadata (line_count batch_count) to a meta file
   local fallback_ns
   fallback_ns="$(date +%s)000000000"
-  local all_ok=true
 
-  while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
-    line_count=$((line_count + 1))
+  TZ=UTC gawk \
+    -v fallback_ns="$fallback_ns" \
+    -v batch_size="$BATCH_SIZE" \
+    -v batch_prefix="${batch_dir}/batch_" \
+    '
+    function json_escape(s) {
+      gsub(/\\/, "\\\\", s)
+      gsub(/"/, "\\\"", s)
+      gsub(/\t/, "\\t", s)
+      gsub(/\r/, "\\r", s)
+      # Handle control chars
+      gsub(/\x08/, "\\b", s)
+      gsub(/\x0c/, "\\f", s)
+      return s
+    }
 
-    local line_ns="$fallback_ns"
-    if [[ "$line" =~ $RE_TIMESTAMP ]]; then
-      local parsed_ns
-      parsed_ns=$(ts_to_nanos "${BASH_REMATCH[1]}Z")
-      # Add line_count as nanosecond offset to preserve ordering
-      line_ns="$((parsed_ns + line_count))"
-    fi
+    BEGIN {
+      line_count = 0
+      batch_num = 1
+      batch_file = batch_prefix batch_num
+      re_ts = "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+    }
 
-    # Write each value pair as a JSON line (small, constant-size jq args)
-    jq -nc --arg ts "$line_ns" --arg l "$line" '[$ts, $l]' >> "$values_file"
+    /^$/ { next }
 
-    # Send batch when we hit the limit
-    if (( line_count % BATCH_SIZE == 0 )); then
-      batch_count=$((batch_count + 1))
-      push_batch "$values_file" "$owner" "$repo" "$task_id_str" \
-           "$job_name" "$event_type" "$runner_name" \
-           "${dedup_key} (batch ${batch_count})"
-      local rc=$?
-      if [[ $rc -eq 2 ]]; then
-        # Timestamps too old - skip entire file
-        echo "$dedup_key" >> "$state_file"
-        return 0
-      elif [[ $rc -ne 0 ]]; then
-        all_ok=false
-      fi
-      : > "$values_file"  # truncate for next batch
-    fi
-  done < "$tmpfile"
+    {
+      line_count++
+      line_ns = fallback_ns + 0 + line_count
+
+      if (match($0, re_ts)) {
+        ts_str = substr($0, RSTART, RLENGTH)
+        # Parse "YYYY-MM-DDTHH:MM:SS" into mktime format "YYYY MM DD HH MM SS"
+        split(ts_str, a, /[-T:]/)
+        epoch = mktime(a[1] " " a[2] " " a[3] " " a[4] " " a[5] " " a[6])
+        if (epoch > 0) {
+          line_ns = epoch "000000000" + 0 + line_count
+        }
+      }
+
+      escaped = json_escape($0)
+      printf "[\"" line_ns "\",\"" escaped "\"]\n" > batch_file
+
+      if (line_count % batch_size == 0) {
+        close(batch_file)
+        batch_num++
+        batch_file = batch_prefix batch_num
+      }
+    }
+
+    END {
+      if (line_count > 0 && line_count % batch_size != 0) close(batch_file)
+      print line_count " " batch_num > (batch_prefix "meta")
+      close(batch_prefix "meta")
+    }
+    ' "$tmpfile"
+
+  # Read metadata from gawk output
+  local line_count batch_count
+  if [[ ! -f "${batch_dir}/batch_meta" ]]; then
+    log "WARNING: no log lines in $filepath, skipping"
+    mark_processed "$dedup_key"
+    return 0
+  fi
+  read -r line_count batch_count < "${batch_dir}/batch_meta"
 
   if [[ "$line_count" -eq 0 ]]; then
     log "WARNING: no log lines in $filepath, skipping"
-    echo "$dedup_key" >> "$state_file"
+    mark_processed "$dedup_key"
     return 0
   fi
 
-  # Send remaining lines
-  if [[ -s "$values_file" ]]; then
-    batch_count=$((batch_count + 1))
+  # Send batches to Loki
+  local all_ok=true
+  local i
+  for (( i=1; i<=batch_count; i++ )); do
+    local batch_file="${batch_dir}/batch_${i}"
+    [[ -s "$batch_file" ]] || continue
+
     local batch_label="$dedup_key"
     if (( batch_count > 1 )); then
-      batch_label="${dedup_key} (batch ${batch_count})"
+      batch_label="${dedup_key} (batch ${i}/${batch_count})"
     fi
-    push_batch "$values_file" "$owner" "$repo" "$task_id_str" \
+
+    push_batch "$batch_file" "$owner" "$repo" "$task_id_str" \
          "$job_name" "$event_type" "$runner_name" "$batch_label"
     local rc=$?
     if [[ $rc -eq 2 ]]; then
-      echo "$dedup_key" >> "$state_file"
+      # Timestamps too old - skip entire file
+      mark_processed "$dedup_key"
       return 0
     elif [[ $rc -ne 0 ]]; then
       all_ok=false
     fi
-  fi
+  done
 
   if $all_ok; then
     log "OK: completed $dedup_key ($line_count lines, $batch_count batch(es))"
-    echo "$dedup_key" >> "$state_file"
+    mark_processed "$dedup_key"
   else
     log "ERROR: some batches failed for $dedup_key"
     return 1
   fi
 }
+
+# --- Single-file mode for parallel backfill ---
+
+if [[ "${1:-}" == "--process-file" ]]; then
+  process_file "$2"
+  exit $?
+fi
 
 # --- Main ---
 
@@ -260,16 +349,17 @@ log "LOKI_ENDPOINT=$LOKI_ENDPOINT"
 log "STATE_DIR=$STATE_DIR"
 
 mkdir -p "$STATE_DIR"
+init_db
+migrate_flat_file
 
-# Phase 1: Backfill - process any existing unprocessed files
-log "Phase 1: backfilling existing log files..."
-backfill_count=0
-while IFS= read -r f; do
-  if process_file "$f"; then
-    backfill_count=$((backfill_count + 1))
-  fi
-done < <(find "$LOG_BASE_DIR" -name '*.log.zst' -type f 2>/dev/null | sort)
-log "Phase 1 complete: processed $backfill_count files"
+# Phase 1: Backfill - process existing unprocessed files in parallel
+log "Phase 1: backfilling existing log files (${MAX_PARALLEL} workers)..."
+
+find "$LOG_BASE_DIR" -name '*.log.zst' -type f 2>/dev/null | sort | \
+  xargs -P "$MAX_PARALLEL" -I {} "$0" --process-file {}
+
+backfill_total=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM processed;")
+log "Phase 1 complete: $backfill_total total files in processed state"
 
 # Phase 2: Watch for new files in real-time
 log "Phase 2: watching for new log files..."

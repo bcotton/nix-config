@@ -10,7 +10,7 @@ with lib; let
 
   scraperScript = pkgs.writeShellApplication {
     name = "forgejo-log-scraper";
-    runtimeInputs = with pkgs; [curl jq coreutils zstd inotify-tools findutils gnugrep gnused];
+    runtimeInputs = with pkgs; [curl jq coreutils zstd inotify-tools findutils gnugrep gnused sqlite gawk];
     text = builtins.readFile ./scraper.sh;
   };
 in {
@@ -34,12 +34,18 @@ in {
       default = "/var/lib/forgejo-log-scraper";
       description = "Directory for tracking which logs have been processed.";
     };
+
+    maxParallel = mkOption {
+      type = types.int;
+      default = 4;
+      description = "Number of parallel workers for backfill processing.";
+    };
   };
 
   config = mkIf cfg.enable {
     systemd.tmpfiles.rules = [
       "d '${cfg.stateDir}' 0750 forgejo forgejo - -"
-      "f '${cfg.stateDir}/processed' 0640 forgejo forgejo - -"
+      "f '${cfg.stateDir}/processed.db' 0640 forgejo forgejo - -"
     ];
 
     systemd.services.forgejo-log-scraper = {
@@ -52,6 +58,7 @@ in {
         LOG_BASE_DIR = cfg.logBaseDir;
         LOKI_ENDPOINT = cfg.lokiEndpoint;
         STATE_DIR = cfg.stateDir;
+        MAX_PARALLEL = toString cfg.maxParallel;
       };
 
       serviceConfig = {
