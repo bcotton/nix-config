@@ -1,0 +1,47 @@
+name: Post-Upgrade Smoke Tests
+
+on:
+  # Triggered by auto-upgrade onSuccess hook via Forgejo API
+  workflow_dispatch:
+  # Scheduled run after the upgrade window (hosts upgrade 03:00-04:30)
+  schedule:
+    - cron: "0 5 * * *"
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root --ipc=host --cap-add=NET_ADMIN --device /dev/net/tun
+    steps:
+      - name: Setup Nix environment
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup smoke test credentials
+        run: |
+          cat > shells/playwright/.env <<'ENVEOF'
+          ${{ secrets.SMOKE_TEST_CREDS }}
+          ENVEOF
+
+      - name: Run post-upgrade smoke tests
+        timeout-minutes: 10
+        run: |
+          cd shells/playwright
+          nix develop --command bash -c '
+            echo "=== Post-Upgrade Smoke Tests ==="
+            echo "Triggered at: $(date)"
+            echo "Node version: $(node --version)"
+            echo "Browser path: $PLAYWRIGHT_BROWSERS_PATH"
+            echo ""
+
+            # Install npm dependencies
+            npm ci
+
+            # Run all service smoke tests
+            npm test
+          '

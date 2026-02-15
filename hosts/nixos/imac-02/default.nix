@@ -38,6 +38,19 @@ in {
     alloy-logs.enable = true;
     scanner.enable = true;
     tailscale.enable = true;
+
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:00";
+      healthChecks = {
+        pingTargets = ["192.168.5.1" "192.168.5.220"];
+        services = ["sshd" "tailscaled" "display-manager"];
+        tcpPorts = [
+          {port = 22;}
+        ];
+      };
+    };
   };
 
   virtualisation.containers.enable = true;

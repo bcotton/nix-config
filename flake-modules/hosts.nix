@@ -73,6 +73,7 @@
       ../modules/postgresql
       ../modules/tailscale
       ../modules/zfs
+      ../modules/auto-upgrade
     ];
 
     # Load host variables for enriching specs
