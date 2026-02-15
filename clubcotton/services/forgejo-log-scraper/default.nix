@@ -39,6 +39,7 @@ in {
   config = mkIf cfg.enable {
     systemd.tmpfiles.rules = [
       "d '${cfg.stateDir}' 0750 forgejo forgejo - -"
+      "f '${cfg.stateDir}/processed' 0640 forgejo forgejo - -"
     ];
 
     systemd.services.forgejo-log-scraper = {
