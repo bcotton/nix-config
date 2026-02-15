@@ -195,11 +195,11 @@ process_file() {
   # - JSON-escape each line
   # - Write batch files directly (one per BATCH_SIZE lines)
   # - Output metadata (line_count batch_count) to a meta file
-  local fallback_ns
-  fallback_ns="$(date +%s)000000000"
+  local fallback_epoch
+  fallback_epoch="$(date +%s)"
 
   TZ=UTC gawk \
-    -v fallback_ns="$fallback_ns" \
+    -v fallback_epoch="$fallback_epoch" \
     -v batch_size="$BATCH_SIZE" \
     -v batch_prefix="${batch_dir}/batch_" \
     '
@@ -227,7 +227,7 @@ process_file() {
 
     {
       line_count++
-      line_ns = fallback_ns + 0 + line_count
+      ts_epoch = fallback_epoch + 0
 
       if (match($0, re_ts)) {
         ts_str = substr($0, RSTART, RLENGTH)
@@ -235,9 +235,12 @@ process_file() {
         split(ts_str, a, /[-T:]/)
         epoch = mktime(a[1] " " a[2] " " a[3] " " a[4] " " a[5] " " a[6])
         if (epoch > 0) {
-          line_ns = epoch "000000000" + 0 + line_count
+          ts_epoch = epoch
         }
       }
+
+      # Build nanosecond timestamp as string to avoid float precision loss
+      line_ns = sprintf("%d%09d", ts_epoch, line_count)
 
       escaped = json_escape($0)
       print "[\"" line_ns "\",\"" escaped "\"]" > batch_file
