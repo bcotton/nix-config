@@ -63,6 +63,38 @@
               grafana_cloud.stack.receivers.metrics,
             ]
           }
+
+          // OpenClaw conversational transcripts
+          local.file_match "openclaw_sessions" {
+            path_targets = [
+              {
+                "__path__" = "/home/larry/.openclaw/agents/main/sessions/*.jsonl",
+                "instance" = "${builtins.toString config.networking.hostName}",
+                "job" = "openclaw-sessions",
+              },
+            ]
+          }
+
+          loki.source.file "openclaw_sessions" {
+            targets = local.file_match.openclaw_sessions.targets
+            forward_to = [grafana_cloud.stack.receivers.logs]
+          }
+
+          // OpenClaw cron execution logs
+          local.file_match "openclaw_cron" {
+            path_targets = [
+              {
+                "__path__" = "/home/larry/.openclaw/cron/runs/*.jsonl",
+                "instance" = "${builtins.toString config.networking.hostName}",
+                "job" = "openclaw-cron",
+              },
+            ]
+          }
+
+          loki.source.file "openclaw_cron" {
+            targets = local.file_match.openclaw_cron.targets
+            forward_to = [grafana_cloud.stack.receivers.logs]
+          }
       '';
     in
       pkgs.runCommand "grafana-alloy.d" {} ''

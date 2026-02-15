@@ -179,6 +179,11 @@
           usernames = ["tomcotton"];
           # No IP - laptop with DHCP, not on homepage
         };
+        incus-testing = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          # No IP - Incus VM with DHCP, external access via Tailscale
+        };
       };
 
     # Derive host list from specs - used for SSH RemoteForward configuration
