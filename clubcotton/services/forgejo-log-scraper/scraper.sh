@@ -38,38 +38,6 @@ mark_processed() {
   sql "INSERT OR IGNORE INTO processed (dedup_key) VALUES ('${key//\'/\'\'}');"
 }
 
-migrate_flat_file() {
-  local flat_file="${STATE_DIR}/processed"
-  local migration_marker="${STATE_DIR}/.migrated"
-
-  # Skip if already migrated or no flat file exists
-  if [[ -f "$migration_marker" ]] || [[ ! -f "$flat_file" ]]; then
-    return 0
-  fi
-
-  if [[ ! -s "$flat_file" ]]; then
-    touch "$migration_marker"
-    return 0
-  fi
-
-  local count
-  count=$(wc -l < "$flat_file")
-  log "Migrating $count entries from flat file to SQLite..."
-
-  {
-    echo ".timeout 5000"
-    echo "BEGIN TRANSACTION;"
-    while IFS= read -r key; do
-      [[ -z "$key" ]] && continue
-      echo "INSERT OR IGNORE INTO processed (dedup_key) VALUES ('${key//\'/\'\'}');"
-    done < "$flat_file"
-    echo "COMMIT;"
-  } | sqlite3 "$DB_FILE"
-
-  touch "$migration_marker"
-  log "Migration complete"
-}
-
 # --- Regex patterns ---
 
 RE_RUNNER='^[0-9T:.Z-]+[[:space:]]([^(]+)[(]version:'
@@ -350,7 +318,6 @@ log "STATE_DIR=$STATE_DIR"
 
 mkdir -p "$STATE_DIR"
 init_db
-migrate_flat_file
 
 # Phase 1: Backfill - process existing unprocessed files in parallel
 log "Phase 1: backfilling existing log files (${MAX_PARALLEL} workers)..."
