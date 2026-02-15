@@ -63,6 +63,7 @@ in {
     roon-server.enable = false;
     sabnzbd.enable = true;
     scanner.enable = true;
+    searxng.enable = true;
     sonarr.enable = true;
     syncoid.enable = true;
     tailscale.enable = true;
@@ -362,6 +363,10 @@ in {
         permissions = "CRUD";
       };
     };
+  };
+
+  services.clubcotton.searxng = {
+    environmentFile = config.age.secrets.searxng.path;
   };
 
   services.clubcotton.wallabag = {

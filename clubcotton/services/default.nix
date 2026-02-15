@@ -36,6 +36,7 @@
     ./roon-server
     ./sabnzbd
     ./scanner
+    ./searxng
     ./syncoid
     ./technitium
     ./wallabag

@@ -224,6 +224,11 @@ in {
     group = "users";
   };
 
+  # SearXNG secret key (format: SEARXNG_SECRET=<hex-key>)
+  age.secrets."searxng" = lib.mkIf config.services.clubcotton.searxng.enable {
+    file = ./searxng.age;
+  };
+
   age.secrets."wallabag" = lib.mkIf config.services.clubcotton.wallabag.enable {
     file = ./wallabag.age;
     owner = "wallabag";
