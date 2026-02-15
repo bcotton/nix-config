@@ -14,6 +14,7 @@
     ./cloudflare-tunnel
     ./filebrowser
     ./forgejo
+    ./forgejo-log-scraper
     ./freshrss
     ./garage
     ./harmonia

@@ -41,6 +41,7 @@ in {
     filebrowser.enable = true;
     freshrss.enable = true;
     forgejo.enable = true;
+    forgejo-log-scraper.enable = true;
     garage.enable = true;
     harmonia.enable = true;
     immich.enable = true;
