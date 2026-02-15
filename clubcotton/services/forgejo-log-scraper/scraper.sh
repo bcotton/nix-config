@@ -208,9 +208,11 @@ process_file() {
       gsub(/"/, "\\\"", s)
       gsub(/\t/, "\\t", s)
       gsub(/\r/, "\\r", s)
-      # Handle control chars
+      gsub(/\n/, "\\n", s)
       gsub(/\x08/, "\\b", s)
       gsub(/\x0c/, "\\f", s)
+      # Strip remaining control characters (U+0000-U+001F)
+      gsub(/[\x00-\x07\x0b\x0e-\x1f]/, "", s)
       return s
     }
 
@@ -323,7 +325,7 @@ init_db
 log "Phase 1: backfilling existing log files (${MAX_PARALLEL} workers)..."
 
 find "$LOG_BASE_DIR" -name '*.log.zst' -type f 2>/dev/null | sort | \
-  xargs -P "$MAX_PARALLEL" -I {} "$0" --process-file {}
+  xargs -P "$MAX_PARALLEL" -I {} "$0" --process-file {} || true
 
 backfill_total=$(sqlite3 "$DB_FILE" "SELECT COUNT(*) FROM processed;")
 log "Phase 1 complete: $backfill_total total files in processed state"
