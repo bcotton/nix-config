@@ -27,6 +27,7 @@
     ./loki
     ./mimir
     ./navidrome
+    ./ntfy
     ./nix-cache-proxy
     ./obsidian
     ./nut-client
