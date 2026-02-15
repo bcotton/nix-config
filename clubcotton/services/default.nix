@@ -29,6 +29,7 @@
     ./obsidian
     ./nut-client
     ./nut-server
+    ./ollama
     ./open-webui
     ./paperless
     ./pinchflat

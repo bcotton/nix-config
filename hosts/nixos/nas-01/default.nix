@@ -53,6 +53,7 @@ in {
     navidrome.enable = true;
     nix-cache-proxy.enable = true;
     nut-client.enable = true;
+    ollama.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
     pinchflat.enable = true;
@@ -294,6 +295,11 @@ in {
     };
   };
 
+  services.clubcotton.ollama = {
+    acceleration = false;
+    loadModels = ["llama3.1:70b"];
+  };
+
   services.clubcotton.open-webui = {
     package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
       dependencies =
@@ -307,8 +313,8 @@ in {
     environment = {
       WEBUI_AUTH = "True";
       ENABLE_OLLAMA_API = "True";
-      OLLAMA_BASE_URL = "http://toms-mini:11434";
-      OLLAMA_API_BASE_URL = "http://toms-mini:11434";
+      OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+      OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
     };
     environmentFile = config.age.secrets.open-webui.path;
   };
