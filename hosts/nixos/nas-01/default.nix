@@ -396,6 +396,7 @@ in {
   };
 
   services.clubcotton.searxng = {
+    port = 8890;
     environmentFile = config.age.secrets.searxng.path;
   };
 
