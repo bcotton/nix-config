@@ -123,16 +123,12 @@ in {
 
   programs.git = {
     enable = true;
-    userEmail = "thomaswileycotton@gmail.com";
-    userName = "5wiley";
-    extraConfig = {
+    settings = {
+      user = {
+        email = "thomaswileycotton@gmail.com";
+        name = "5wiley";
+      };
       alias = {
-        # br = "branch";
-        # co = "checkout";
-        # ci = "commit";
-        # d = "diff";
-        # dc = "diff --cached";
-        # la = "config --get-regexp alias";
         lg = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit";
         lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
       };
@@ -146,40 +142,15 @@ in {
 
       core = {
         whitespace = "trailing-space,space-before-tab";
-        # pager = "difftastic";
       };
-      # interactive.diffFilter = "difft";
       merge.conflictstyle = "diff3";
       diff = {
-        # tool = "difftastic";
         colorMoved = "default";
       };
-      # difftool."difftastic".cmd = "difft $LOCAL $REMOTE";
     };
-    # difftastic = {
-    #   enable = false;
-    #   background = "dark";
-    #   display = "side-by-side";
-    # };
     includes = [
       {path = "${pkgs.delta}/share/themes.gitconfig";}
     ];
-    # delta = {
-    #   enable = true;
-    #   options = {
-    #     # decorations = {
-    #     #   commit-decoration-style = "bold yellow box ul";
-    #     #   file-decoration-style = "none";
-    #     #   file-style = "bold yellow ul";
-    #     # };
-    #     # features = "mellow-barbet";
-    #     features = "collared-trogon";
-    #     # whitespace-error-style = "22 reverse";
-    #     navigate = true;
-    #     light = false;
-    #     side-by-side = true;
-    #   };
-    # };
   };
 
   programs.htop = {
@@ -592,17 +563,18 @@ in {
 
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
+    matchBlocks."*" = {
+      extraOptions = {
+        StrictHostKeyChecking = "no";
+      };
+      forwardAgent = true;
+    };
     extraConfig = ''
-      Host *
-        StrictHostKeyChecking no
-        ForwardAgent yes
-
       Host github.com
         Hostname ssh.github.com
         Port 443
     '';
-    matchBlocks = {
-    };
   };
 
   home.packages = with pkgs; [

@@ -271,7 +271,7 @@
     # atuin register -u bcotton -e bob.cotton@gmail.com
     envExtra =
       ''
-        export BAT_PAGER="moar --mousemode=select"
+        export BAT_PAGER="moor --mousemode=select"
         export BAT_STYLE="plain"
         export BAT_THEME="Visual Studio Dark+"
         export DFT_DISPLAY=side-by-side
@@ -594,6 +594,13 @@
 
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false;
+    matchBlocks."*" = {
+      extraOptions = {
+        StrictHostKeyChecking = "no";
+      };
+      forwardAgent = true;
+    };
     extraConfig = let
       # Generate host list from nixosHosts for RemoteForward configuration
       remoteForwardHosts = lib.concatStringsSep " " nixosHosts;
@@ -610,11 +617,6 @@
         RemoteForward 7890 localhost:7890
         RemoteForward 7891 localhost:7891
         RemoteForward 7892 localhost:7892
-
-      Host *
-        StrictHostKeyChecking no
-        ForwardAgent yes
-
 
       Host github.com
         Hostname ssh.github.com
@@ -642,8 +644,8 @@
       kubectl
       opentofu
 
-      inputs.opencode.packages.${pkgs.system}.default
-      inputs.beads.packages.${pkgs.system}.default
+      inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default
+      inputs.beads.packages.${pkgs.stdenv.hostPlatform.system}.default
       crushPackage
 
       procs

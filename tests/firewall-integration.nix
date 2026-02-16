@@ -6,6 +6,7 @@
     server = {
       config,
       pkgs,
+      lib,
       ...
     }: {
       # Enable OpenSSH
@@ -13,7 +14,10 @@
         enable = true;
         settings.PermitRootLogin = "yes";
       };
-      users.users.root.password = "test";
+      users.users.root = {
+        initialPassword = "test";
+        hashedPasswordFile = lib.mkForce null;
+      };
 
       # Simple web server on port 8080
       services.nginx = {

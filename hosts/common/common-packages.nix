@@ -3,7 +3,6 @@
   pkgs,
   unstablePkgs,
   inputs,
-  system,
   ...
 }: {
   config = {
@@ -15,7 +14,7 @@
     home-manager.backupFileExtension = "home-manager-backup";
 
     environment.systemPackages = with pkgs; [
-      inputs.agenix.packages."${system}".default
+      inputs.agenix.packages."${pkgs.stdenv.hostPlatform.system}".default
       atuin
       ## unstable
       yt-dlp
@@ -33,7 +32,7 @@
       bat-extras.batwatch
       bat-extras.prettybat
       btop
-      moar
+      moor
 
       # K8s development tools
       ctlptl

@@ -37,7 +37,7 @@
         (lib.optionalAttrs (config.boot.supportedFilesystems.zfs or false)
           ((import ./overlays/smart-disk-monitoring.nix {inherit config pkgs lib unstablePkgs;}) final prev))
 
-        (lib.optionalAttrs ((config.programs.git.enable or false) && (config.programs.git.delta.enable or false))
+        (lib.optionalAttrs ((config.programs.git.enable or false) && (config.programs.delta.enable or false))
           ((import ./overlays/delta.nix {inherit config pkgs lib unstablePkgs;}) final prev))
 
         # Grafana overlay removed - nixpkgs 25.11 already has grafana 12.3.2

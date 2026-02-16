@@ -131,10 +131,11 @@
   # ─────────────────────────────────────────────────────────────
   programs.git = {
     enable = true;
-    userName = "Larry";
-    userEmail = "larry@nix-02";
-
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Larry";
+        email = "larry@nix-02";
+      };
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
       pull.rebase = true;
@@ -152,16 +153,17 @@
       merge.conflictstyle = "diff3";
       diff.colorMoved = "default";
     };
+  };
 
-    # Delta for beautiful diffs
-    delta = {
-      enable = true;
-      options = {
-        navigate = true;
-        light = false;
-        side-by-side = true;
-        line-numbers = true;
-      };
+  # Delta for beautiful diffs
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      light = false;
+      side-by-side = true;
+      line-numbers = true;
     };
   };
 
