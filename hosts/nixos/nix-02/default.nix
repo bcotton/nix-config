@@ -38,6 +38,22 @@ in {
     tailscale.enable = true;
     nut-client.enable = true;
     hyprland.enable = true;
+
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:00";
+      healthChecks = {
+        pingTargets = ["192.168.5.1" "192.168.5.220"];
+        services = ["sshd" "tailscaled"];
+        tcpPorts = [
+          {port = 22;}
+        ];
+        extraScript = ''
+          incus cluster list --format csv | awk -F, '{if ($3 != "ONLINE") exit 1}'
+        '';
+      };
+    };
     forgejo-runner = {
       enable = true;
       instances = {
