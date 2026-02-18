@@ -79,7 +79,7 @@ jobs:
       - name: Build all NixOS host configurations
         run: |
           echo "Building all NixOS host system closures..."
-          hosts=$(nix eval --json '.#nixosConfigurations' --apply builtins.attrNames | jq -r '.[]')
+          hosts=$(nix eval --raw '.#nixosConfigurations' --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)')
           failed=""
           for host in $hosts; do
             echo ""
