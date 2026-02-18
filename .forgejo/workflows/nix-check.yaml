@@ -52,4 +52,52 @@ jobs:
           nix flake info --json | head -20 || true
           echo ""
           echo "=== Flake Metadata ==="
-          nix flake metadata || tru
+          nix flake metadata || true
+
+  build-hosts:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    steps:
+      - name: Setup SSH key for distributed builds
+        run: |
+          mkdir -p /run/secrets
+          echo "${{ secrets.NIX_BUILDER_KEY }}" > /run/secrets/nix-builder-key
+          chmod 600 /run/secrets/nix-builder-key
+
+      - name: Setup Nix environment
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build all NixOS host configurations
+        run: |
+          echo "Building all NixOS host system closures..."
+          hosts=$(nix eval --json '.#nixosConfigurations' --apply builtins.attrNames | jq -r '.[]')
+          failed=""
+          for host in $hosts; do
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Building $host..."
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            if nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --show-trace 2>&1; then
+              echo "✓ $host built successfully"
+            else
+              echo "✗ $host FAILED to build"
+              failed="$failed $host"
+            fi
+          done
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ -n "$failed" ]; then
+            echo "FAILED hosts:$failed"
+            exit 1
+          else
+            echo "All hosts built successfully"
+          fi
