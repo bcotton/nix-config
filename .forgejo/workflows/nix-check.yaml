@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - forgejo
-  pull_request_target:
+  pull_request:
   workflow_dispatch:
 
 jobs:
