@@ -322,7 +322,7 @@ in {
 
   services.clubcotton.ollama = {
     acceleration = false;
-    loadModels = ["llama3.1:70b"];
+    loadModels = ["llama3.1:70b" "llama3.2:3b"];
   };
 
   services.clubcotton.open-webui = {

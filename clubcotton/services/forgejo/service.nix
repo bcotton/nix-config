@@ -259,6 +259,10 @@ in {
             SSH_LISTEN_PORT = cfg.sshPort;
           };
 
+          webhook = {
+            ALLOWED_HOST_LIST = "*";
+          };
+
           service = {
             DISABLE_REGISTRATION = true;
             REQUIRE_SIGNIN_VIEW = false;
