@@ -645,7 +645,40 @@
       opentofu
 
       inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default
-      inputs.beads.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # Build beads locally with Go 1.26 - nixpkgs Go 1.25.5 is too old for dolthub/driver
+      (let
+        buildGoModule126 = unstablePkgs.buildGoModule.override {go = unstablePkgs.go_1_26;};
+        bdBase = buildGoModule126 {
+          pname = "beads";
+          version = "0.52.0";
+          src = inputs.beads;
+          subPackages = ["cmd/bd"];
+          vendorHash = "sha256-M+JCxrKgUxCczYzMc2czLZ/JhdVulo7dH2YLTPrJVSc=";
+          nativeBuildInputs = [pkgs.git pkgs.pkg-config];
+          buildInputs = [pkgs.icu];
+          doCheck = false;
+          postPatch = ''
+            goVersion=$(go version | ${pkgs.gnugrep}/bin/grep -oP 'go\K[0-9]+\.[0-9]+(\.[0-9]+)?')
+            ${pkgs.gnused}/bin/sed -i "s/^go .*/go $goVersion/" go.mod
+          '';
+        };
+      in
+        pkgs.stdenv.mkDerivation {
+          pname = "beads";
+          version = bdBase.version;
+          phases = ["installPhase"];
+          installPhase = ''
+            mkdir -p $out/bin
+            cp ${bdBase}/bin/bd $out/bin/bd
+            ln -s bd $out/bin/beads
+            mkdir -p $out/share/fish/vendor_completions.d
+            mkdir -p $out/share/bash-completion/completions
+            mkdir -p $out/share/zsh/site-functions
+            $out/bin/bd completion fish > $out/share/fish/vendor_completions.d/bd.fish
+            $out/bin/bd completion bash > $out/share/bash-completion/completions/bd
+            $out/bin/bd completion zsh > $out/share/zsh/site-functions/_bd
+          '';
+        })
       crushPackage
 
       procs
