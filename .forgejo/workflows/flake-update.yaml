@@ -49,7 +49,7 @@ jobs:
       - name: Create branch and push
         if: steps.check.outputs.changed == 'true'
         run: |
-          BRANCH="flake-update/$(date -u +%Y-%m-%d)"
+          BRANCH="flake-update/$(date -u +%Y-%m-%d-%H%M%S)"
           echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
 
           git checkout -b "$BRANCH"
