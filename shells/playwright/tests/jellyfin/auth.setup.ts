@@ -15,7 +15,8 @@ setup('authenticate', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Password' }).fill(svc.password);
   await page.getByRole('button', { name: 'Sign In' }).click();
 
-  await expect(page).toHaveURL(/.*#\/home\.html/, { timeout: 15000 });
+  // Jellyfin 10.11+ removed .html from routes (jellyfin-web#6617)
+  await expect(page).toHaveURL(/.*#\/home/, { timeout: 15000 });
 
   await page.context().storageState({ path: authFile });
 });

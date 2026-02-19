@@ -9,7 +9,8 @@ test.describe('Jellyfin smoke tests', () => {
     const page = await context.newPage();
 
     await page.goto('/');
-    await expect(page).toHaveTitle('Jellyfin');
+    // Jellyfin 10.11+ uses server name as page title (jellyfin-web#6706)
+    await expect(page).toHaveTitle(/.+/);
     await expect(page.getByRole('heading', { name: 'Please sign in' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'User' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Password' })).toBeVisible();
@@ -20,7 +21,7 @@ test.describe('Jellyfin smoke tests', () => {
 
   test('home page loads after login', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveURL(/.*#\/home\.html/);
+    await expect(page).toHaveURL(/.*#\/home/);
     await expect(page.getByRole('heading', { name: 'My Media' })).toBeVisible();
   });
 
