@@ -86,12 +86,15 @@ jobs:
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "Building $host..."
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            if nix build ".#nixosConfigurations.$host.config.system.build.toplevel" --show-trace 2>&1; then
+            build_log=$(mktemp)
+            if nix build ".#nixosConfigurations.$host.config.system.build.toplevel" 2>"$build_log"; then
               echo "✓ $host built successfully"
             else
               echo "✗ $host FAILED to build"
+              cat "$build_log"
               failed="$failed $host"
             fi
+            rm -f "$build_log"
           done
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
