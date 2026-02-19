@@ -107,10 +107,11 @@
   # ─────────────────────────────────────────────────────────────
   programs.git = {
     enable = true;
-    userName = "Natalya";
-    userEmail = "natalya.verscheure@gmail.com";
-
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Natalya";
+        email = "natalya.verscheure@gmail.com";
+      };
       init.defaultBranch = "main";
       push.autoSetupRemote = true;
       pull.rebase = true;
@@ -128,16 +129,17 @@
       merge.conflictstyle = "diff3";
       diff.colorMoved = "default";
     };
+  };
 
-    # Delta for beautiful diffs
-    delta = {
-      enable = true;
-      options = {
-        navigate = true;
-        light = false;
-        side-by-side = true;
-        line-numbers = true;
-      };
+  # Delta for beautiful diffs
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      light = false;
+      side-by-side = true;
+      line-numbers = true;
     };
   };
 

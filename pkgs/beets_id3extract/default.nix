@@ -11,6 +11,7 @@
 buildPythonPackage rec {
   pname = "beets_id3extract";
   version = "0.1.0";
+  pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
@@ -18,7 +19,7 @@ buildPythonPackage rec {
   };
 
   # Build dependencies
-  nativeBuildInputs = [
+  build-system = [
     setuptools
     wheel
   ];
@@ -29,6 +30,10 @@ buildPythonPackage rec {
 
   # do not run tests as they are not included in the PyPI package
   doCheck = false;
+
+  # Skip runtime dependency check — this is a beets plugin loaded inside beets,
+  # so its declared deps (beets, mediafile, mutagen) are provided by the host.
+  dontCheckRuntimeDeps = true;
 
   meta = with lib; {
     description = "ID3Extract Plugin for beets";

@@ -34,6 +34,9 @@ in {
     enable = true;
     hostname = "frigate";
     package = frigatePackage;
+    # Config uses env vars (FRIGATE_MQTT_USER, etc.) provided at runtime
+    # via EnvironmentFile, which aren't available in the build sandbox
+    checkConfig = false;
 
     settings = {
       detectors = {

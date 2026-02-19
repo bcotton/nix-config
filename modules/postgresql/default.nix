@@ -161,9 +161,25 @@ in {
           '';
         };
 
-        postgresql.postStart = mkIf (cfg.postStartCommands != []) ''
-          ${concatStringsSep "\n" cfg.postStartCommands}
-        '';
+        # Run custom commands after postgresql-setup.service has created
+        # databases and users (NixOS 25.11+ moved ensureDatabases there)
+        postgresql-custom-setup = mkIf (cfg.postStartCommands != []) {
+          description = "PostgreSQL Custom Setup Commands";
+          after = ["postgresql.service" "postgresql-setup.service"];
+          requires = ["postgresql.service"];
+          wants = ["postgresql-setup.service"];
+          wantedBy = ["multi-user.target"];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            User = "postgres";
+          };
+          environment.PSQL = "${lib.getExe' cfg.package "psql"} -p ${toString cfg.port}";
+          script = ''
+            PSQL="${lib.getExe' cfg.package "psql"} -p ${toString cfg.port}"
+            ${concatStringsSep "\n" cfg.postStartCommands}
+          '';
+        };
       };
     }
   ]);

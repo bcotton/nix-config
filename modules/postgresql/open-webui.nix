@@ -46,29 +46,27 @@ in {
       ];
     };
 
-    # Set password from file if passwordFile is provided
-    systemd.services.postgresql.postStart = mkIf (cfg.open-webui.passwordFile != null) (let
-      password_file_path = cfg.open-webui.passwordFile;
-    in ''
-      $PSQL -tA <<'EOF'
-        DO $$
-        DECLARE password TEXT;
-        BEGIN
-          password := trim(both from replace(pg_read_file('${password_file_path}'), E'\n', '''));
-          EXECUTE format('ALTER ROLE "${cfg.open-webui.database}" WITH PASSWORD '''%s''';', password);
-        END $$;
-      EOF
-    '');
-
     services.clubcotton.postgresql.postStartCommands = let
+      psql = "${lib.getExe' config.services.postgresql.package "psql"} -p ${toString cfg.port}";
       sqlFile = pkgs.writeText "open-webui-setup.sql" ''
         CREATE EXTENSION IF NOT EXISTS vector;
 
         ALTER SCHEMA public OWNER TO "${cfg.open-webui.user}";
       '';
+      passwordCmd = optionalString (cfg.open-webui.passwordFile != null) ''
+        ${psql} -tA <<'EOF'
+          DO $$
+          DECLARE password TEXT;
+          BEGIN
+            password := trim(both from replace(pg_read_file('${cfg.open-webui.passwordFile}'), E'\n', '''));
+            EXECUTE format('ALTER ROLE "${cfg.open-webui.database}" WITH PASSWORD '''%s''';', password);
+          END $$;
+        EOF
+      '';
     in [
+      passwordCmd
       ''
-        ${lib.getExe' config.services.postgresql.package "psql"} -p ${toString cfg.port} -d "${cfg.open-webui.database}" -f "${sqlFile}"
+        ${psql} -d "${cfg.open-webui.database}" -f "${sqlFile}"
       ''
     ];
   };

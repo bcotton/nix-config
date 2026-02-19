@@ -43,7 +43,7 @@
       libva-utils
 
       # Diagnostic tools
-      glxinfo
+      mesa-demos
       pciutils
     ];
   };

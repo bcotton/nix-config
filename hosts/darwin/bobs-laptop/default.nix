@@ -32,7 +32,7 @@ in {
     nixpkgs.config.allowUnfree = true;
     nixpkgs.config.overlays = [
       (final: prev:
-        lib.optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
+        lib.optionalAttrs (prev.stdenv.hostPlatform.system == "aarch64-darwin") {
           # Add access to x86 packages system is running Apple Silicon
           pkgs-x86 = import nixpkgs {
             system = "x86_64-darwin";

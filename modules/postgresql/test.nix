@@ -56,6 +56,8 @@
         machine.succeed("systemctl is-active postgresql.service")
     with subtest("PostgreSQL is listening on custom port"):
         machine.wait_until_succeeds("nc -z localhost 5433")
+    with subtest("Wait for custom setup to complete"):
+        machine.wait_for_unit("postgresql-custom-setup.service")
     with subtest("Data directory is created"):
         machine.succeed("test -d /var/lib/postgresql")
     with subtest("Immich database and user are created"):

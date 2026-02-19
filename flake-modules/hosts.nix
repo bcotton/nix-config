@@ -318,12 +318,12 @@
       userModules = [../users/groups.nix] ++ map (username: ../users/${username}.nix) usernames;
     in
       nixpkgs.lib.nixosSystem {
-        inherit system;
         specialArgs = {
           inherit self system inputs hostName nixosHostSpecs homepageServiceList homepageManualServices;
         };
         modules =
-          commonModules
+          [{nixpkgs.hostPlatform = system;}]
+          ++ commonModules
           ++ (
             if minimal
             then []

@@ -69,7 +69,7 @@ with lib; let
     }
 
     # Display in rofi
-    format_bindings | ${pkgs.rofi-wayland}/bin/rofi -dmenu \
+    format_bindings | ${pkgs.rofi}/bin/rofi -dmenu \
       -p "⌨ Keybindings" \
       -i \
       -no-custom \

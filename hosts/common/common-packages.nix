@@ -3,7 +3,6 @@
   pkgs,
   unstablePkgs,
   inputs,
-  system,
   ...
 }: {
   config = {
@@ -15,7 +14,7 @@
     home-manager.backupFileExtension = "home-manager-backup";
 
     environment.systemPackages = with pkgs; [
-      inputs.agenix.packages."${system}".default
+      inputs.agenix.packages."${pkgs.stdenv.hostPlatform.system}".default
       atuin
       ## unstable
       yt-dlp
@@ -33,7 +32,7 @@
       bat-extras.batwatch
       bat-extras.prettybat
       btop
-      moar
+      moor
 
       # K8s development tools
       ctlptl
@@ -49,11 +48,11 @@
       dig
       dua # Modern Unix `du`
       duf # Modern Unix `df`
-      du-dust # Modern Unix `du`
+      dust # Modern Unix `du`
       # direnv # programs.direnv
       #docker
       drill
-      du-dust
+      dust
       dua
       duf
       entr # Modern Unix `watch`
@@ -63,7 +62,7 @@
       #  fira-mono
       fd
       gh
-      go_1_23
+      go_1_24
       glow
       go-migrate
       gron

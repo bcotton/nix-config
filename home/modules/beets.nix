@@ -14,7 +14,7 @@ in {
   config = lib.mkIf cfg.enable {
     programs.beets = {
       enable = true;
-      package = pkgs.beets-unstable;
+      package = pkgs.beets;
       settings = {
         directory = "/media/music/curated";
         library = "/media/music/musiclibrary.db";

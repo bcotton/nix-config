@@ -78,7 +78,7 @@ in {
   };
 
   environment.systemPackages = with pkgs; [
-    beets-unstable
+    beets
   ];
 
   services.clubcotton.harmonia = {

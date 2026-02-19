@@ -11,7 +11,7 @@ in {
   config = mkIf (cfg.enable && cfg.enableRofi) {
     programs.rofi = {
       enable = true;
-      package = pkgs.rofi-wayland;
+      package = pkgs.rofi;
 
       extraConfig = {
         modi = "drun,run,filebrowser";

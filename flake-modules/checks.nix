@@ -9,23 +9,23 @@
       # NixOS tests - only available on x86_64-linux
       # To run: nix build '.#checks.x86_64-linux.postgresql'
       # Interactive: nix run '.#checks.x86_64-linux.postgresql.driverInteractive'
-      postgresql = pkgs.nixosTest (import ../modules/postgresql/test.nix {
+      postgresql = pkgs.testers.nixosTest (import ../modules/postgresql/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
-      webdav = pkgs.nixosTest (import ../clubcotton/services/webdav/test.nix {
+      webdav = pkgs.testers.nixosTest (import ../clubcotton/services/webdav/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
-      kavita = pkgs.nixosTest (import ../clubcotton/services/kavita/test.nix {
+      kavita = pkgs.testers.nixosTest (import ../clubcotton/services/kavita/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
-      harmonia = pkgs.nixosTest (import ../clubcotton/services/harmonia/test.nix {
+      harmonia = pkgs.testers.nixosTest (import ../clubcotton/services/harmonia/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
-      nix-cache-proxy = pkgs.nixosTest (import ../clubcotton/services/nix-cache-proxy/test.nix {
+      nix-cache-proxy = pkgs.testers.nixosTest (import ../clubcotton/services/nix-cache-proxy/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
@@ -43,7 +43,7 @@
           config.allowUnfree = true;
         };
       in
-        pkgs.nixosTest (import ../tests/nix-cache-integration.nix {
+        pkgs.testers.nixosTest (import ../tests/nix-cache-integration.nix {
           nixpkgs = inputs.nixpkgs;
           inherit unstablePkgs inputs;
         });
@@ -54,7 +54,7 @@
           config.allowUnfree = true;
         };
       in
-        pkgs.nixosTest (import ../tests/postgresql-integration.nix {
+        pkgs.testers.nixosTest (import ../tests/postgresql-integration.nix {
           nixpkgs = inputs.nixpkgs;
           inherit unstablePkgs;
           inherit inputs;
@@ -64,11 +64,11 @@
         inherit pkgs;
       };
 
-      garage = pkgs.nixosTest (import ../clubcotton/services/garage/test.nix {
+      garage = pkgs.testers.nixosTest (import ../clubcotton/services/garage/test.nix {
         nixpkgs = inputs.nixpkgs;
       });
 
-      firewall = pkgs.nixosTest (import ../tests/firewall-integration.nix {
+      firewall = pkgs.testers.nixosTest (import ../tests/firewall-integration.nix {
         nixpkgs = inputs.nixpkgs;
       });
 

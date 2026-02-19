@@ -25,12 +25,10 @@ in {
     };
 
     # Display manager - GDM with Wayland
-    services.xserver = mkIf cfg.enableGDM {
+    services.xserver.enable = mkIf cfg.enableGDM true;
+    services.displayManager.gdm = mkIf cfg.enableGDM {
       enable = true;
-      displayManager.gdm = {
-        enable = true;
-        wayland = true;
-      };
+      wayland = true;
     };
 
     # XDG Portal for Wayland - required for screen sharing, file dialogs, etc.
