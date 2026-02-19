@@ -40,7 +40,7 @@ in {
     hyprland.enable = true;
 
     auto-upgrade = {
-      enable = true;
+      enable = false;
       flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
       dates = "03:00";
       healthChecks = {
@@ -109,12 +109,10 @@ in {
     disk = "/dev/disk/by-id/nvme-eui.00000000000000000026b738281a43c5";
     useStandardRootFilesystems = true;
     reservedSize = "20GiB";
-    volumes = {
-      "local/incus" = {
-        size = "300G";
-      };
-    };
+    volumes = {};
   };
+
+  boot.zfs.extraPools = ["incus"];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;

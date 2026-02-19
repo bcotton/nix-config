@@ -99,12 +99,10 @@ in {
     disk = "/dev/disk/by-id/nvme-eui.00000000000000000026b738281a3535";
     useStandardRootFilesystems = true;
     reservedSize = "20GiB";
-    volumes = {
-      "local/incus" = {
-        size = "300G";
-      };
-    };
+    volumes = {};
   };
+
+  boot.zfs.extraPools = ["incus"];
 
   networking = {
     hostId = variables.hostId;
