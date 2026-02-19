@@ -79,17 +79,6 @@ in {
 
   networking.firewall.enable = variables.firewallEnable;
 
-  virtualisation.libvirtd = {
-    enable = true;
-    qemu = {
-      package = pkgs.qemu_kvm;
-      ovmf = {
-        enable = true;
-        packages = [pkgs.OVMFFull.fd];
-      };
-    };
-  };
-
   # Only monitor the ZFS root disk, skip auto-discovery which picks up
   # /dev/nvme0 (controller node, permission denied) and /dev/sda (no SMART)
   services.prometheus.exporters.smartctl.devices = [
