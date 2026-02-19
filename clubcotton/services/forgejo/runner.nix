@@ -97,7 +97,7 @@ in {
               enabled = true;
             };
             container = {
-              network = "bridge";
+              network = "host";
               privileged = false;
               options = "-v /nix:/nix:ro";
             };
