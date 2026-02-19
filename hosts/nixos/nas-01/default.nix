@@ -22,6 +22,7 @@ in {
     inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
+    ../../../modules/incus
     ../../../modules/systemd-network
     ../../../users/cheryl.nix
     ./restic.nix
@@ -206,7 +207,7 @@ in {
     mode = "single-nic";
     interfaces = ["enp65s0"];
     bridgeName = "br0";
-    enableIncusBridge = false; # nas-01 doesn't run Incus, but needs VLAN access
+    enableIncusBridge = true;
     enableVlans = true;
     nativeVlan = {
       id = 5;
@@ -760,7 +761,7 @@ in {
       # };
       volumes = {
         "local/incus" = {
-          size = "300G";
+          size = "1T";
         };
       };
     };
