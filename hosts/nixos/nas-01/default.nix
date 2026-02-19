@@ -37,6 +37,23 @@ in {
   services.clubcotton = {
     alloy-logs.enable = true;
     atuin.enable = true;
+
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:30";
+      healthChecks = {
+        pingTargets = ["192.168.5.1" "192.168.5.220"];
+        services = ["sshd" "tailscaled" "postgresql" "forgejo"];
+        tcpPorts = [
+          {port = 22;}
+          {port = 3000;}
+        ];
+        extraScript = ''
+          incus cluster list --format csv | awk -F, '{if ($3 != "ONLINE") exit 1}'
+        '';
+      };
+    };
     calibre.enable = true;
     calibre-web.enable = true;
     filebrowser.enable = true;

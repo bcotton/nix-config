@@ -27,6 +27,18 @@ in {
     alloy-logs.enable = true;
     alloy-logs.lokiEndpoint = "http://loki.bobtail-clownfish.ts.net/loki/api/v1/push";
     tailscale.enable = true;
+
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:00";
+      healthChecks = {
+        services = ["sshd" "tailscaled"];
+        tcpPorts = [
+          {port = 22;}
+        ];
+      };
+    };
   };
 
   clubcotton.zfs_single_root.enable = true;

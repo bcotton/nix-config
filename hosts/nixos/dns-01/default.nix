@@ -36,6 +36,20 @@ in {
     alloy-logs.enable = true;
     nut-client.enable = true;
 
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:00";
+      healthChecks = {
+        pingTargets = ["192.168.5.1"];
+        services = ["sshd"];
+        tcpPorts = [
+          {port = 22;}
+          {port = 53;}
+        ];
+      };
+    };
+
     # Technitium DNS Server
     technitium = {
       enable = true;

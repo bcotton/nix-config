@@ -50,10 +50,9 @@ Hosts are grouped into tiers with increasing delay. Critical infrastructure upgr
 
 | Time | Tier | Hosts |
 |------|------|-------|
-| 03:00 + 0-15min random | Compute | nix-01, nix-02, nix-03, nix-04, imac-01, imac-02 |
-| 03:30 + 0-15min random | Storage/Services | nas-01, admin |
-| 04:00 + 0-15min random | Infrastructure | octoprint, frigate-host |
-| 04:30 (no random) | Critical | dns-01 |
+| 03:00 + 0-15min random | Compute | nix-01, nix-02, nix-03, imac-01, imac-02, condo-01, natalya-01, frigate-host, octoprint |
+| 03:30 + 0-15min random | Storage/Services | nas-01 |
+| 03:00 + 0-15min random | Infrastructure | dns-01 |
 | 05:00 | Verification | Forgejo runs Playwright smoke tests |
 
 dns-01 upgrades ~1.5 hours after the first hosts. If the new config is broken in a way that local health checks can't catch, other hosts will have exhibited problems first.

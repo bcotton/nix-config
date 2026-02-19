@@ -40,7 +40,7 @@ in {
     hyprland.enable = true;
 
     auto-upgrade = {
-      enable = false;
+      enable = true;
       flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
       dates = "03:00";
       healthChecks = {
