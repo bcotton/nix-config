@@ -60,54 +60,47 @@ jobs:
       - name: Create PR and enable auto-merge
         if: steps.check.outputs.changed == 'true'
         run: |
-          API_URL="${GITHUB_SERVER_URL}/api/v1"
-          REPO="${GITHUB_REPOSITORY}"
-          TOKEN="${{ secrets.FLAKE_UPDATE_TOKEN }}"
+          nix shell nixpkgs#curl nixpkgs#jq --command bash -c '
+            set -euo pipefail
 
-          # Build PR body with input diff summary
-          BODY="Automated daily flake input update.
+            API_URL="${GITHUB_SERVER_URL}/api/v1"
+            REPO="${GITHUB_REPOSITORY}"
+            TOKEN="${{ secrets.FLAKE_UPDATE_TOKEN }}"
+            DATE="$(date -u +%Y-%m-%d)"
 
-          <details>
-          <summary>Input changes</summary>
+            # Create PR
+            PR_RESPONSE=$(curl -sf -X POST \
+              -H "Authorization: token ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"title\": \"flake.lock: update ${DATE}\",
+                \"body\": \"Automated daily flake input update.\",
+                \"head\": \"${BRANCH}\",
+                \"base\": \"main\"
+              }" \
+              "${API_URL}/repos/${REPO}/pulls")
 
-          \`\`\`
-          $(nix flake metadata --json 2>/dev/null | head -100 || echo "See flake.lock diff for details")
-          \`\`\`
-          </details>"
+            PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r ".number")
 
-          # Create PR
-          PR_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: token ${TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"title\": \"flake.lock: update $(date -u +%Y-%m-%d)\",
-              \"body\": $(echo "$BODY" | jq -Rs .),
-              \"head\": \"${BRANCH}\",
-              \"base\": \"main\"
-            }" \
-            "${API_URL}/repos/${REPO}/pulls")
+            if [ "$PR_NUMBER" = "null" ] || [ -z "$PR_NUMBER" ]; then
+              echo "Failed to create PR:"
+              echo "$PR_RESPONSE" | jq .
+              exit 1
+            fi
 
-          PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r '.number')
+            echo "Created PR #${PR_NUMBER}"
 
-          if [ "$PR_NUMBER" = "null" ] || [ -z "$PR_NUMBER" ]; then
-            echo "Failed to create PR:"
-            echo "$PR_RESPONSE" | jq .
-            exit 1
-          fi
+            # Enable auto-merge (merge when CI passes)
+            curl -sf -X POST \
+              -H "Authorization: token ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"merge_message_field\": \"Auto-merge: flake.lock update ${DATE}\",
+                \"merge_when_checks_succeed\": true,
+                \"delete_branch_after_merge\": true,
+                \"Do\": \"merge\"
+              }" \
+              "${API_URL}/repos/${REPO}/pulls/${PR_NUMBER}/merge"
 
-          echo "Created PR #${PR_NUMBER}"
-
-          # Enable auto-merge (merge when CI passes)
-          MERGE_RESPONSE=$(curl -s -X POST \
-            -H "Authorization: token ${TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "merge_message_field": "Auto-merge: flake.lock update",
-              "merge_when_checks_succeed": true,
-              "delete_branch_after_merge": true,
-              "Do": "merge"
-            }' \
-            "${API_URL}/repos/${REPO}/pulls/${PR_NUMBER}/merge")
-
-          echo "Auto-merge response:"
-          echo "$MERGE_RESPONSE" | jq . || echo "$MERGE_RESPONSE"
+            echo "Auto-merge enabled for PR #${PR_NUMBER}"
+          '
