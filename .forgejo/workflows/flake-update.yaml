@@ -1,0 +1,113 @@
+name: Flake Update
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 06:00 UTC daily (11pm MST)
+  workflow_dispatch:
+
+jobs:
+  update-flake:
+    runs-on: ubuntu-latest
+    container:
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      options: --user root
+    steps:
+      - name: Setup git
+        run: |
+          git config --global user.email "actions@forgejo.local"
+          git config --global user.name "Forgejo Actions"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.FLAKE_UPDATE_TOKEN }}
+          fetch-depth: 0
+
+      - name: Clean up old flake-update branches
+        run: |
+          git fetch origin
+          for branch in $(git branch -r --list 'origin/flake-update/*'); do
+            branch_name="${branch#origin/}"
+            echo "Deleting old branch: $branch_name"
+            git push origin --delete "$branch_name" || true
+          done
+
+      - name: Run nix flake update
+        run: nix flake update
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet flake.lock; then
+            echo "No changes to flake.lock"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "flake.lock has been updated"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create branch and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          BRANCH="flake-update/$(date -u +%Y-%m-%d)"
+          echo "BRANCH=$BRANCH" >> "$GITHUB_ENV"
+
+          git checkout -b "$BRANCH"
+          git add flake.lock
+          git commit -m "flake.lock: update $(date -u +%Y-%m-%d)"
+          git push origin "$BRANCH"
+
+      - name: Create PR and enable auto-merge
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          API_URL="${GITHUB_SERVER_URL}/api/v1"
+          REPO="${GITHUB_REPOSITORY}"
+          TOKEN="${{ secrets.FLAKE_UPDATE_TOKEN }}"
+
+          # Build PR body with input diff summary
+          BODY="Automated daily flake input update.
+
+          <details>
+          <summary>Input changes</summary>
+
+          \`\`\`
+          $(nix flake metadata --json 2>/dev/null | head -100 || echo "See flake.lock diff for details")
+          \`\`\`
+          </details>"
+
+          # Create PR
+          PR_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"title\": \"flake.lock: update $(date -u +%Y-%m-%d)\",
+              \"body\": $(echo "$BODY" | jq -Rs .),
+              \"head\": \"${BRANCH}\",
+              \"base\": \"main\"
+            }" \
+            "${API_URL}/repos/${REPO}/pulls")
+
+          PR_NUMBER=$(echo "$PR_RESPONSE" | jq -r '.number')
+
+          if [ "$PR_NUMBER" = "null" ] || [ -z "$PR_NUMBER" ]; then
+            echo "Failed to create PR:"
+            echo "$PR_RESPONSE" | jq .
+            exit 1
+          fi
+
+          echo "Created PR #${PR_NUMBER}"
+
+          # Enable auto-merge (merge when CI passes)
+          MERGE_RESPONSE=$(curl -s -X POST \
+            -H "Authorization: token ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "merge_message_field": "Auto-merge: flake.lock update",
+              "merge_when_checks_succeed": true,
+              "delete_branch_after_merge": true,
+              "Do": "merge"
+            }' \
+            "${API_URL}/repos/${REPO}/pulls/${PR_NUMBER}/merge")
+
+          echo "Auto-merge response:"
+          echo "$MERGE_RESPONSE" | jq . || echo "$MERGE_RESPONSE"
