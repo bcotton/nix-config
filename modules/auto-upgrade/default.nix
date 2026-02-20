@@ -290,6 +290,10 @@ in {
       after = ["network-online.target"];
       wants = ["network-online.target"];
 
+      # Never restart mid-run — this service triggers nixos-rebuild,
+      # which activates a new config that would try to restart us.
+      restartIfChanged = false;
+
       # Prevent concurrent runs
       serviceConfig = {
         Type = "oneshot";
