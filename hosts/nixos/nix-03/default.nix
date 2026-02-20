@@ -40,7 +40,7 @@ in {
           {port = 22;}
         ];
         extraScript = ''
-          incus cluster list --format csv | awk -F, '{if ($3 != "ONLINE") exit 1}'
+          if incus cluster list --format csv | grep -qv ONLINE; then echo "incus: member not ONLINE"; exit 1; fi
         '';
         extraScriptPackages = [pkgs.incus];
       };
