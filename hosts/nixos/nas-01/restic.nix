@@ -101,6 +101,11 @@
           "--verbose"
           # Limit parallelism to reduce connection strain
           "--pack-size=32"
+          # Retry lock acquisition for SFTP backend where lock cleanup can lag
+          "--retry-lock=5m"
+        ];
+        pruneOpts = [
+          "--retry-lock=5m"
         ];
         # Limit SFTP connections to prevent overwhelming rsync.net
         extraOptions = [
