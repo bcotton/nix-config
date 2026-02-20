@@ -123,7 +123,7 @@ with lib; let
     echo "=== Phase 1: Building new configuration ==="
     if ! ${config.nix.package}/bin/nix build \
         "''${FLAKE}#nixosConfigurations.''${HOSTNAME}.config.system.build.toplevel" \
-        --no-link --print-out-paths; then
+        --refresh --no-link --print-out-paths; then
       echo "FATAL: Build failed. Aborting upgrade."
       ${optionalString (cfg.onFailure != "") cfg.onFailure}
       exit 1
