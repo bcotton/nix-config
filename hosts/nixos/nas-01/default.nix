@@ -52,8 +52,86 @@ in {
         extraScript = ''
           incus cluster list --format csv | awk -F, '{if ($3 != "ONLINE") exit 1}'
         '';
-        extraScriptPackages = [pkgs.incus];
+        extraScriptPackages = [pkgs.incus pkgs.jq];
       };
+      onSuccess = let
+        curl = "${pkgs.curl}/bin/curl";
+        jq = "${pkgs.jq}/bin/jq";
+        forgejoUrl = "https://forgejo.bobtail-clownfish.ts.net";
+        repo = "bcotton/nix-config";
+        workflow = "playwright.yaml";
+        tokenPath = config.age.secrets."forgejo-dispatch-token".path;
+        pollInterval = 15;
+        maxWait = 600; # 10 minutes
+        appearTimeout = 60; # 1 minute for run to appear
+      in ''
+        # Trigger Playwright smoke tests and wait for result (failures are non-fatal)
+        (
+          TOKEN=$(cat ${tokenPath})
+          API="${forgejoUrl}/api/v1/repos/${repo}"
+          AUTH="Authorization: token $TOKEN"
+
+          echo "=== Post-upgrade: triggering Playwright smoke tests ==="
+
+          # Get current latest run number
+          LATEST=$(${curl} -sf -H "$AUTH" "$API/actions/tasks?limit=5" \
+            | ${jq} '[.workflow_runs[].run_number] | max // 0')
+
+          # Dispatch the workflow
+          HTTP_CODE=$(${curl} -sf -o /dev/null -w '%{http_code}' -X POST \
+            "$API/actions/workflows/${workflow}/dispatches" \
+            -H "$AUTH" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"main"}')
+
+          if [ "$HTTP_CODE" != "204" ]; then
+            echo "WARNING: workflow dispatch returned HTTP $HTTP_CODE (expected 204)"
+            exit 0
+          fi
+          echo "Workflow dispatched. Waiting for run to appear..."
+
+          # Wait for new run to appear
+          DEADLINE=$(($(date +%s) + ${toString appearTimeout}))
+          RUN_NUMBER=""
+          while [ -z "$RUN_NUMBER" ] && [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            sleep 5
+            RUN_NUMBER=$(${curl} -sf -H "$AUTH" "$API/actions/tasks?limit=5" \
+              | ${jq} --argjson latest "$LATEST" \
+                '[.workflow_runs[] | select(.run_number > $latest)] | .[0].run_number // empty')
+          done
+
+          if [ -z "$RUN_NUMBER" ]; then
+            echo "WARNING: smoke test run did not appear within ${toString appearTimeout}s"
+            exit 0
+          fi
+          echo "Smoke test run #$RUN_NUMBER started. Polling for completion..."
+
+          # Poll until completion
+          DEADLINE=$(($(date +%s) + ${toString maxWait}))
+          while [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            STATUS=$(${curl} -sf -H "$AUTH" "$API/actions/tasks?limit=10" \
+              | ${jq} -r --argjson rn "$RUN_NUMBER" \
+                '[.workflow_runs[] | select(.run_number == $rn)] |
+                 if any(.[]; .status == "failure") then "failure"
+                 elif any(.[]; .status == "running") then "running"
+                 elif any(.[]; .status == "cancelled") then "cancelled"
+                 else "success" end')
+
+            if [ "$STATUS" != "running" ]; then
+              break
+            fi
+            sleep ${toString pollInterval}
+          done
+
+          case "$STATUS" in
+            success)   echo "=== Post-upgrade smoke tests PASSED (run #$RUN_NUMBER) ===" ;;
+            failure)   echo "WARNING: Post-upgrade smoke tests FAILED (run #$RUN_NUMBER)" ;;
+            cancelled) echo "WARNING: Post-upgrade smoke tests CANCELLED (run #$RUN_NUMBER)" ;;
+            running)   echo "WARNING: Post-upgrade smoke tests still running after ${toString maxWait}s (run #$RUN_NUMBER)" ;;
+            *)         echo "WARNING: Post-upgrade smoke tests unknown status '$STATUS' (run #$RUN_NUMBER)" ;;
+          esac
+        ) || echo "WARNING: Post-upgrade smoke test trigger failed (non-fatal)"
+      '';
     };
     calibre.enable = true;
     calibre-web.enable = true;

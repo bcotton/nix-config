@@ -101,4 +101,7 @@ in {
 
   # Smoke test credentials for Playwright CI tests
   "smoke-test-creds.age".publicKeys = users ++ systems;
+
+  # Forgejo API token for auto-upgrade workflow dispatch
+  "forgejo-dispatch-token.age".publicKeys = users ++ systems;
 }

@@ -176,15 +176,14 @@ Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix
 
 When working with features that require secrets:
 1. Add the secret definition to `secrets/secrets.nix` (this is safe - just metadata)
-2. Reference the secret in your configuration using `config.age.secrets.<name>.path`
-3. Leave clear instructions for the user to create/edit the actual encrypted secret file using `agenix -e <secret-name>.age`
-4. Document what content/format the secret file should contain
+2. **Stop and give the user instructions** to create the `.age` file before proceeding. The nix build will fail if the `.age` file doesn't exist. Include the `agenix -e` command, what content/format to use, and any required permissions (e.g., API token scopes).
+3. **Wait for the user to confirm** the secret is created before continuing with the build.
+4. Reference the secret in your configuration using `config.age.secrets.<name>.path`
 
 Example instructions to provide:
 ```bash
-# After this configuration is applied, create the secret:
-agenix -e new-secret.age
-# Then add the required content (e.g., password, API key, etc.)
+cd secrets && agenix -e new-secret.age
+# Paste the raw API token (or whatever format the service expects)
 ```
 
 See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
