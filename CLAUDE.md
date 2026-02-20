@@ -221,6 +221,7 @@ cd secrets && agenix -e service-name.age
   - No need to run 'just fmt', unless you want to syntax check the code
 - Don't forget to 'git add' new files before building with nix. This will save you an error step
 - **ZFS dataset safety**: When adding or modifying a `zfsDataset` option in a service module, always run `just dry-activate <hostname>` (requires root) before deploying. Review the output for any destructive ZFS actions (dataset destroy/rollback). The disko-zfs module auto-detects pools and will **destroy undeclared datasets**, so verify no existing datasets are accidentally dropped.
+- **Auto-upgrade health checks**: When adding or modifying `healthChecks.extraScript` in a host's auto-upgrade config, ensure any commands used are available in PATH. The module provides a base set of common utilities (coreutils, gawk, gnugrep, gnused, findutils), but host-specific tools (e.g., `incus`) must be added via `healthChecks.extraScriptPackages`. Missing packages cause health checks to fail silently with "command not found", which triggers an automatic reboot to roll back. See `modules/auto-upgrade/default.nix` for the base path.
 
 
 

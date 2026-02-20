@@ -245,6 +245,12 @@ in {
         description = "Additional shell commands for health checks. Exit non-zero to signal failure.";
       };
 
+      extraScriptPackages = mkOption {
+        type = types.listOf types.package;
+        default = [];
+        description = "Packages to add to PATH for the extraScript health check (e.g., incus, gawk).";
+      };
+
       timeout = mkOption {
         type = types.int;
         default = 120;
@@ -295,15 +301,20 @@ in {
         StandardError = "journal+console";
       };
 
-      path = with pkgs; [
-        config.nix.package
-        gitMinimal
-        coreutils
-        gnused
-        gnutar
-        gzip
-        xz
-      ];
+      path = with pkgs;
+        [
+          config.nix.package
+          gitMinimal
+          coreutils
+          gawk
+          gnugrep
+          gnused
+          findutils
+          gnutar
+          gzip
+          xz
+        ]
+        ++ cfg.healthChecks.extraScriptPackages;
     };
 
     # Timer to trigger upgrades on schedule

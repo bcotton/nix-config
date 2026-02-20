@@ -42,6 +42,7 @@ in {
         extraScript = ''
           incus cluster list --format csv | awk -F, '{if ($3 != "ONLINE") exit 1}'
         '';
+        extraScriptPackages = [pkgs.incus];
       };
     };
     forgejo-runner = {
