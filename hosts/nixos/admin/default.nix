@@ -39,6 +39,22 @@ in {
     nut-client.enable = true;
     tailscale.enable = true;
     homepage.enable = true;
+
+    auto-upgrade = {
+      enable = true;
+      flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
+      dates = "03:00";
+      healthChecks = {
+        pingTargets = ["192.168.5.1" "192.168.5.220"];
+        services = ["sshd" "tailscaled"];
+        tcpPorts = [
+          {port = 22;}
+          {port = 9001;} # prometheus
+          {port = 9093;} # alertmanager
+          {port = 3493;} # upsd (NUT server)
+        ];
+      };
+    };
   };
 
   # Configure homepage dashboard
