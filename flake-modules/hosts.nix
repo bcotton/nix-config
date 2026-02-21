@@ -185,6 +185,11 @@
           usernames = ["bcotton"];
           # No IP - Incus VM with DHCP, external access via Tailscale
         };
+        freshrss = {
+          system = "x86_64-linux";
+          usernames = ["bcotton"];
+          # No IP - Incus container with DHCP, accessed via Tailscale/tsnsrv
+        };
       };
 
     # Derive host list from specs - used for SSH RemoteForward configuration

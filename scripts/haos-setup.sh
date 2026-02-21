@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+# haos-setup.sh - Configure SSH access and VLAN networking on HAOS VM
+#
+# After reimporting the HAOS image (new VM), run this script to:
+# 1. Inject SSH public key via virtual CONFIG USB disk
+# 2. Create VLAN sub-interfaces for multi-VLAN access
+#
+# Prerequisites:
+# - HAOS VM (prod-homeassistant) running in the Incus cluster
+# - SSH access to the Incus host (nix-01.lan)
+#
+# Usage: ./scripts/haos-setup.sh [--ssh-only] [--vlan-only]
+#
+# See docs/HAOS_SETUP.md for full documentation.
+
+set -euo pipefail
+
+# --- Configuration ---
+INCUS_HOST="nix-01.lan"
+VM_NAME="prod-homeassistant"
+HAOS_IP="192.168.5.17"
+HAOS_SSH_PORT="22222"
+SSH_KEY="$HOME/.ssh/haos_ed25519"
+SSH_OPTS="-o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
+
+# VLANs to configure (id:subnet pairs)
+VLANS=(
+  "10:192.168.10.0/24"
+  "20:192.168.20.0/24"
+)
+
+# --- Helpers ---
+info()  { echo "==> $*"; }
+warn()  { echo "WARNING: $*" >&2; }
+die()   { echo "ERROR: $*" >&2; exit 1; }
+
+ssh_incus() { ssh $SSH_OPTS "root@${INCUS_HOST}" "$@"; }
+ssh_haos()  { ssh $SSH_OPTS -i "$SSH_KEY" -p "$HAOS_SSH_PORT" "root@${HAOS_IP}" "$@"; }
+
+wait_for_ssh() {
+  local max_attempts=20
+  local attempt=0
+  info "Waiting for HAOS SSH (port $HAOS_SSH_PORT) to become available..."
+  while [ $attempt -lt $max_attempts ]; do
+    if ssh $SSH_OPTS -i "$SSH_KEY" -p "$HAOS_SSH_PORT" "root@${HAOS_IP}" "true" 2>/dev/null; then
+      info "SSH is ready"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    echo "  Attempt $attempt/$max_attempts..."
+    sleep 5
+  done
+  die "SSH did not become available after $((max_attempts * 5)) seconds"
+}
+
+# --- SSH Key Setup ---
+setup_ssh_key() {
+  info "Setting up SSH access to HAOS base OS"
+
+  # Generate key if needed
+  if [ ! -f "$SSH_KEY" ]; then
+    info "Generating SSH key pair at $SSH_KEY"
+    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "haos-access"
+  else
+    info "Using existing SSH key: $SSH_KEY"
+  fi
+
+  # Check if SSH already works
+  if ssh $SSH_OPTS -i "$SSH_KEY" -p "$HAOS_SSH_PORT" "root@${HAOS_IP}" "true" 2>/dev/null; then
+    info "SSH access already working, skipping key injection"
+    return 0
+  fi
+
+  info "SSH not yet configured, injecting key via CONFIG USB disk"
+
+  # Check VM exists and is running
+  local vm_status
+  vm_status=$(ssh_incus "incus info $VM_NAME 2>/dev/null | grep '^Status:' | awk '{print \$2}'" || echo "NOT_FOUND")
+  if [ "$vm_status" != "RUNNING" ]; then
+    die "VM $VM_NAME is not running (status: $vm_status)"
+  fi
+
+  # Create FAT disk image with authorized_keys
+  info "Creating CONFIG disk image on $INCUS_HOST"
+  ssh_incus "
+    mkdir -p /tmp/haos-config
+    dd if=/dev/zero of=/tmp/haos-config.img bs=1M count=32 2>/dev/null
+    mkfs.vfat -n CONFIG /tmp/haos-config.img >/dev/null
+  "
+
+  # Write the public key
+  cat "${SSH_KEY}.pub" | ssh_incus "
+    mount -o loop /tmp/haos-config.img /tmp/haos-config
+    cp /dev/stdin /tmp/haos-config/authorized_keys
+    sync
+    umount /tmp/haos-config
+  "
+
+  # Attach USB disk and reboot VM
+  info "Attaching CONFIG disk to $VM_NAME and rebooting"
+  ssh_incus "incus config device add $VM_NAME config-usb disk source=/tmp/haos-config.img io.bus=usb"
+  ssh_incus "incus restart $VM_NAME --timeout 120"
+
+  # Wait for SSH
+  sleep 30
+  wait_for_ssh
+
+  # Clean up CONFIG disk
+  info "Cleaning up CONFIG disk"
+  ssh_incus "
+    incus config device remove $VM_NAME config-usb
+    rm -f /tmp/haos-config.img
+    rmdir /tmp/haos-config 2>/dev/null || true
+  "
+
+  info "SSH access configured successfully"
+}
+
+# --- VLAN Setup ---
+setup_vlans() {
+  info "Configuring VLAN interfaces inside HAOS"
+
+  # Load 8021q module
+  ssh_haos "modprobe 8021q 2>/dev/null || true"
+
+  for vlan_entry in "${VLANS[@]}"; do
+    local vlan_id="${vlan_entry%%:*}"
+    local vlan_subnet="${vlan_entry##*:}"
+    local conn_name="enp5s0.${vlan_id}"
+
+    # Check if connection already exists
+    if ssh_haos "nmcli connection show '$conn_name'" &>/dev/null; then
+      info "VLAN $vlan_id ($conn_name) already configured"
+
+      # Ensure it's active
+      if ! ssh_haos "nmcli device status | grep -q '$conn_name.*connected'" 2>/dev/null; then
+        info "  Activating $conn_name"
+        ssh_haos "nmcli connection up '$conn_name'"
+      fi
+      continue
+    fi
+
+    info "Creating VLAN $vlan_id interface ($conn_name, subnet $vlan_subnet)"
+    ssh_haos "nmcli connection add type vlan con-name '$conn_name' ifname '$conn_name' \
+      dev enp5s0 id $vlan_id ipv4.method auto ipv6.method disabled"
+    ssh_haos "nmcli connection up '$conn_name'"
+  done
+
+  info "VLAN configuration complete"
+}
+
+# --- Verification ---
+verify() {
+  info "Verifying configuration"
+
+  echo ""
+  echo "Network devices:"
+  ssh_haos "nmcli device status"
+
+  echo ""
+  echo "IP addresses:"
+  ssh_haos "ip -4 addr show enp5s0 | grep inet"
+  for vlan_entry in "${VLANS[@]}"; do
+    local vlan_id="${vlan_entry%%:*}"
+    ssh_haos "ip -4 addr show enp5s0.${vlan_id} | grep inet" 2>/dev/null || \
+      warn "No IP on VLAN $vlan_id"
+  done
+
+  echo ""
+  echo "ARP neighbors (VLAN reachability):"
+  for vlan_entry in "${VLANS[@]}"; do
+    local vlan_id="${vlan_entry%%:*}"
+    local neighbors
+    neighbors=$(ssh_haos "ip neigh show dev enp5s0.${vlan_id}" 2>/dev/null || echo "")
+    if [ -n "$neighbors" ]; then
+      echo "  VLAN $vlan_id: $(echo "$neighbors" | wc -l) neighbor(s) discovered"
+    else
+      warn "VLAN $vlan_id: no neighbors yet (may take a moment)"
+    fi
+  done
+
+  echo ""
+  info "Done. Connect with: ssh -i $SSH_KEY -p $HAOS_SSH_PORT root@$HAOS_IP"
+}
+
+# --- Main ---
+main() {
+  local ssh_only=false
+  local vlan_only=false
+
+  for arg in "$@"; do
+    case "$arg" in
+      --ssh-only)  ssh_only=true ;;
+      --vlan-only) vlan_only=true ;;
+      --help|-h)
+        echo "Usage: $0 [--ssh-only] [--vlan-only]"
+        echo ""
+        echo "Options:"
+        echo "  --ssh-only   Only set up SSH access (skip VLAN config)"
+        echo "  --vlan-only  Only set up VLANs (SSH must already work)"
+        echo ""
+        echo "With no flags, runs the full setup: SSH + VLANs + verify."
+        exit 0
+        ;;
+      *) die "Unknown argument: $arg" ;;
+    esac
+  done
+
+  if $vlan_only; then
+    setup_vlans
+    verify
+  elif $ssh_only; then
+    setup_ssh_key
+  else
+    setup_ssh_key
+    setup_vlans
+    verify
+  fi
+}
+
+main "$@"
