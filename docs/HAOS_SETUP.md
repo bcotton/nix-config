@@ -8,6 +8,7 @@ Configuration guide for the HAOS virtual machine running in the Incus cluster, i
 - [VM Configuration](#vm-configuration)
 - [SSH Access to Base OS](#ssh-access-to-base-os)
 - [VLAN Networking](#vlan-networking)
+- [Firewall](#firewall)
 - [Re-Setup Script](#re-setup-script)
 - [HA Container Network Access](#ha-container-network-access)
 - [Verification](#verification)
@@ -52,7 +53,7 @@ prod-homeassistant = {
     hwaddr = "00:16:3e:3d:95:f2";  # Fixed MAC for DHCP reservation
   };
   extraConfig = {
-    "migration.stateful" = "false";
+    "migration.stateful" = "true";
     "boot.autostart" = "true";
   };
 };
@@ -186,6 +187,67 @@ These survive HAOS updates and reboots. They do **not** survive a full HAOS imag
 nmcli connection delete enp5s0.10
 nmcli connection delete enp5s0.20
 ```
+
+## Firewall
+
+An nftables firewall filters inbound connections to the HAOS VM. HA can reach out to all networks freely; only new incoming connections are filtered.
+
+### Policy
+
+| Network | Interface | Policy |
+|---------|-----------|--------|
+| Main LAN (192.168.5.0/24) | `enp5s0` | Full trust |
+| IoT VLAN (192.168.20.0/24) | `enp5s0.20` | HA integration ports only |
+| Guest VLAN (192.168.10.0/24) | `enp5s0.10` | Block all |
+| Docker/Supervisor | `hassio`, `docker0`, `veth*` | Full trust |
+
+### IoT VLAN Allowed Ports
+
+| Port | Protocol | Service |
+|------|----------|---------|
+| 5353 | UDP | mDNS (ESPHome, Chromecast, Shelly) |
+| 1900 | UDP | SSDP/UPnP (Hue, WLED) |
+| 8123 | TCP | HA API/WebSocket (device webhooks) |
+| 1883 | TCP | MQTT (Mosquitto broker) |
+| 5683 | UDP | CoAP (Thread/Matter) |
+| 21063 | TCP | HomeKit bridge |
+| 18555 | TCP | go2rtc (camera streaming) |
+
+### How It Works
+
+The firewall uses a separate nftables table (`inet haos-firewall`) that doesn't interfere with Docker/Supervisor's iptables rules. The `ct state established,related accept` rule ensures all outbound connections from HA get return traffic regardless of source VLAN.
+
+Files on the HAOS VM:
+- `/mnt/data/firewall/haos-firewall.nft` — nftables rules (on persistent data partition)
+- `/mnt/data/firewall/load.sh` — loader script
+- `/etc/udev/rules.d/90-haos-firewall.rules` — loads rules when NIC comes up (on overlay partition)
+
+Source of truth: `scripts/haos-firewall.nft` in this repo.
+
+### Managing the Firewall
+
+```bash
+# SSH into HAOS base OS
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17
+
+# View current rules and drop counters
+nft list table inet haos-firewall
+
+# Reload after editing rules
+nft -f /mnt/data/firewall/haos-firewall.nft
+
+# Temporarily disable (until next boot)
+nft delete table inet haos-firewall
+
+# Add a port (e.g., allow Zigbee coordinator on IoT VLAN)
+# Edit /mnt/data/firewall/haos-firewall.nft, then reload
+```
+
+### Persistence
+
+- **HAOS updates**: The udev rule (overlay partition) and nft rules (data partition) both survive HAOS updates.
+- **HAOS reimport**: A new VM from scratch requires re-running `scripts/haos-setup.sh`, which deploys the firewall rules.
+- **Live migration**: Firewall rules live in VM memory (nftables) and persist across migration. The files on disk are part of the VM's virtual disk.
 
 ## Re-Setup Script
 

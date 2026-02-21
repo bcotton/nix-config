@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# haos-setup.sh - Configure SSH access and VLAN networking on HAOS VM
+# haos-setup.sh - Configure SSH access, VLAN networking, and firewall on HAOS VM
 #
 # After reimporting the HAOS image (new VM), run this script to:
 # 1. Inject SSH public key via virtual CONFIG USB disk
 # 2. Create VLAN sub-interfaces for multi-VLAN access
+# 3. Deploy nftables firewall rules
 #
 # Prerequisites:
 # - HAOS VM (prod-homeassistant) running in the Incus cluster
 # - SSH access to the Incus host (nix-01.lan)
 #
-# Usage: ./scripts/haos-setup.sh [--ssh-only] [--vlan-only]
+# Usage: ./scripts/haos-setup.sh [--ssh-only] [--vlan-only] [--firewall-only]
 #
 # See docs/HAOS_SETUP.md for full documentation.
 
@@ -149,6 +150,37 @@ setup_vlans() {
   info "VLAN configuration complete"
 }
 
+# --- Firewall Setup ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FIREWALL_RULES="${SCRIPT_DIR}/haos-firewall.nft"
+
+setup_firewall() {
+  info "Deploying nftables firewall rules to HAOS"
+
+  if [ ! -f "$FIREWALL_RULES" ]; then
+    die "Firewall rules not found at $FIREWALL_RULES"
+  fi
+
+  # Deploy rules file to persistent data partition
+  ssh_haos "mkdir -p /mnt/data/firewall"
+  cat "$FIREWALL_RULES" | ssh_haos "cat > /mnt/data/firewall/haos-firewall.nft"
+
+  # Deploy loader script
+  ssh_haos "printf '#!/bin/sh\n/sbin/nft -f /mnt/data/firewall/haos-firewall.nft 2>/mnt/data/firewall/last-load.log\n' > /mnt/data/firewall/load.sh && chmod +x /mnt/data/firewall/load.sh"
+
+  # Deploy udev rule for boot persistence (overlay partition, survives updates)
+  if ssh_haos "test -f /etc/udev/rules.d/90-haos-firewall.rules" 2>/dev/null; then
+    info "Udev rule already exists, updating"
+  fi
+  ssh_haos "printf 'ACTION==\"add\", SUBSYSTEM==\"net\", KERNEL==\"enp5s0\", RUN+=\"/bin/sh -c /mnt/data/firewall/load.sh\"\n' > /etc/udev/rules.d/90-haos-firewall.rules"
+
+  # Load rules now
+  info "Loading firewall rules"
+  ssh_haos "/sbin/nft -f /mnt/data/firewall/haos-firewall.nft" || die "Failed to load firewall rules"
+
+  info "Firewall deployed and active"
+}
+
 # --- Verification ---
 verify() {
   info "Verifying configuration"
@@ -180,6 +212,19 @@ verify() {
   done
 
   echo ""
+  echo "Firewall:"
+  if ssh_haos "nft list table inet haos-firewall" &>/dev/null; then
+    local drop_iot drop_guest
+    drop_iot=$(ssh_haos "nft list chain inet haos-firewall input" 2>/dev/null | grep 'enp5s0.20.*drop' | grep -oP 'packets \K[0-9]+' || echo "0")
+    drop_guest=$(ssh_haos "nft list chain inet haos-firewall input" 2>/dev/null | grep 'enp5s0.10.*drop' | grep -oP 'packets \K[0-9]+' || echo "0")
+    echo "  Active: yes"
+    echo "  IoT VLAN drops: $drop_iot packets"
+    echo "  Guest VLAN drops: $drop_guest packets"
+  else
+    warn "Firewall not loaded"
+  fi
+
+  echo ""
   info "Done. Connect with: ssh -i $SSH_KEY -p $HAOS_SSH_PORT root@$HAOS_IP"
 }
 
@@ -187,26 +232,32 @@ verify() {
 main() {
   local ssh_only=false
   local vlan_only=false
+  local firewall_only=false
 
   for arg in "$@"; do
     case "$arg" in
-      --ssh-only)  ssh_only=true ;;
-      --vlan-only) vlan_only=true ;;
+      --ssh-only)      ssh_only=true ;;
+      --vlan-only)     vlan_only=true ;;
+      --firewall-only) firewall_only=true ;;
       --help|-h)
-        echo "Usage: $0 [--ssh-only] [--vlan-only]"
+        echo "Usage: $0 [--ssh-only] [--vlan-only] [--firewall-only]"
         echo ""
         echo "Options:"
-        echo "  --ssh-only   Only set up SSH access (skip VLAN config)"
-        echo "  --vlan-only  Only set up VLANs (SSH must already work)"
+        echo "  --ssh-only       Only set up SSH access (skip VLAN and firewall)"
+        echo "  --vlan-only      Only set up VLANs (SSH must already work)"
+        echo "  --firewall-only  Only deploy firewall rules (SSH must already work)"
         echo ""
-        echo "With no flags, runs the full setup: SSH + VLANs + verify."
+        echo "With no flags, runs the full setup: SSH + VLANs + firewall + verify."
         exit 0
         ;;
       *) die "Unknown argument: $arg" ;;
     esac
   done
 
-  if $vlan_only; then
+  if $firewall_only; then
+    setup_firewall
+    verify
+  elif $vlan_only; then
     setup_vlans
     verify
   elif $ssh_only; then
@@ -214,6 +265,7 @@ main() {
   else
     setup_ssh_key
     setup_vlans
+    setup_firewall
     verify
   fi
 }
