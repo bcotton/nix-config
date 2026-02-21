@@ -67,6 +67,19 @@ with lib; let
     };
   });
 
+  # Consistent maxcpus across heterogeneous cluster nodes.
+  # Without this, QEMU uses the host's physical thread count as maxcpus,
+  # which causes ICH9LPC device state migration failures between hosts
+  # with different core counts (e.g. Ryzen 16T vs EPYC 48T).
+  # Must be set to the minimum thread count in the cluster (16 for nix-01/02/03).
+  qemuMigrationCompat = {
+    "raw.qemu.conf" = ''
+      [smp-opts]
+      cpus = "1"
+      maxcpus = "16"
+    '';
+  };
+
   # Default values for profile fields not explicitly set
   profileDefaults = {
     storagePool = "local";
@@ -134,6 +147,7 @@ with lib; let
         "limits.memory" = profile.memory;
         "security.secureboot" = boolToString profile.secureboot;
       }
+      // qemuMigrationCompat
       // optionalAttrs profile.nesting {
         "security.nesting" = "true";
       }
