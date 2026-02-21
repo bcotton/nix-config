@@ -15,7 +15,7 @@
       hwaddr = "00:16:3e:3d:95:f2";
     };
     extraConfig = {
-      "migration.stateful" = "false";
+      "migration.stateful" = "true";
       "boot.autostart" = "true";
     };
   };
