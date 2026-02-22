@@ -176,15 +176,14 @@ Uses `agenix` for secret encryption. Secrets are defined in `secrets/secrets.nix
 
 When working with features that require secrets:
 1. Add the secret definition to `secrets/secrets.nix` (this is safe - just metadata)
-2. Reference the secret in your configuration using `config.age.secrets.<name>.path`
-3. Leave clear instructions for the user to create/edit the actual encrypted secret file using `agenix -e <secret-name>.age`
-4. Document what content/format the secret file should contain
+2. **Stop and give the user instructions** to create the `.age` file before proceeding. The nix build will fail if the `.age` file doesn't exist. Include the `agenix -e` command, what content/format to use, and any required permissions (e.g., API token scopes).
+3. **Wait for the user to confirm** the secret is created before continuing with the build.
+4. Reference the secret in your configuration using `config.age.secrets.<name>.path`
 
 Example instructions to provide:
 ```bash
-# After this configuration is applied, create the secret:
-agenix -e new-secret.age
-# Then add the required content (e.g., password, API key, etc.)
+cd secrets && agenix -e new-secret.age
+# Paste the raw API token (or whatever format the service expects)
 ```
 
 See `secrets/README-NIX-CACHE.md` for an example of proper secret documentation.
@@ -221,6 +220,7 @@ cd secrets && agenix -e service-name.age
   - No need to run 'just fmt', unless you want to syntax check the code
 - Don't forget to 'git add' new files before building with nix. This will save you an error step
 - **ZFS dataset safety**: When adding or modifying a `zfsDataset` option in a service module, always run `just dry-activate <hostname>` (requires root) before deploying. Review the output for any destructive ZFS actions (dataset destroy/rollback). The disko-zfs module auto-detects pools and will **destroy undeclared datasets**, so verify no existing datasets are accidentally dropped.
+- **Auto-upgrade health checks**: When adding or modifying `healthChecks.extraScript` in a host's auto-upgrade config, ensure any commands used are available in PATH. The module provides a base set of common utilities (coreutils, gawk, gnugrep, gnused, findutils), but host-specific tools (e.g., `incus`) must be added via `healthChecks.extraScriptPackages`. Missing packages cause health checks to fail silently with "command not found", which triggers an automatic reboot to roll back. See `modules/auto-upgrade/default.nix` for the base path.
 
 
 

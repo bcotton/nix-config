@@ -90,6 +90,10 @@ in {
     group = "gitea-runner";
   };
 
+  age.secrets."forgejo-dispatch-token" = lib.mkIf config.services.clubcotton.auto-upgrade.enable {
+    file = ./forgejo-dispatch-token.age;
+  };
+
   age.secrets."immich-database" = lib.mkIf config.services.clubcotton.postgresql.enable {
     file = ./immich-database.age;
     owner = "postgres";

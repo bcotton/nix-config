@@ -70,6 +70,12 @@ with lib; let
       reservations;
   in ''
     ${scopeCommands}
+
+    # Wait for DHCP scopes to be fully operational before adding reservations.
+    # Technitium needs time to bind scopes to network interfaces after enabling.
+    echo "Waiting for DHCP scopes to become operational..."
+    sleep 3
+
     ${reservationCommands}
   '';
 in {
@@ -426,6 +432,13 @@ in {
         Restart = "on-failure";
         RestartSec = "5s";
 
+        # Technitium's .NET runtime ignores SIGTERM, so reduce the stop
+        # timeout from the 90 s default.  This lets systemd SIGKILL the
+        # process quickly during nixos-rebuild restarts, keeping the DNS
+        # outage window short enough for the auto-upgrade health checks
+        # to pass.
+        TimeoutStopSec = "10s";
+
         # Security hardening
         PrivateTmp = true;
         ProtectSystem = "strict";
@@ -611,23 +624,37 @@ in {
           fi
         }
 
-        # Add DHCP reservation
+        # Add DHCP reservation with retry logic
         # Use /dhcp/scopes/addReservedLease to create reservations with specific IPs
         # Note: /dhcp/leases/reserve only reserves existing dynamic leases at their current IP
+        # Retries are needed because DHCP scopes may not be fully operational immediately
+        # after creation/enabling (Technitium needs time to bind to interfaces).
         add_reservation() {
           local scope=$1 mac=$2 ip=$3 hostname=$4
+          local max_retries=5
+          local retry_delay=2
+
           echo "Adding DHCP reservation: $hostname ($mac) -> $ip to scope: $scope"
 
-          response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/addReservedLease?token=''${TOKEN}" \
-            -d "name=$scope" \
-            -d "hardwareAddress=$mac" \
-            -d "ipAddress=$ip" \
-            -d "hostName=$hostname" 2>&1)
-          echo "API response for addReservedLease: $response"
+          for attempt in $(seq 1 $max_retries); do
+            response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/addReservedLease?token=''${TOKEN}" \
+              -d "name=$scope" \
+              -d "hardwareAddress=$mac" \
+              -d "ipAddress=$ip" \
+              -d "hostName=$hostname" 2>&1)
 
-          if ! echo "$response" | grep -q '"status":"ok"'; then
-            echo "ERROR: Failed to add reservation for $hostname"
-          fi
+            if echo "$response" | grep -q '"status":"ok"'; then
+              return 0
+            fi
+
+            if [ "$attempt" -lt "$max_retries" ]; then
+              echo "Attempt $attempt/$max_retries failed for $hostname, retrying in ''${retry_delay}s..."
+              sleep "$retry_delay"
+            else
+              echo "API response for addReservedLease: $response"
+              echo "ERROR: Failed to add reservation for $hostname after $max_retries attempts"
+            fi
+          done
         }
 
         login

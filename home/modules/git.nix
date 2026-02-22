@@ -20,6 +20,7 @@
         lga = "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit --all";
         clone-gwt = "!sh $HOME/.config/git-worktrees/git-clone-bare-for-worktrees.sh";
         beads-init = "!sh $HOME/.config/beads-init/beads-init.sh";
+        whatchanged = "log --raw --no-merges";
       };
       url = {
         "ssh://git@github.com/" = {

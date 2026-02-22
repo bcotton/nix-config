@@ -14,6 +14,8 @@ in {
     };
   };
   config = lib.mkIf cfg.enable {
+    networking.firewall.allowedTCPPorts = [3493];
+
     power.ups = {
       enable = true;
       mode = lib.mkForce "netserver";

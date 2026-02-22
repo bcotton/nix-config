@@ -123,7 +123,7 @@ with lib; let
     echo "=== Phase 1: Building new configuration ==="
     if ! ${config.nix.package}/bin/nix build \
         "''${FLAKE}#nixosConfigurations.''${HOSTNAME}.config.system.build.toplevel" \
-        --no-link --print-out-paths; then
+        --refresh --no-link --print-out-paths; then
       echo "FATAL: Build failed. Aborting upgrade."
       ${optionalString (cfg.onFailure != "") cfg.onFailure}
       exit 1
@@ -245,6 +245,12 @@ in {
         description = "Additional shell commands for health checks. Exit non-zero to signal failure.";
       };
 
+      extraScriptPackages = mkOption {
+        type = types.listOf types.package;
+        default = [];
+        description = "Packages to add to PATH for the extraScript health check (e.g., incus, gawk).";
+      };
+
       timeout = mkOption {
         type = types.int;
         default = 120;
@@ -284,6 +290,10 @@ in {
       after = ["network-online.target"];
       wants = ["network-online.target"];
 
+      # Never restart mid-run — this service triggers nixos-rebuild,
+      # which activates a new config that would try to restart us.
+      restartIfChanged = false;
+
       # Prevent concurrent runs
       serviceConfig = {
         Type = "oneshot";
@@ -295,15 +305,20 @@ in {
         StandardError = "journal+console";
       };
 
-      path = with pkgs; [
-        config.nix.package
-        gitMinimal
-        coreutils
-        gnused
-        gnutar
-        gzip
-        xz
-      ];
+      path = with pkgs;
+        [
+          config.nix.package
+          gitMinimal
+          coreutils
+          gawk
+          gnugrep
+          gnused
+          findutils
+          gnutar
+          gzip
+          xz
+        ]
+        ++ cfg.healthChecks.extraScriptPackages;
     };
 
     # Timer to trigger upgrades on schedule
