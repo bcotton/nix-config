@@ -426,6 +426,13 @@ in {
         Restart = "on-failure";
         RestartSec = "5s";
 
+        # Technitium's .NET runtime ignores SIGTERM, so reduce the stop
+        # timeout from the 90 s default.  This lets systemd SIGKILL the
+        # process quickly during nixos-rebuild restarts, keeping the DNS
+        # outage window short enough for the auto-upgrade health checks
+        # to pass.
+        TimeoutStopSec = "10s";
+
         # Security hardening
         PrivateTmp = true;
         ProtectSystem = "strict";
