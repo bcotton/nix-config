@@ -70,12 +70,12 @@ push_batch() {
       streams: [{
         stream: {
           job: $job,
-          "forgejo:owner": $owner,
-          "forgejo:repo": $repo,
-          "forgejo:task_id": $task_id,
-          "forgejo:job_name": $job_name,
-          "forgejo:event": $event,
-          "forgejo:runner": $runner
+          forgejo_owner: $owner,
+          forgejo_repo: $repo,
+          forgejo_task_id: $task_id,
+          forgejo_job_name: $job_name,
+          forgejo_event: $event,
+          forgejo_runner: $runner
         },
         values: $values
       }]

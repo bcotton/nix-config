@@ -162,6 +162,22 @@ Filter out benign DNS degradation from systemd-resolved (these are transient and
 {job="systemd-journal"} |~ "syncoid" |~ "error|fail|CRITICAL"
 ```
 
+### 13. Forgejo Actions Log Scraper Errors
+
+```logql
+{unit="forgejo-log-scraper.service"} |~ "ERROR"
+```
+
+Check for Loki push failures (HTTP 400/500), decompression errors, or other scraper issues.
+
+### 14. Forgejo Actions CI Failures (if logs are available in Loki)
+
+```logql
+{job="forgejo-actions"} |~ "FAIL|ERROR|error"
+```
+
+Note: These logs are only available if the forgejo-log-scraper is working correctly.
+
 ## Report Format
 
 Present findings as a structured report with these sections:
@@ -207,6 +223,8 @@ Bullet list of categories checked with "None" or brief findings:
 - DNS degradation
 - Syncoid replication errors
 - Service failures
+- Forgejo log scraper errors
+- Forgejo CI failures
 
 ### Action Items
 Numbered list of things that need attention, ordered by severity.
