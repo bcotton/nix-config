@@ -1,7 +1,7 @@
 ---
 name: infra-report
 description: Generate an infrastructure health report from Loki logs. Use when asked to check logs and create a report, generate a health report, summarize infrastructure status, or do a log review.
-allowed-tools: Bash(curl *), Bash(jq *), Bash(date *), Bash(sleep *)
+allowed-tools: Bash(curl *), Bash(jq *), Bash(date *), Bash(sleep *), Bash(yq *), Bash(cat *)
 argument-hint: time window (e.g., 'last 12 hours', 'last 24 hours', 'last 7 days')
 ---
 
@@ -275,3 +275,59 @@ When analyzing results:
    - Podman aardvark-dns cleanup errors during reboot
    - lxcfs.service failures during auto-upgrade reboots
    - systemd-resolved "Using degraded feature set" (transient DNS negotiation)
+
+## Filing Action Items as Forgejo Issues
+
+After presenting the report, create Forgejo issues for each genuine action item.
+
+### Forgejo API Setup
+
+Read the token from the tea CLI config:
+
+```bash
+TOKEN=$(yq -r '.logins[0].token' ~/.config/tea/config.yml)
+FORGEJO_URL="https://forgejo.bobtail-clownfish.ts.net"
+REPO="bcotton/nix-config"
+```
+
+**Important**: Use `yq -r` (raw output) to avoid quoted strings.
+
+### Check for Duplicate Issues
+
+Before creating, search existing open issues to avoid duplicates:
+
+```bash
+curl -sf -H "Authorization: token $TOKEN" \
+  "$FORGEJO_URL/api/v1/repos/$REPO/issues?state=open&limit=50" | jq '.[].title'
+```
+
+### Create Issues
+
+For each action item, create an issue with the `bug` label (label ID 1):
+
+```bash
+curl -sf -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
+  "$FORGEJO_URL/api/v1/repos/$REPO/issues" \
+  -d "$(cat <<PAYLOAD
+{
+  "title": "<host>: <short description>",
+  "body": "## Problem\n\n<description of the error>\n\n## Evidence\n\n\`\`\`\n<relevant log lines>\n\`\`\`\n\n## Action Required\n\n<numbered steps>\n\n## Source\n\nDiscovered via infra-report skill.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)",
+  "labels": [1]
+}
+PAYLOAD
+)"
+```
+
+### Issue Guidelines
+
+- **Title format**: `<hostname>: <short description>` (e.g., `nas-01: Radarr import failure`)
+- **Label**: Use `bug` (ID 1) for issues found in logs
+- **Do NOT create issues for**:
+  - Cosmetic/expected errors (OpenGL, aardvark-dns, lxcfs, DNS degradation)
+  - Issues already fixed in the same session (note "fix deployed" in the report instead)
+  - Transient errors that occurred only during upgrade/reboot windows
+- **DO create issues for**:
+  - Hardware problems (SMART failures, disk errors)
+  - Persistent service failures (stuck imports, repeated crashes)
+  - Configuration bugs (missing PATH packages, wrong permissions)
+  - Anything that generates >100 errors/day and isn't cosmetic
