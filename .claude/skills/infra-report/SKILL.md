@@ -91,7 +91,9 @@ jq -r '.data.result[] | .stream as $s | .values[] | "\(.[0] | tonumber / 1000000
 
 ### 4b. Application-Level Errors (text-based)
 
-Many services log "ERROR" in the log text without setting syslog priority metadata. This query catches those:
+Many services log errors in the log text without setting syslog priority metadata.
+The `(?i)` flag makes this case-insensitive, catching `ERROR`, `Error`, `error`,
+`level=error`, `[Error]`, etc.
 
 ```logql
 topk(20, sum by (hostname, unit) (count_over_time({job="systemd-journal"} |~ "(?i)\\bERROR\\b" [$WINDOW])))
