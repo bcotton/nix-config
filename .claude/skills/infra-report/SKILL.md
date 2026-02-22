@@ -1,0 +1,232 @@
+---
+name: infra-report
+description: Generate an infrastructure health report from Loki logs. Use when asked to check logs and create a report, generate a health report, summarize infrastructure status, or do a log review.
+allowed-tools: Bash(curl *), Bash(jq *), Bash(date *), Bash(sleep *)
+argument-hint: time window (e.g., 'last 12 hours', 'last 24 hours', 'last 7 days')
+---
+
+# Infrastructure Health Report Skill
+
+Generate a comprehensive infrastructure health report by querying Loki logs across all hosts.
+
+## Overview
+
+This skill runs a structured set of Loki queries to assess fleet health, then produces a formatted report covering auto-upgrades, backups, UPS status, errors, and service health.
+
+## Loki Endpoint Detection
+
+Always detect the working endpoint first:
+
+```bash
+LOKI=$(curl -sf --max-time 3 https://loki.bobtail-clownfish.ts.net/ready >/dev/null 2>&1 \
+  && echo "https://loki.bobtail-clownfish.ts.net" \
+  || echo "http://nas-01.lan:3100")
+```
+
+Use `$LOKI` as the base URL. If both fail, tell the user Loki appears down.
+
+## Query Pattern
+
+All queries use:
+```bash
+curl -sG "$LOKI/loki/api/v1/query_range" \
+  --data-urlencode 'query=...' \
+  --data-urlencode "start=$(date -d '<time>' +%s)" \
+  --data-urlencode "end=$(date +%s)" \
+  --data-urlencode 'limit=100' \
+  --data-urlencode 'direction=backward' | jq ...
+```
+
+For metric (count) queries use `/loki/api/v1/query` with `time=$(date +%s)`.
+
+## Time Window
+
+Parse the user's requested time window. Default to 24 hours. Examples:
+- "last 12 hours" -> `date -d '12 hours ago' +%s`
+- "last 24 hours" -> `date -d '24 hours ago' +%s`
+- "last 7 days" -> `date -d '7 days ago' +%s`
+
+Use the variable `WINDOW` for the LogQL range (e.g., `[24h]`, `[12h]`, `[7d]`).
+
+## Queries to Run
+
+Run these in parallel where possible. Use `$PERIOD` for `--data-urlencode "start=..."` and `$WINDOW` for LogQL range selectors.
+
+### 1. Hosts Actively Reporting (validates fleet coverage)
+
+```logql
+count by (hostname) (count_over_time({job="systemd-journal"}[1h]))
+```
+
+Format: list of hostnames. Flag any expected host NOT reporting.
+
+Expected hosts: admin, dns-01, imac-01, imac-02, nas-01, nix-01, nix-02, nix-03
+
+### 2. Error Counts by Host
+
+```logql
+sum by (hostname) (count_over_time({job="systemd-journal", priority=~"err|crit|alert|emerg"}[$WINDOW]))
+```
+
+Format: table of hostname: count. Hosts with 0 errors won't appear.
+
+### 3. Top Error-Producing Units
+
+```logql
+topk(15, sum by (hostname, unit) (count_over_time({job="systemd-journal", priority=~"err|crit|alert|emerg"}[$WINDOW])))
+```
+
+Format: table of hostname/unit: count.
+
+### 4. Actual Error Log Lines
+
+```logql
+{job="systemd-journal", priority=~"err|crit|alert|emerg"}
+```
+
+Format with:
+```bash
+jq -r '.data.result[] | .stream as $s | .values[] | "\(.[0] | tonumber / 1000000000 | strftime("%Y-%m-%d %H:%M:%S")) [\($s.hostname)] [\($s.unit // $s.syslog_identifier // "?")] \(.[1])"'
+```
+
+### 5. Auto-Upgrade Outcomes
+
+```logql
+{unit="auto-upgrade.service"} |~ "completed successfully|FATAL|failed|started"
+```
+
+For any failures, do a follow-up query to get the full log for that host:
+```logql
+{hostname="<host>", unit="auto-upgrade.service"}
+```
+
+Look for specific failure patterns:
+- `FAIL: tcp` / `FAIL: ping` / `FAIL: dns` / `FAIL: service` / `FAIL: extra health check script` - health check failures
+- `FATAL: nixos-rebuild test failed` - activation failure
+- `FATAL: Build failed` - nix build failure
+- `incus: command not found` / `awk: command not found` - missing PATH packages
+- `nixos-rebuild-switch-to-configuration.service was already loaded` - stale transient unit
+
+### 6. Restic Backup Outcomes (nas-01)
+
+```logql
+{hostname="nas-01"} |= "restic-backups" |~ "Finished|Failed|Starting"
+```
+
+Filter out non-restic noise: `grep -v "alertmanager\|grafana\|tsnsrv\|loki"`
+
+Also check for lock contention:
+```logql
+{hostname="nas-01"} |= "already locked"
+```
+
+### 7. UPS Status
+
+```logql
+{unit="upsmon.service"} |~ "unavailable|connect failed|Communications restored"
+```
+
+No output = healthy. Any "unavailable" or "connect failed" messages indicate the UPS server is unreachable from that host.
+
+### 8. Service Failures (systemd)
+
+```logql
+{job="systemd-journal"} |~ "Failed to start|entered failed state|Main process exited, code=exited, status=1"
+```
+
+Filter out noise: `grep -v "alertmanager\|grafana\|tsnsrv\|loki"`
+
+### 9. OOM Kills and ZFS Issues
+
+```logql
+{job="systemd-journal"} |~ "Out of memory|oom-kill|Killed process|FAULTED|degraded"
+```
+
+Filter out benign DNS degradation from systemd-resolved (these are transient and expected).
+
+### 10. Kernel Errors
+
+```logql
+{job="systemd-journal", transport="kernel", priority=~"err|crit|alert|emerg"}
+```
+
+### 11. SSH Auth Failures
+
+```logql
+{unit="sshd.service"} |~ "Failed|Invalid user"
+```
+
+### 12. Syncoid/ZFS Replication Errors
+
+```logql
+{job="systemd-journal"} |~ "syncoid" |~ "error|fail|CRITICAL"
+```
+
+## Report Format
+
+Present findings as a structured report with these sections:
+
+```markdown
+## Infrastructure Log Report — Last <N> Hours/Days
+**Period**: <start> – <end> <timezone>
+
+### Fleet Status
+All N hosts actively reporting: <list>
+(or flag missing hosts)
+
+### Auto-Upgrades
+| Host | Time | Status | Notes |
+|------|------|--------|-------|
+Table with all hosts that ran upgrades. Bold **FAILED** for failures.
+Include brief failure reason in Notes column.
+
+For failures, add detail paragraphs below the table explaining:
+- What check failed
+- Root cause if determinable
+- Cascade effects on other hosts/services
+
+### Backups
+| Backup | Started | Finished | Status |
+|--------|---------|----------|--------|
+
+### UPS
+Brief status. "Healthy" if no issues, or detail any unavailability windows.
+
+### Errors
+| Host | Count | Details |
+|------|-------|---------|
+Only hosts with errors. Note if errors are cosmetic/expected.
+
+### Other Checks
+Bullet list of categories checked with "None" or brief findings:
+- OOM kills
+- ZFS/disk issues
+- Kernel errors
+- SSH auth failures
+- Podman container issues
+- DNS degradation
+- Syncoid replication errors
+- Service failures
+
+### Action Items
+Numbered list of things that need attention, ordered by severity.
+Only include genuine issues, not cosmetic/expected errors.
+```
+
+## Analysis Guidelines
+
+When analyzing results:
+
+1. **Distinguish expected from unexpected**: Podman cleanup errors during reboot, lxcfs failures during upgrade, and systemd-resolved DNS degradation are expected/cosmetic.
+
+2. **Identify cascade failures**: A single root cause (e.g., dns-01 down) can cause failures across multiple hosts (DNS resolution, ping checks, cache checks). Always trace back to the root cause.
+
+3. **Check for patterns**: If the same error repeats on a schedule, note the pattern. If errors cluster around a specific time, correlate with auto-upgrade or backup windows.
+
+4. **Auto-upgrade health checks working correctly**: A health check that catches a real problem and rolls back is the system working as designed. Note it as "caught by health check" rather than a system failure.
+
+5. **Known cosmetic errors to ignore**:
+   - `imac-01`: `Failed to initialize graphics backend for OpenGL` (headless display)
+   - Podman aardvark-dns cleanup errors during reboot
+   - lxcfs.service failures during auto-upgrade reboots
+   - systemd-resolved "Using degraded feature set" (transient DNS negotiation)
