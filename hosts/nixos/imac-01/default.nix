@@ -85,6 +85,19 @@ in {
     "/dev/disk/by-id/wwn-0x5002538655584d30"
   ];
 
+  # Apple SSD SM0256F ships with SMART disabled; enable it on boot
+  # so the smartctl-exporter can read health metrics.
+  systemd.services.smartctl-enable = {
+    description = "Enable SMART on Apple SSD";
+    before = ["prometheus-smartctl-exporter.service"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.smartmontools}/bin/smartctl -s on /dev/disk/by-id/wwn-0x5002538655584d30";
+    };
+  };
+
   services.clubcotton = {
     alloy-logs.enable = true;
 
