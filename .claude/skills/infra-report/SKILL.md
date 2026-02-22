@@ -78,7 +78,7 @@ topk(15, sum by (hostname, unit) (count_over_time({job="systemd-journal", priori
 
 Format: table of hostname/unit: count.
 
-### 4. Actual Error Log Lines
+### 4. Actual Error Log Lines (syslog priority)
 
 ```logql
 {job="systemd-journal", priority=~"err|crit|alert|emerg"}
@@ -88,6 +88,31 @@ Format with:
 ```bash
 jq -r '.data.result[] | .stream as $s | .values[] | "\(.[0] | tonumber / 1000000000 | strftime("%Y-%m-%d %H:%M:%S")) [\($s.hostname)] [\($s.unit // $s.syslog_identifier // "?")] \(.[1])"'
 ```
+
+### 4b. Application-Level Errors (text-based)
+
+Many services log "ERROR" in the log text without setting syslog priority metadata. This query catches those:
+
+```logql
+topk(20, sum by (hostname, unit) (count_over_time({job="systemd-journal"} |~ "(?i)\\bERROR\\b" [$WINDOW])))
+```
+
+Then sample the top offenders (limit 5 each) to classify as genuine vs noisy:
+```logql
+{hostname="<host>", unit="<unit>"} |~ "(?i)\\bERROR\\b"
+```
+
+**Known noisy/cosmetic text-level errors to note but not flag as action items:**
+- `immich-server.service`: "Input file contains unsupported image format" (thumbnailing unsupported formats)
+- `garage.service`: "error 404 Not Found, Key not found" (normal S3 cache misses, logged at INFO level)
+- `podman-pinchflat.service`: SQL queries containing column name "last_error" (false positive)
+- `navidrome.service`: Subsonic API scanner warnings
+
+**Potentially significant text-level errors to flag:**
+- `prometheus-smartctl-exporter.service`: SMART command failures (may indicate failing disk)
+- `radarr.service` / `sonarr.service`: Import failures (path/permission issues)
+- `forgejo-log-scraper.service`: Loki push failures
+- `technitium-configure-dhcp.service`: DHCP reservation failures
 
 ### 5. Auto-Upgrade Outcomes
 
