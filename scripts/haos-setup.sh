@@ -19,7 +19,7 @@ set -euo pipefail
 # --- Configuration ---
 INCUS_HOST="nix-01.lan"
 VM_NAME="prod-homeassistant"
-HAOS_IP="192.168.5.17"
+HAOS_IP="192.168.5.20"
 HAOS_SSH_PORT="22222"
 SSH_KEY="$HOME/.ssh/haos_ed25519"
 SSH_OPTS="-o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"

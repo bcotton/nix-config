@@ -120,9 +120,9 @@ in {
           }
           {
             scope = "main";
-            macAddress = "00:50:56:01:32:22";
+            macAddress = "00:16:3e:3d:95:f2";
             ipAddress = "192.168.5.20";
-            hostName = "homeassistant-new";
+            hostName = "prod-homeassistant";
           }
           {
             scope = "main";
@@ -445,6 +445,12 @@ in {
               name = "dns-01";
               type = "A";
               ipAddress = "192.168.5.220";
+              createPtrRecord = true;
+            }
+            {
+              name = "prod-homeassistant";
+              type = "A";
+              ipAddress = "192.168.5.20";
               createPtrRecord = true;
             }
 

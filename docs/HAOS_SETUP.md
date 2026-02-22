@@ -28,7 +28,7 @@ Incus Host (nix-01)
   br0 (VLAN filtering=off, passes all tagged frames)
     └─ tap device (VM port)
          └─ HAOS VM (prod-homeassistant)
-              enp5s0 ─── 192.168.5.17/24  (native VLAN 5, DHCP)
+              enp5s0 ─── 192.168.5.20/24  (native VLAN 5, DHCP)
               enp5s0.10 ─ 192.168.10.x/24 (VLAN 10, DHCP)
               enp5s0.20 ─ 192.168.20.x/24 (VLAN 20, DHCP)
                 │
@@ -116,7 +116,7 @@ ssh root@nix-01.lan "
 
 # 5. Wait for boot, then test SSH
 sleep 45
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17 "echo connected"
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20 "echo connected"
 
 # 6. Clean up the CONFIG disk (key is now imported)
 ssh root@nix-01.lan "
@@ -129,14 +129,14 @@ ssh root@nix-01.lan "
 ### Connecting
 
 ```bash
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20
 ```
 
 Add to `~/.ssh/config` for convenience:
 
 ```
 Host haos
-  HostName 192.168.5.17
+  HostName 192.168.5.20
   Port 22222
   User root
   IdentityFile ~/.ssh/haos_ed25519
@@ -154,7 +154,7 @@ HAOS uses NetworkManager (`nmcli`) for network configuration. VLAN sub-interface
 
 ```bash
 # SSH into the HAOS base OS
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20
 
 # Create VLAN 10 interface (DHCP)
 nmcli connection add type vlan con-name enp5s0.10 ifname enp5s0.10 \
@@ -228,7 +228,7 @@ Source of truth: `scripts/haos-firewall.nft` in this repo.
 
 ```bash
 # SSH into HAOS base OS
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20
 
 # View current rules and drop counters
 nft list table inet haos-firewall
@@ -289,7 +289,7 @@ This means HA integrations (ESPHome, Shelly, etc.) can communicate with devices 
 ### Check VLAN Interfaces
 
 ```bash
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20
 
 # List all network devices
 nmcli device status
@@ -365,7 +365,7 @@ Or manually re-inject the key (see [SSH Access to Base OS](#ssh-access-to-base-o
 HAOS updates preserve NetworkManager connections. VLANs should survive updates automatically. If they disappear, re-run the VLAN setup portion of the script:
 
 ```bash
-ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.17 "
+ssh -i ~/.ssh/haos_ed25519 -p 22222 root@192.168.5.20 "
   nmcli connection add type vlan con-name enp5s0.10 ifname enp5s0.10 \
     dev enp5s0 id 10 ipv4.method auto ipv6.method disabled
   nmcli connection add type vlan con-name enp5s0.20 ifname enp5s0.20 \
