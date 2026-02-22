@@ -261,6 +261,13 @@
         description = "DNS & DHCP server";
         href = "http://dns-01:5380";
       };
+      frigate = {
+        name = "Frigate";
+        category = "Smart Home";
+        icon = "frigate.svg";
+        description = "NVR & object detection";
+        href = "http://frigate-host:5000";
+      };
     };
 
     # NixOS system builder (consolidated from nixosSystem and nixosMinimalSystem)
