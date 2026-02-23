@@ -3,6 +3,10 @@ default: switch
 
 hostname := `hostname | cut -d "." -f 1`
 
+# Show all available commands
+help:
+  @just --list
+
 # Install git hooks (idempotent)
 install-hooks:
     #!/usr/bin/env bash
