@@ -69,6 +69,33 @@ just ci logs 401 1           # Show logs for job index 1 of run #401
 The script reads your API token from the `tea` CLI config at `~/.config/tea/config.yml`.
 Override with `FORGEJO_TOKEN` env var if needed.
 
+### Infrastructure Tooling Scripts
+
+Shared library and CLI tools in `scripts/` for Forgejo, host lookup, CI analysis, and issue triage.
+All Forgejo-related scripts source `scripts/lib/common.sh` for auth, API helpers, and Loki detection.
+
+```bash
+# Host lookup (parses flake-modules/hosts.nix, no nix eval)
+just host-lookup 192.168.5.49         # Resolve IP to hostname
+just host-lookup dns-01               # Resolve hostname to IP
+just host-lookup --list               # Show all hosts
+
+# Forgejo issue/PR management
+just forgejo issue list --label=bug   # List open bugs
+just forgejo issue create --title "host: desc" --body "..." --label bug
+just forgejo issue close 42 --comment "Fixed in #43"
+just forgejo issue comment 42 --body "Still investigating"
+just forgejo pr create --title "fix" --body "..." --head branch
+
+# CI failure analysis
+just ci-analyze 603                   # Analyze failed run (with Loki correlation)
+just ci-analyze 603 --no-loki        # Skip Loki queries
+
+# Issue fixed-check (git history + Loki)
+just issue-check-fixed 66             # Check if issue appears fixed
+just issue-check-fixed 66 --no-loki  # Skip Loki queries
+```
+
 ### Testing
 
 ```bash

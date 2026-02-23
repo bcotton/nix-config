@@ -1,7 +1,7 @@
 ---
 name: bug-triage
 description: Triage open bug issues from Forgejo. Use when asked to triage bugs, review open issues, prioritize work, check what needs fixing, or do a bug review.
-allowed-tools: Bash(curl *), Bash(jq *), Bash(yq *), Bash(date *), Bash(git *), Bash(nix *), Bash(just *)
+allowed-tools: Bash(curl *), Bash(jq *), Bash(yq *), Bash(date *), Bash(git *), Bash(nix *), Bash(just *), Bash(./scripts/*)
 argument-hint: optional filter (e.g., 'nas-01 only', 'critical', 'all')
 ---
 
@@ -9,22 +9,10 @@ argument-hint: optional filter (e.g., 'nas-01 only', 'critical', 'all')
 
 Fetch open bug issues from Forgejo, prioritize by severity, present to the user for triage decisions, then act on each — either investigating, fixing via worktree + PR, deferring, or closing.
 
-## Forgejo API Setup
-
-```bash
-TOKEN=$(yq -r '.logins[0].token' ~/.config/tea/config.yml)
-FORGEJO_URL="https://forgejo.bobtail-clownfish.ts.net"
-REPO="bcotton/nix-config"
-```
-
-**Important**: Use `yq -r` (raw output) to avoid quoted strings.
-
 ## Step 1: Fetch Open Bug Issues
 
 ```bash
-curl -sf -H "Authorization: token $TOKEN" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/issues?state=open&labels=bug&limit=50&sort=created&direction=desc" \
-  | jq '.[] | {number, title, created_at, body: (.body[:200])}'
+./scripts/forgejo.sh issue list --label=bug
 ```
 
 If the user specified a filter (e.g., "nas-01 only"), filter results by hostname prefix in the title.
@@ -40,21 +28,23 @@ Classify each issue into a priority level based on its title, body, and optional
 | **P2 Medium** | Noisy errors (>100/day), stuck imports, misconfigured services | Radarr import loops, DHCP reservation failures |
 | **P3 Low** | Cosmetic, informational, minor noise | Logging format issues, non-impacting warnings |
 
-### Live Status Check (optional)
+### Fixed-Check (recommended)
 
-For each issue, optionally query Loki to check if the error is still actively occurring:
+For each issue, check if it appears to already be fixed:
 
 ```bash
-LOKI=$(curl -sf --max-time 3 https://loki.bobtail-clownfish.ts.net/ready >/dev/null 2>&1 \
-  && echo "https://loki.bobtail-clownfish.ts.net" \
-  || echo "http://nas-01.lan:3100")
+./scripts/issue-check-fixed.sh <issue-number>
+```
 
-curl -sG "$LOKI/loki/api/v1/query_range" \
-  --data-urlencode 'query=<relevant LogQL>' \
-  --data-urlencode "start=$(date -d '1 hour ago' +%s)" \
-  --data-urlencode "end=$(date +%s)" \
-  --data-urlencode 'limit=5' \
-  --data-urlencode 'direction=backward' | jq '.data.result | length'
+This checks git history for commits referencing the issue and queries Loki for recent error activity.
+Verdicts: LIKELY FIXED / STILL ACTIVE / INCONCLUSIVE.
+
+### CI Failure Analysis
+
+For issues related to CI failures, analyze the relevant run:
+
+```bash
+./scripts/ci-analyze.sh <run-number>
 ```
 
 Mark issues as "still active" or "not seen recently" in the triage table.
@@ -141,20 +131,24 @@ EOF
 git push -u origin "$BRANCH"
 ```
 
-Create PR via Forgejo API:
+Create PR:
 
 ```bash
-curl -sf -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/pulls" \
-  -d "$(cat <<PAYLOAD
-{
-  "title": "<short description>",
-  "body": "## Summary\n\n<what this fixes and why>\n\nFixes #${ISSUE_NUM}\n\n## Test plan\n\n- [ ] \`nix build\` succeeds for affected host\n- [ ] Deploy and verify fix\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)",
-  "head": "${BRANCH}",
-  "base": "main"
-}
-PAYLOAD
-)"
+./scripts/forgejo.sh pr create \
+  --title "<short description>" \
+  --body "## Summary
+
+<what this fixes and why>
+
+Fixes #${ISSUE_NUM}
+
+## Test plan
+
+- [ ] \`nix build\` succeeds for affected host
+- [ ] Deploy and verify fix
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)" \
+  --head "${BRANCH}" --base main
 ```
 
 ### 5f. Return to main
@@ -183,27 +177,24 @@ When the user chooses "Fix now (investigation)":
 ### Close an issue
 
 ```bash
-curl -sf -X PATCH -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/issues/${ISSUE_NUM}" \
-  -d '{"state": "closed"}'
+./scripts/forgejo.sh issue close ${ISSUE_NUM}
 ```
 
 ### Add a comment
 
 ```bash
-curl -sf -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/issues/${ISSUE_NUM}/comments" \
-  -d "$(cat <<PAYLOAD
-{
-  "body": "<comment text>\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)"
-}
-PAYLOAD
-)"
+./scripts/forgejo.sh issue comment ${ISSUE_NUM} --body "<comment text>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 ```
 
 ### Close with comment (combined)
 
-For "close as known/expected" or "close as resolved", add the comment first, then close.
+```bash
+./scripts/forgejo.sh issue close ${ISSUE_NUM} --comment "<reason>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+```
 
 ## Guidelines
 

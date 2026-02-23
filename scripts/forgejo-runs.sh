@@ -1,22 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TEA_CONFIG="${HOME}/.config/tea/config.yml"
-
-# Colors (disabled when not a terminal)
-if [[ -t 1 ]]; then
-  RED='\033[0;31m'
-  GREEN='\033[0;32m'
-  YELLOW='\033[0;33m'
-  BLUE='\033[0;34m'
-  BOLD='\033[1m'
-  NC='\033[0m'
-else
-  RED='' GREEN='' YELLOW='' BLUE='' BOLD='' NC=''
-fi
-
-log_error() { echo -e "${RED}error:${NC} $*" >&2; }
-log_info()  { echo -e "${BLUE}::${NC} $*" >&2; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/common.sh"
 
 usage() {
   cat <<EOF
@@ -41,98 +27,6 @@ Environment variables:
 
 Token is read from tea CLI config at ${TEA_CONFIG} by default.
 EOF
-}
-
-# --- Dependency checks ---
-
-check_deps() {
-  local missing=()
-  for cmd in curl jq; do
-    command -v "$cmd" &>/dev/null || missing+=("$cmd")
-  done
-  if [[ -z "${FORGEJO_TOKEN:-}" ]] && ! command -v yq &>/dev/null; then
-    missing+=("yq (needed to read tea config)")
-  fi
-  if [[ ${#missing[@]} -gt 0 ]]; then
-    log_error "missing required tools: ${missing[*]}"
-    exit 1
-  fi
-}
-
-# --- Token & URL resolution ---
-
-resolve_config() {
-  if [[ -n "${FORGEJO_TOKEN:-}" ]]; then
-    TOKEN="$FORGEJO_TOKEN"
-  elif [[ -f "$TEA_CONFIG" ]]; then
-    TOKEN=$(yq -r '.logins[0].token' "$TEA_CONFIG")
-    if [[ -z "$TOKEN" || "$TOKEN" == "null" ]]; then
-      log_error "could not extract token from $TEA_CONFIG"
-      log_error "run 'tea login add' or set FORGEJO_TOKEN"
-      exit 1
-    fi
-  else
-    log_error "no FORGEJO_TOKEN set and tea config not found at $TEA_CONFIG"
-    log_error "either: tea login add  OR  export FORGEJO_TOKEN=..."
-    exit 1
-  fi
-
-  if [[ -n "${FORGEJO_URL:-}" ]]; then
-    BASE_URL="$FORGEJO_URL"
-  elif [[ -f "$TEA_CONFIG" ]]; then
-    BASE_URL=$(yq -r '.logins[0].url' "$TEA_CONFIG")
-  else
-    log_error "no FORGEJO_URL set and tea config not found"
-    exit 1
-  fi
-  # strip trailing slash
-  BASE_URL="${BASE_URL%/}"
-
-  if [[ -n "${FORGEJO_REPO:-}" ]]; then
-    REPO="$FORGEJO_REPO"
-  else
-    local remote
-    remote=$(git remote get-url origin 2>/dev/null || true)
-    if [[ -n "$remote" ]]; then
-      # Handle ssh://user@host:port/owner/repo.git and git@host:owner/repo.git
-      REPO=$(echo "$remote" | sed -E 's#^(ssh://[^/]+/|https?://[^/]+/|[^@]+@[^:]+:)##; s/\.git$//')
-    else
-      log_error "could not detect repo from git remote; set FORGEJO_REPO"
-      exit 1
-    fi
-  fi
-}
-
-# --- API helpers ---
-
-api_get() {
-  local endpoint="$1"
-  local response
-  response=$(curl -sf -H "Authorization: token $TOKEN" "${BASE_URL}/api/v1/${endpoint}")
-  echo "$response"
-}
-
-status_color() {
-  case "$1" in
-    success)   echo -n "${GREEN}" ;;
-    failure)   echo -n "${RED}" ;;
-    running)   echo -n "${BLUE}" ;;
-    cancelled) echo -n "${YELLOW}" ;;
-    *)         echo -n "" ;;
-  esac
-}
-
-relative_time() {
-  local timestamp="$1"
-  local then_epoch now_epoch diff
-  then_epoch=$(date -d "$timestamp" +%s 2>/dev/null) || return
-  now_epoch=$(date +%s)
-  diff=$((now_epoch - then_epoch))
-  if (( diff < 60 )); then echo "${diff}s ago"
-  elif (( diff < 3600 )); then echo "$((diff / 60))m ago"
-  elif (( diff < 86400 )); then echo "$((diff / 3600))h ago"
-  else echo "$((diff / 86400))d ago"
-  fi
 }
 
 # --- Commands ---
@@ -293,8 +187,11 @@ done
 
 # --- Main ---
 
-check_deps
-resolve_config
+check_deps curl jq
+if [[ -z "${FORGEJO_TOKEN:-}" ]]; then
+  check_deps yq
+fi
+resolve_forgejo_config
 
 case "$COMMAND" in
   list)

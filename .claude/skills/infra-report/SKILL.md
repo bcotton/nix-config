@@ -1,7 +1,7 @@
 ---
 name: infra-report
 description: Generate an infrastructure health report from Loki logs. Use when asked to check logs and create a report, generate a health report, summarize infrastructure status, or do a log review.
-allowed-tools: Bash(curl *), Bash(jq *), Bash(date *), Bash(sleep *), Bash(yq *), Bash(cat *)
+allowed-tools: Bash(curl *), Bash(jq *), Bash(date *), Bash(sleep *), Bash(yq *), Bash(cat *), Bash(./scripts/*)
 argument-hint: time window (e.g., 'last 12 hours', 'last 24 hours', 'last 7 days')
 ---
 
@@ -280,42 +280,49 @@ When analyzing results:
 
 After presenting the report, create Forgejo issues for each genuine action item.
 
-### Forgejo API Setup
-
-Read the token from the tea CLI config:
-
-```bash
-TOKEN=$(yq -r '.logins[0].token' ~/.config/tea/config.yml)
-FORGEJO_URL="https://forgejo.bobtail-clownfish.ts.net"
-REPO="bcotton/nix-config"
-```
-
-**Important**: Use `yq -r` (raw output) to avoid quoted strings.
-
 ### Check for Duplicate Issues
 
-Before creating, search existing open issues to avoid duplicates:
+Before creating, list existing open bug issues to avoid duplicates:
 
 ```bash
-curl -sf -H "Authorization: token $TOKEN" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/issues?state=open&limit=50" | jq '.[].title'
+./scripts/forgejo.sh issue list --label=bug
 ```
 
 ### Create Issues
 
-For each action item, create an issue with the `bug` label (label ID 1):
+For each action item, create an issue with the `bug` label:
 
 ```bash
-curl -sf -X POST -H "Authorization: token $TOKEN" -H "Content-Type: application/json" \
-  "$FORGEJO_URL/api/v1/repos/$REPO/issues" \
-  -d "$(cat <<PAYLOAD
-{
-  "title": "<host>: <short description>",
-  "body": "## Problem\n\n<description of the error>\n\n## Evidence\n\n\`\`\`\n<relevant log lines>\n\`\`\`\n\n## Action Required\n\n<numbered steps>\n\n## Source\n\nDiscovered via infra-report skill.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)",
-  "labels": [1]
-}
-PAYLOAD
-)"
+./scripts/forgejo.sh issue create \
+  --title "<host>: <short description>" \
+  --body "## Problem
+
+<description of the error>
+
+## Evidence
+
+\`\`\`
+<relevant log lines>
+\`\`\`
+
+## Action Required
+
+<numbered steps>
+
+## Source
+
+Discovered via infra-report skill.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)" \
+  --label bug
+```
+
+### Host Lookup
+
+To resolve an IP address to a hostname:
+```bash
+./scripts/host-lookup.sh 192.168.5.49    # → octoprint (OctoPrint) - 192.168.5.49
+./scripts/host-lookup.sh --list           # → all hosts with IPs
 ```
 
 ### Issue Guidelines

@@ -143,6 +143,22 @@ nas-01-console:
 ci *args="":
   ./scripts/forgejo-runs.sh {{args}}
 
+# Look up hosts by IP, hostname, or partial match
+host-lookup *args="":
+  ./scripts/host-lookup.sh {{args}}
+
+# Manage Forgejo issues and PRs
+forgejo *args="":
+  ./scripts/forgejo.sh {{args}}
+
+# Analyze a failed CI run
+ci-analyze *args="":
+  ./scripts/ci-analyze.sh {{args}}
+
+# Check if a Forgejo issue appears to be fixed
+issue-check-fixed *args="":
+  ./scripts/issue-check-fixed.sh {{args}}
+
 # Build an Incus VM image (qcow2 + metadata) for importing into Incus
 build-incus-image host="incus-testing":
   #!/usr/bin/env bash
