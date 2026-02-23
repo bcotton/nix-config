@@ -57,9 +57,6 @@
     "d /var/lib/prometheus-node-exporter-text-files 0755 root root - -"
   ];
 
-  # Enable textfile collector on node-exporter
-  services.prometheus.exporters.node = lib.mkIf config.virtualisation.incus.enable {
-    enabledCollectors = ["textfile"];
-    extraFlags = ["--collector.textfile.directory=/var/lib/prometheus-node-exporter-text-files"];
-  };
+  # Note: textfile collector on node-exporter is configured by modules/zfs/monitoring.nix
+  # which uses the same directory. No need to duplicate here.
 }
