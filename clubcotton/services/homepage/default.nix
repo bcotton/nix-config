@@ -290,7 +290,7 @@ in {
 
       services = let
         # Group services by category
-        categories = ["Arr" "Media" "Downloads" "Content" "Infrastructure" "Monitoring"];
+        categories = ["Arr" "Media" "Downloads" "Content" "Infrastructure" "Monitoring" "Smart Home"];
 
         servicesByCategory = category:
           lib.filterAttrs (_name: svc: svc.category == category) cfg.services;
