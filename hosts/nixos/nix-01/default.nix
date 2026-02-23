@@ -22,8 +22,16 @@ in {
     ../../../modules/nfs
     inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/incus
+    ../../../modules/incus-cluster
     ../../../modules/systemd-network
   ];
+
+  # Incus cluster controller for clubcotton site
+  services.incus-cluster = {
+    enable = true;
+    site = "clubcotton";
+    instances = import ../../../data/incus/clubcotton.nix;
+  };
 
   services.clubcotton = {
     alloy-logs.enable = true;

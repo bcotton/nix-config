@@ -1,0 +1,70 @@
+#!/usr/sbin/nft -f
+#
+# Home Assistant OS - Inbound Firewall Rules
+#
+# Strategy: HA can reach OUT to all networks freely (established/related
+# handles return traffic). This ruleset only filters NEW inbound connections.
+#
+# Uses a separate "inet haos-firewall" table so Docker/Supervisor tables
+# (ip filter, ip nat, etc.) are completely untouched.
+#
+# Network layout:
+#   enp5s0      192.168.5.0/24   Main LAN (management, trusted)
+#   enp5s0.10   192.168.10.0/24  Guest VLAN (untrusted, block all)
+#   enp5s0.20   192.168.20.0/24  IoT VLAN (selective access)
+#   hassio      172.30.32.0/23   Supervisor network (internal)
+#   docker0     172.30.232.0/23  Docker network (internal)
+#
+# To reload:  nft -f /root/haos-firewall.nft
+# To disable: nft delete table inet haos-firewall
+# To check:   nft list table inet haos-firewall
+
+# Atomic replace - flush only our table, never touch Docker's
+table inet haos-firewall
+delete table inet haos-firewall
+
+table inet haos-firewall {
+    chain input {
+        type filter hook input priority -10; policy accept;
+
+        # --- Always allow ---
+        iif lo accept
+        ct state established,related accept
+        ct state invalid drop
+
+        ip protocol icmp accept
+        meta l4proto ipv6-icmp accept
+
+        # --- Internal (Docker/Supervisor) - always allow ---
+        iifname { "hassio", "docker0" } accept
+        iifname "veth*" accept
+
+        # --- Main LAN (192.168.5.0/24) - full trust ---
+        iifname "enp5s0" ip saddr 192.168.5.0/24 accept
+
+        # --- IoT VLAN (192.168.20.0/24) - HA integration traffic ---
+        # mDNS - device discovery (ESPHome, Chromecast, Shelly, etc.)
+        iifname "enp5s0.20" udp dport 5353 accept
+        # SSDP/UPnP - device discovery (Hue, WLED, etc.)
+        iifname "enp5s0.20" udp dport 1900 accept
+        # HA API/WebSocket - devices that push to HA (webhooks, automations)
+        iifname "enp5s0.20" tcp dport 8123 accept
+        # MQTT - Mosquitto broker addon (IoT devices publish state)
+        iifname "enp5s0.20" tcp dport 1883 accept
+        # CoAP - Thread/Matter device communication
+        iifname "enp5s0.20" udp dport 5683 accept
+        # HomeKit bridge
+        iifname "enp5s0.20" tcp dport 21063 accept
+        # go2rtc - camera streaming
+        iifname "enp5s0.20" tcp dport 18555 accept
+
+        # --- IoT VLAN - deny everything else ---
+        iifname "enp5s0.20" counter drop
+
+        # --- Guest VLAN (192.168.10.0/24) - block all ---
+        iifname "enp5s0.10" counter drop
+
+        # --- Default: accept (main LAN non-RFC1918, link-local, etc.) ---
+        # Switch this to "counter drop" once rules are validated
+    }
+}
