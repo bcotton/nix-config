@@ -112,9 +112,15 @@ in {
       dates = "03:00";
       healthChecks = {
         pingTargets = ["192.168.5.1"];
-        services = ["sshd"];
+        services = ["sshd" "frigate" "go2rtc"];
         tcpPorts = [
           {port = 22;}
+          {port = 5000;}
+          {port = 1984;}
+        ];
+        httpEndpoints = [
+          "http://127.0.0.1:5000/api/version"
+          "http://127.0.0.1:1984/api"
         ];
       };
     };
