@@ -24,6 +24,7 @@ c8:c9:a3:f9:cc:68,192.168.5.192,fireplace-led
 
 90:5A:E6:27:84:3C,192.168.20.11,esp-mmw-motion-01
 E4:5F:01:40:8D:61,192.168.20.20,homeassistant
+00:16:3e:3d:95:f2,192.168.20.21,prod-homeassistant
 d0:3f:27:4e:fd:6a,192.168.20.40,frontporch-camera
 c2:30:bc:16:17:ef,192.168.20.52,master-bath-tablet
 C8:C9:A3:1B:B4:5E,192.168.20.78,ratgdo

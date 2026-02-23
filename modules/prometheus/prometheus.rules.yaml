@@ -806,3 +806,66 @@ groups:
     annotations:
       summary: "Loki ring has unhealthy members"
       description: "Loki ring on {{ $labels.instance }} has {{ $value }} unhealthy members"
+
+# Incus Container/VM Monitoring
+- name: incus_recording_rules
+  interval: 30s
+  rules:
+    - record: incus:instance_cpu_usage_ratio
+      expr: sum by (name, project, instance) (rate(incus_cpu_seconds_total{mode!="idle"}[5m])) / sum by (name, project, instance) (rate(incus_cpu_seconds_total[5m]))
+
+    - record: incus:instance_memory_usage_ratio
+      expr: incus_memory_Active_bytes / incus_memory_MemTotal_bytes
+
+    - record: incus:instance_filesystem_usage_ratio
+      expr: 1 - (incus_filesystem_avail_bytes / incus_filesystem_size_bytes)
+
+- name: incus_alerts
+  rules:
+  - alert: IncusInstanceHighMemory
+    expr: (incus_memory_Active_bytes / incus_memory_MemTotal_bytes) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} memory usage above 90%'
+
+  - alert: IncusInstanceHighCPU
+    expr: incus:instance_cpu_usage_ratio > 0.9
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} CPU usage above 90% for 10 minutes'
+
+  - alert: IncusInstanceFilesystemFull
+    expr: (1 - (incus_filesystem_avail_bytes{mountpoint="/"} / incus_filesystem_size_bytes{mountpoint="/"})) > 0.9
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} root filesystem above 90% full'
+
+  - alert: IncusDaemonRestarted
+    expr: changes(incus_uptime_seconds[5m]) > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus daemon on {{ $labels.instance }} was restarted'
+
+  - alert: IncusWarningsPresent
+    expr: incus_warnings_total > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus on {{ $labels.instance }} has {{ $value }} active warnings'
+
+  - alert: IncusMetricsStale
+    expr: (time() - node_textfile_mtime_seconds{file="incus.prom"}) > 60
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'Incus metrics collector on {{ $labels.instance }} has not updated for over 60 seconds'

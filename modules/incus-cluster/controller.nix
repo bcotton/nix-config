@@ -29,9 +29,8 @@ with lib; let
     metadataDir = "${guestConfig.config.system.build.metadata}/tarball";
   };
 
-  # Build launch flags for an instance
-  # NOTE: -d flags can only override devices already in the profile.
-  # Network and extra devices are added post-launch via incus config device add.
+  # Build flags for incus init (instance creation without starting).
+  # Network and extra devices are added to the stopped instance before ExecStart.
   mkLaunchFlags = name: instanceCfg: let
     isVM = instanceCfg.type == "vm";
     extraConfigFlags = concatLists (mapAttrsToList (k: v: ["-c" "${k}=${v}"]) instanceCfg.extraConfig);
@@ -139,11 +138,8 @@ with lib; let
         ''
       }
 
-        echo "Launching instance $INSTANCE_NAME from $IMAGE_ALIAS..."
-        incus launch "$IMAGE_ALIAS" "$INSTANCE_NAME" ${launchFlags}
-
-        # Signal ExecStart to skip (instance was just started by launch)
-        touch "/run/incus-instance-${name}.launched"
+        echo "Creating instance $INSTANCE_NAME from $IMAGE_ALIAS..."
+        incus init "$IMAGE_ALIAS" "$INSTANCE_NAME" ${launchFlags}
       fi
 
       # Reconcile network device (runs on every invocation, including adoption)
@@ -182,13 +178,6 @@ with lib; let
       export PATH="${lib.makeBinPath [pkgs.incus pkgs.coreutils pkgs.gawk pkgs.gnugrep]}:$PATH"
 
       INSTANCE_NAME="${name}"
-
-      # If just launched by ExecStartPre, skip start
-      if [ -f "/run/incus-instance-${name}.launched" ]; then
-        rm -f "/run/incus-instance-${name}.launched"
-        echo "Instance $INSTANCE_NAME already started by launch"
-        exit 0
-      fi
 
       # Start if not already running
       STATUS=$(incus info "$INSTANCE_NAME" 2>/dev/null | grep "^Status:" | awk '{print $2}' || echo "Unknown")

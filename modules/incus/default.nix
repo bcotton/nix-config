@@ -3,6 +3,10 @@
   pkgs,
   ...
 }: {
+  imports = [
+    ./monitoring.nix
+  ];
+
   networking.nftables.enable = true;
   networking.firewall.allowedTCPPorts = [8443];
 

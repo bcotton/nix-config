@@ -255,6 +255,12 @@ in {
           {
             scope = "vlan20";
             macAddress = "E4:5F:01:40:8D:61";
+            ipAddress = "192.168.20.19";
+            hostName = "homeassistant-old";
+          }
+          {
+            scope = "vlan20";
+            macAddress = "00:16:3e:3d:95:f2";
             ipAddress = "192.168.20.20";
             hostName = "homeassistant";
           }

@@ -2,7 +2,7 @@
 # haos-setup.sh - Configure SSH access, VLAN networking, and firewall on HAOS VM
 #
 # After reimporting the HAOS image (new VM), run this script to:
-# 1. Inject SSH public key via virtual CONFIG USB disk
+# 1. Inject SSH public key via incus agent (no reboot required)
 # 2. Create VLAN sub-interfaces for multi-VLAN access
 # 3. Deploy nftables firewall rules
 #
@@ -16,12 +16,12 @@
 
 set -euo pipefail
 
-# --- Configuration ---
-INCUS_HOST="nix-01.lan"
-VM_NAME="prod-homeassistant"
-HAOS_IP="192.168.5.20"
-HAOS_SSH_PORT="22222"
-SSH_KEY="$HOME/.ssh/haos_ed25519"
+# --- Configuration (override via environment variables) ---
+INCUS_HOST="${INCUS_HOST:-nix-01.lan}"
+VM_NAME="${VM_NAME:-prod-homeassistant}"
+HAOS_IP="${HAOS_IP:-192.168.5.20}"
+HAOS_SSH_PORT="${HAOS_SSH_PORT:-22222}"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/haos_ed25519}"
 SSH_OPTS="-o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new -o LogLevel=ERROR"
 
 # VLANs to configure (id:subnet pairs)
@@ -37,6 +37,20 @@ die()   { echo "ERROR: $*" >&2; exit 1; }
 
 ssh_incus() { ssh $SSH_OPTS "root@${INCUS_HOST}" "$@"; }
 ssh_haos()  { ssh $SSH_OPTS -i "$SSH_KEY" -p "$HAOS_SSH_PORT" "root@${HAOS_IP}" "$@"; }
+
+# SSH to the cluster node where the VM is actually running.
+# In a cluster, disk source paths must exist on the VM's node.
+vm_node() {
+  ssh_incus "incus info $VM_NAME 2>/dev/null | grep '^Location:' | awk '{print \$2}'"
+}
+ssh_vm_node() {
+  local node
+  node=$(vm_node)
+  if [ -z "$node" ]; then
+    die "Could not determine which node $VM_NAME is on"
+  fi
+  ssh $SSH_OPTS "root@${node}" "$@"
+}
 
 wait_for_ssh() {
   local max_attempts=20
@@ -72,7 +86,7 @@ setup_ssh_key() {
     return 0
   fi
 
-  info "SSH not yet configured, injecting key via CONFIG USB disk"
+  info "SSH not yet configured, injecting key via incus agent"
 
   # Check VM exists and is running
   local vm_status
@@ -81,38 +95,19 @@ setup_ssh_key() {
     die "VM $VM_NAME is not running (status: $vm_status)"
   fi
 
-  # Create FAT disk image with authorized_keys
-  info "Creating CONFIG disk image on $INCUS_HOST"
-  ssh_incus "
-    mkdir -p /tmp/haos-config
-    dd if=/dev/zero of=/tmp/haos-config.img bs=1M count=32 2>/dev/null
-    mkfs.vfat -n CONFIG /tmp/haos-config.img >/dev/null
-  "
+  # Push SSH public key directly via incus exec (uses the incus agent inside the VM).
+  # /root/.ssh/ is on the writable overlay partition in HAOS.
+  info "Writing SSH public key to $VM_NAME via incus exec"
+  ssh_incus "incus exec $VM_NAME -- mkdir -p /root/.ssh"
+  cat "${SSH_KEY}.pub" | ssh_incus "incus exec $VM_NAME -- tee /root/.ssh/authorized_keys >/dev/null"
+  ssh_incus "incus exec $VM_NAME -- chmod 700 /root/.ssh"
+  ssh_incus "incus exec $VM_NAME -- chmod 600 /root/.ssh/authorized_keys"
 
-  # Write the public key
-  cat "${SSH_KEY}.pub" | ssh_incus "
-    mount -o loop /tmp/haos-config.img /tmp/haos-config
-    cp /dev/stdin /tmp/haos-config/authorized_keys
-    sync
-    umount /tmp/haos-config
-  "
-
-  # Attach USB disk and reboot VM
-  info "Attaching CONFIG disk to $VM_NAME and rebooting"
-  ssh_incus "incus config device add $VM_NAME config-usb disk source=/tmp/haos-config.img io.bus=usb"
+  # HAOS dropbear reads authorized_keys at boot only — must restart
+  info "Restarting $VM_NAME for SSH key to take effect"
   ssh_incus "incus restart $VM_NAME --timeout 120"
-
-  # Wait for SSH
   sleep 30
   wait_for_ssh
-
-  # Clean up CONFIG disk
-  info "Cleaning up CONFIG disk"
-  ssh_incus "
-    incus config device remove $VM_NAME config-usb
-    rm -f /tmp/haos-config.img
-    rmdir /tmp/haos-config 2>/dev/null || true
-  "
 
   info "SSH access configured successfully"
 }
