@@ -45,7 +45,10 @@ in {
         services = ["sshd"];
         tcpPorts = [
           {port = 22;}
-          {port = 53;}
+          {
+            host = "192.168.5.220";
+            port = 53;
+          }
         ];
       };
     };
