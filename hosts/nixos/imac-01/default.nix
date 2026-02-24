@@ -79,24 +79,12 @@ in {
 
   networking.firewall.enable = variables.firewallEnable;
 
-  # Only monitor the ZFS root disk, skip auto-discovery which picks up
-  # /dev/nvme0 (controller node, permission denied) and /dev/sda (no SMART)
-  services.prometheus.exporters.smartctl.devices = [
-    "/dev/disk/by-id/wwn-0x5002538655584d30"
-  ];
-
-  # Apple SSD SM0256F ships with SMART disabled; enable it on boot
-  # so the smartctl-exporter can read health metrics.
-  systemd.services.smartctl-enable = {
-    description = "Enable SMART on Apple SSD";
-    before = ["prometheus-smartctl-exporter.service"];
-    wantedBy = ["multi-user.target"];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = "${pkgs.smartmontools}/bin/smartctl -s on /dev/disk/by-id/wwn-0x5002538655584d30";
-    };
-  };
+  # Disable smartctl exporter on imac-01: upstream bug in v0.14.0 causes HTTP 500
+  # on every scrape due to a DescribeByCollect race condition triggered by the
+  # Apple SSD's partial ATA command support (exit status 4).
+  # See: https://github.com/prometheus-community/smartctl_exporter/issues/305
+  # Re-enable when nixpkgs ships a fixed version (check docs/UPGRADE_CHECKLIST.md).
+  services.prometheus.exporters.smartctl.enable = lib.mkForce false;
 
   services.clubcotton = {
     alloy-logs.enable = true;
