@@ -18,13 +18,18 @@
       ];
   };
 
-  services.mjpg-streamer = {
-    enable = true;
-    # using yuv mode, see https://github.com/jacksonliam/mjpg-streamer/issues/236
-    # -> limited to VGA resolution
-    #inputPlugin = "input_uvc.so -d /dev/video0 -r 1920x1080 -f 15 -y";
-    # This seems to work well enough.
-    inputPlugin = "input_uvc.so -d /dev/video0 -r 1280x720 --minimum_size 4096";
+  # Webcam streaming via ustreamer (replaces broken mjpg-streamer)
+  systemd.services.ustreamer = {
+    description = "ustreamer webcam streamer";
+    after = ["network.target"];
+    wantedBy = ["multi-user.target"];
+    serviceConfig = {
+      ExecStart = "${pkgs.ustreamer}/bin/ustreamer --device /dev/video0 --resolution 1280x720 --host 0.0.0.0 --port 5050";
+      DynamicUser = true;
+      SupplementaryGroups = ["video"];
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
   };
 
   networking.firewall.allowedTCPPorts = [5000 5050];
