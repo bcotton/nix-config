@@ -354,12 +354,8 @@ in {
             ipAddress = "192.168.20.195";
             hostName = "iton-meter";
           }
-          {
-            scope = "vlan20";
-            macAddress = "D2:21:F9:29:F6:B5";
-            ipAddress = "192.168.20.199";
-            hostName = "esp-keyboard-wake";
-          }
+          # esp-keyboard-wake removed: duplicate MAC D2:21:F9:29:F6:B5 (same as plant-monitor)
+          # Re-add with correct MAC when known
         ];
       };
 

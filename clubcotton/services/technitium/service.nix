@@ -624,9 +624,9 @@ in {
           fi
         }
 
-        # Add DHCP reservation with retry logic
-        # Use /dhcp/scopes/addReservedLease to create reservations with specific IPs
-        # Note: /dhcp/leases/reserve only reserves existing dynamic leases at their current IP
+        # Add DHCP reservation (idempotent: remove first, then add)
+        # Uses remove-then-add because addReservedLease is not idempotent —
+        # it errors if the reservation already exists.
         # Retries are needed because DHCP scopes may not be fully operational immediately
         # after creation/enabling (Technitium needs time to bind to interfaces).
         add_reservation() {
@@ -635,6 +635,11 @@ in {
           local retry_delay=2
 
           echo "Adding DHCP reservation: $hostname ($mac) -> $ip to scope: $scope"
+
+          # Remove existing reservation first (ignore errors if it doesn't exist)
+          curl -sf -X POST "''${API_BASE}/dhcp/scopes/removeReservedLease?token=''${TOKEN}" \
+            -d "name=$scope" \
+            -d "hardwareAddress=$mac" > /dev/null 2>&1 || true
 
           for attempt in $(seq 1 $max_retries); do
             response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/addReservedLease?token=''${TOKEN}" \
