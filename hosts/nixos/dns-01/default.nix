@@ -39,7 +39,10 @@ in {
     auto-upgrade = {
       enable = true;
       flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
-      dates = "03:00";
+      # Upgrade last — dns-01 is the fleet DNS server, so all other hosts
+      # (03:00 + 15min jitter, nas-01 at 03:30) must finish before this runs.
+      dates = "04:00";
+      randomizedDelaySec = "0";
       healthChecks = {
         pingTargets = ["192.168.5.1"];
         services = ["sshd"];
