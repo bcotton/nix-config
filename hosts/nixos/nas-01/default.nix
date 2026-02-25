@@ -180,6 +180,7 @@ in {
     vulkan-tools
     pciutils
     amdgpu_top
+    python3Packages.huggingface-hub
     toolbox
   ];
 
@@ -425,17 +426,10 @@ in {
 
   services.clubcotton.llama-swap = {
     port = 8090;
-    settings = let
-      llama-cpp-vulkan = pkgs.llama-cpp.override {vulkanSupport = true;};
-      llama-server = lib.getExe' llama-cpp-vulkan "llama-server";
-    in {
+    modelsDir = "/models";
+    llamaCppPackage = pkgs.llama-cpp.override {vulkanSupport = true;};
+    settings = {
       healthCheckTimeout = 120;
-      models = {
-        "llama3.1-8b" = {
-          cmd = "${llama-server} --port \${PORT} -m /models/llama-3.1-8b-instruct.gguf -ngl 99 --no-webui";
-          ttl = 300;
-        };
-      };
     };
   };
 
