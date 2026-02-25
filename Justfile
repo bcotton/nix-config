@@ -56,6 +56,12 @@ switch target_host=hostname:
 dry-activate target_host=hostname:
   sudo nixos-rebuild dry-activate --flake .#{{target_host}}
 
+# Dry-activate on a remote host to preview changes without switching
+# Usage: just dry-activate-remote nas-01
+dry-activate-remote target_host:
+  NIX_SSHOPTS="-A" nixos-rebuild dry-activate --flake .#{{target_host}} \
+    --target-host root@{{target_host}}
+
 # Safely switch network configuration with automatic rollback
 # This should be run ON the target host, not remotely
 [linux]
@@ -73,6 +79,7 @@ fmt: install-hooks
   nix fmt .
 
 # Deploy to one or more remote NixOS hosts via SSH
+# Runs dry-activate first and aborts if any ZFS datasets would be destroyed
 # Usage: just deploy nas-01
 #        just deploy nas-01 nix-01 nix-02
 # Builds use distributed builders configured in the local host's nix-builder.coordinator
@@ -81,10 +88,23 @@ deploy +hostnames:
   set -euo pipefail
   for hostname in {{hostnames}}; do
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Dry-activating $hostname..."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    output=$(NIX_SSHOPTS="-A" nixos-rebuild dry-activate --flake ".#$hostname" \
+      --target-host "root@$hostname" 2>&1)
+    echo "$output"
+    if echo "$output" | grep -q "zfs destroy"; then
+      echo ""
+      echo "ABORTING: dry-activate for $hostname would destroy ZFS datasets!"
+      echo "Review the destructive commands above and fix disko.zfs config before deploying."
+      exit 1
+    fi
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "Deploying $hostname..."
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    NIX_SSHOPTS="-A" nixos-rebuild switch --flake .#$hostname \
-      --target-host root@$hostname || echo "⚠ Failed to deploy $hostname"
+    NIX_SSHOPTS="-A" nixos-rebuild switch --flake ".#$hostname" \
+      --target-host "root@$hostname" || echo "⚠ Failed to deploy $hostname"
   done
   echo ""
   echo "✓ Deployment complete"

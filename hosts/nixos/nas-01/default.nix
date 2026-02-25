@@ -151,7 +151,7 @@ in {
     navidrome.enable = true;
     nix-cache-proxy.enable = true;
     nut-client.enable = true;
-    ollama.enable = true;
+    llama-swap.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
     pinchflat.enable = true;
@@ -179,6 +179,7 @@ in {
     vulkan-tools
     pciutils
     amdgpu_top
+    toolbox
   ];
 
   services.clubcotton.harmonia = {
@@ -421,9 +422,20 @@ in {
     };
   };
 
-  services.clubcotton.ollama = {
-    acceleration = false;
-    loadModels = ["llama3.1:70b" "llama3.2:3b"];
+  services.clubcotton.llama-swap = {
+    port = 8090;
+    settings = let
+      llama-cpp-vulkan = pkgs.llama-cpp.override {vulkanSupport = true;};
+      llama-server = lib.getExe' llama-cpp-vulkan "llama-server";
+    in {
+      healthCheckTimeout = 120;
+      models = {
+        "llama3.1-8b" = {
+          cmd = "${llama-server} --port \${PORT} -m /models/llama-3.1-8b-instruct.gguf -ngl 99 --no-webui";
+          ttl = 300;
+        };
+      };
+    };
   };
 
   services.clubcotton.open-webui = {
@@ -438,9 +450,10 @@ in {
     tailnetHostname = "llm";
     environment = {
       WEBUI_AUTH = "True";
-      ENABLE_OLLAMA_API = "True";
-      OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-      OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+      ENABLE_OLLAMA_API = "False";
+      ENABLE_OPENAI_API = "True";
+      OPENAI_API_BASE_URL = "http://127.0.0.1:8090/v1";
+      OPENAI_API_KEY = "not-needed";
     };
     environmentFile = config.age.secrets.open-webui.path;
   };
@@ -674,11 +687,22 @@ in {
   # Always run `nixos-rebuild dry-activate` before switching.
   disko.zfs = {
     enable = true;
+    # Incus manages its own datasets inside the ssdpool/local/incus zvol;
+    # these change dynamically and must not be managed by disko-zfs.
+    settings.ignoredDatasets = ["incus" "incus/*"];
     settings.datasets = {
       # --- ssdpool datasets ---
       # NOTE: ssdpool/local/database, forgejo, garage, nix-cache, nix-cache-proxy
       # are declared by their respective service modules via zfsDataset option
       "ssdpool/local" = {};
+      "ssdpool/local/models" = {
+        properties = {
+          mountpoint = "/models";
+          compression = "lz4";
+          atime = "off";
+          quota = "500G";
+        };
+      };
       "ssdpool/local/reserved" = {
         properties = {
           reservation = "200G";
@@ -789,9 +813,7 @@ in {
       "backuppool/local/nas-01/photos" = {};
       "backuppool/local/nas-01/tomcotton-audio-library" = {};
       "backuppool/local/nas-01/tomcotton-data" = {};
-      # Note: backuppool/local/nas-01/redis is NOT declared here because
-      # syncoid initial replication requires the target dataset to not exist.
-      # Syncoid creates it automatically on first run.
+      "backuppool/local/nas-01/redis" = {};
       "backuppool/local/nas-01/var-lib" = {};
       "backuppool/local/postgresql" = {
         properties = {
