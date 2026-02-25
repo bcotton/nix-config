@@ -928,6 +928,11 @@ in {
   # AMD GPU monitoring (Radeon AI Pro R9700)
   clubcotton.amdgpu-monitoring.enable = true;
 
+  # Keep both R9700 GPUs awake so metrics are always reported
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1002", ATTR{device}=="0x7551", ATTR{power/control}="on"
+  '';
+
   # Enhanced monitoring for nas-01 specific disks
   services.prometheus.exporters.smartctl = {
     devices = [
