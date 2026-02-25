@@ -12,7 +12,7 @@ jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:96f0161
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:ce974cc
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
@@ -57,7 +57,7 @@ jobs:
   build-hosts:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:96f0161
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:ce974cc
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
