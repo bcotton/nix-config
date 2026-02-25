@@ -111,7 +111,7 @@ in {
       flake = "git+https://forgejo.bobtail-clownfish.ts.net/bcotton/nix-config?ref=main";
       dates = "03:00";
       healthChecks = {
-        pingTargets = ["192.168.5.1"];
+        pingTargets = ["192.168.20.1"];
         services = ["sshd" "frigate" "go2rtc"];
         tcpPorts = [
           {port = 22;}
