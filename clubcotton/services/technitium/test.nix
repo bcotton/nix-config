@@ -254,9 +254,11 @@ pkgs.testers.runNixOSTest {
       reserved = server.succeed(
         f"curl -sf 'http://localhost:5380/api/dhcp/scopes/get?token={token}&name=test-scope' | jq -r '.response.reservedLeases'"
       ).strip()
-      assert "AA:BB:CC:DD:EE:01" in reserved.upper() or "aa:bb:cc:dd:ee:01" in reserved.lower(), \
+      # Technitium stores MACs with hyphens (AA-BB-CC-DD-EE-01), not colons
+      reserved_upper = reserved.upper()
+      assert "AA-BB-CC-DD-EE-01" in reserved_upper or "AA:BB:CC:DD:EE:01" in reserved_upper, \
         f"Reservation for test-host-1 not found in: {reserved}"
-      assert "AA:BB:CC:DD:EE:02" in reserved.upper() or "aa:bb:cc:dd:ee:02" in reserved.lower(), \
+      assert "AA-BB-CC-DD-EE-02" in reserved_upper or "AA:BB:CC:DD:EE:02" in reserved_upper, \
         f"Reservation for test-host-2 not found in: {reserved}"
       assert "192.168.2.50" in reserved, f"Reservation IP 192.168.2.50 not found in: {reserved}"
       assert "192.168.2.51" in reserved, f"Reservation IP 192.168.2.51 not found in: {reserved}"
