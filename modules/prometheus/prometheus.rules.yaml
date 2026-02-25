@@ -862,6 +862,63 @@ groups:
     annotations:
       description: 'Incus on {{ $labels.instance }} has {{ $value }} active {{ $labels.severity }} severity warnings'
 
+  # AMD GPU Temperature Monitoring
+  - alert: AmdgpuEdgeTemperatureHigh
+    expr: amdgpu_temperature_celsius{sensor="edge"} > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) edge temperature is {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuEdgeTemperatureCritical
+    expr: amdgpu_temperature_celsius{sensor="edge"} > 100
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) edge temperature is critically high at {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuJunctionTemperatureHigh
+    expr: amdgpu_temperature_celsius{sensor="junction"} > 90
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) junction temperature is {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuJunctionTemperatureCritical
+    expr: amdgpu_temperature_celsius{sensor="junction"} > 105
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) junction temperature is critically high at {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuMemoryTemperatureHigh
+    expr: amdgpu_temperature_celsius{sensor="memory"} > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) memory temperature is {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuMemoryTemperatureCritical
+    expr: amdgpu_temperature_celsius{sensor="memory"} > 100
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      description: 'GPU {{ $labels.name }} ({{ $labels.device }}) memory temperature is critically high at {{ printf "%.0f" $value }}°C on {{ $labels.instance }}'
+
+  - alert: AmdgpuMetricsStale
+    expr: (time() - node_textfile_mtime_seconds{file="amdgpu.prom"}) > 120
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      description: 'AMD GPU metrics collector on {{ $labels.instance }} has not updated for over 2 minutes'
+
   - alert: IncusMetricsStale
     expr: (time() - node_textfile_mtime_seconds{file="incus.prom"}) > 60
     for: 5m

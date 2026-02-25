@@ -24,6 +24,7 @@
     ./incus-vm
     ./jellyfin
     ./kavita
+    ./llama-swap
     ./loki
     ./mimir
     ./navidrome
