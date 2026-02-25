@@ -499,33 +499,59 @@ in {
           fi
         }
 
-        # Create zone
+        FAILURES=0
+
+        # Create zone (idempotent — Technitium's zones/create is a no-op if zone exists)
         create_zone() {
           local zone=$1
           echo "Creating zone: $zone"
-          curl -sf -X POST "''${API_BASE}/zones/create?token=''${TOKEN}" \
-            -d "zone=$zone&type=Primary" > /dev/null || echo "Zone $zone may already exist"
+          response=$(curl -sf -X POST "''${API_BASE}/zones/create?token=''${TOKEN}" \
+            -d "zone=$zone&type=Primary" 2>&1)
+          if echo "$response" | grep -q '"status":"ok"'; then
+            return 0
+          elif echo "$response" | grep -q "already exists"; then
+            echo "Zone $zone already exists (ok)"
+          else
+            echo "ERROR: Failed to create zone $zone: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
-        # Add A record with optional PTR
+        # Add A record with optional PTR (idempotent: delete first, then add)
         add_a_record() {
           local zone=$1 name=$2 ip=$3 create_ptr=$4
           local fqdn="''${name}.''${zone}"
           echo "Adding A record: $fqdn -> $ip"
-          curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" > /dev/null || \
-            echo "Record $fqdn may already exist"
+
+          # Delete existing record first (ignore errors if it doesn't exist)
+          curl -sf -X POST "''${API_BASE}/zones/records/delete?token=''${TOKEN}" \
+            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip" > /dev/null 2>&1 || true
+
+          response=$(curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
+            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" 2>&1)
+          if ! echo "$response" | grep -q '"status":"ok"'; then
+            echo "ERROR: Failed to add A record $fqdn: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
-        # Add CNAME record
+        # Add CNAME record (idempotent: delete first, then add)
         add_cname_record() {
           local zone=$1 name=$2 target=$3
           local fqdn="''${name}.''${zone}"
           local target_fqdn="''${target}.''${zone}"
           echo "Adding CNAME record: $fqdn -> $target_fqdn"
-          curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=CNAME&domain=$fqdn&cname=$target_fqdn" > /dev/null || \
-            echo "CNAME $fqdn may already exist"
+
+          # Delete existing record first (ignore errors if it doesn't exist)
+          curl -sf -X POST "''${API_BASE}/zones/records/delete?token=''${TOKEN}" \
+            -d "zone=$zone&type=CNAME&domain=$fqdn" > /dev/null 2>&1 || true
+
+          response=$(curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
+            -d "zone=$zone&type=CNAME&domain=$fqdn&cname=$target_fqdn" 2>&1)
+          if ! echo "$response" | grep -q '"status":"ok"'; then
+            echo "ERROR: Failed to add CNAME record $fqdn: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
         login
@@ -533,6 +559,10 @@ in {
         # Generated zone configuration
         ${generateZoneScript cfg.zones}
 
+        if [ "$FAILURES" -gt 0 ]; then
+          echo "Zone configuration completed with $FAILURES error(s)"
+          exit 1
+        fi
         echo "Zone configuration complete"
       '';
     };
@@ -584,43 +614,51 @@ in {
           fi
         }
 
-        # Create DHCP scope
+        FAILURES=0
+
+        # Create DHCP scope (scopes/set is idempotent)
         create_scope() {
           local name=$1 interface=$2 start=$3 end=$4 subnet=$5 gateway=$6 dns=$7 lease=$8 domain=$9 use_this_dns=''${10} pxe_file=''${11} pxe_server=''${12}
           echo "Creating DHCP scope: $name"
 
-          local cmd="curl -sf -X POST \"''${API_BASE}/dhcp/scopes/set?token=''${TOKEN}\""
-          cmd="$cmd -d \"name=$name\""
-          cmd="$cmd -d \"startingAddress=$start\""
-          cmd="$cmd -d \"endingAddress=$end\""
-          cmd="$cmd -d \"subnetMask=$subnet\""
-          cmd="$cmd -d \"leaseTimeDays=$lease\""
-          cmd="$cmd -d \"routerAddress=$gateway\""
-          cmd="$cmd -d \"domainName=$domain\""
-          # Note: interfaceName is not supported by Technitium API - scope binds based on IP range
+          # Build curl args array (avoids eval + string concatenation)
+          local -a args=(
+            -sf -X POST "''${API_BASE}/dhcp/scopes/set?token=''${TOKEN}"
+            -d "name=$name"
+            -d "startingAddress=$start"
+            -d "endingAddress=$end"
+            -d "subnetMask=$subnet"
+            -d "leaseTimeDays=$lease"
+            -d "routerAddress=$gateway"
+            -d "domainName=$domain"
+          )
 
           if [ "$use_this_dns" = "true" ]; then
-            cmd="$cmd -d \"useThisDnsServer=true\""
+            args+=(-d "useThisDnsServer=true")
           elif [ -n "$dns" ]; then
-            cmd="$cmd -d \"dnsServers=$dns\""
+            args+=(-d "dnsServers=$dns")
           fi
 
           if [ -n "$pxe_file" ] && [ -n "$pxe_server" ]; then
-            cmd="$cmd -d \"bootFileName=$pxe_file\""
-            cmd="$cmd -d \"serverAddress=$pxe_server\""
+            args+=(-d "bootFileName=$pxe_file")
+            args+=(-d "serverAddress=$pxe_server")
           fi
 
-          response=$(eval "$cmd" 2>&1)
-          echo "API response for scope $name: $response"
-          if [ $? -ne 0 ]; then
-            echo "Error creating scope $name: $response"
-          else
+          response=$(curl "''${args[@]}" 2>&1)
+          if echo "$response" | grep -q '"status":"ok"'; then
             echo "Successfully created scope: $name"
 
             # Enable the scope after creation
             echo "Enabling scope: $name"
-            curl -sf -X POST "''${API_BASE}/dhcp/scopes/enable?token=''${TOKEN}" \
-              -d "name=$name" > /dev/null || echo "Note: Could not enable scope (may already be enabled)"
+            enable_response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/enable?token=''${TOKEN}" \
+              -d "name=$name" 2>&1)
+            if ! echo "$enable_response" | grep -q '"status":"ok"'; then
+              echo "ERROR: Failed to enable scope $name: $enable_response"
+              FAILURES=$((FAILURES + 1))
+            fi
+          else
+            echo "ERROR: Failed to create scope $name: $response"
+            FAILURES=$((FAILURES + 1))
           fi
         }
 
@@ -658,6 +696,7 @@ in {
             else
               echo "API response for addReservedLease: $response"
               echo "ERROR: Failed to add reservation for $hostname after $max_retries attempts"
+              FAILURES=$((FAILURES + 1))
             fi
           done
         }
@@ -671,6 +710,10 @@ in {
         # Generated DHCP configuration
         ${generateDhcpScript cfg.dhcp.scopes cfg.dhcp.reservations}
 
+        if [ "$FAILURES" -gt 0 ]; then
+          echo "DHCP configuration completed with $FAILURES error(s)"
+          exit 1
+        fi
         echo "DHCP configuration complete"
       '';
     };
