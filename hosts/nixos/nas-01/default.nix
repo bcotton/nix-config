@@ -22,6 +22,7 @@ in {
     inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
+    ../../../modules/amdgpu
     ../../../modules/incus
     ../../../modules/systemd-network
     ../../../users/cheryl.nix
@@ -929,6 +930,9 @@ in {
       useTemplate = ["media"];
     };
   };
+
+  # AMD GPU monitoring (Radeon AI Pro R9700)
+  clubcotton.amdgpu-monitoring.enable = true;
 
   # Enhanced monitoring for nas-01 specific disks
   services.prometheus.exporters.smartctl = {
