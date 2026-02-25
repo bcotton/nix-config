@@ -831,7 +831,7 @@ groups:
       description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} memory usage above 90%'
 
   - alert: IncusInstanceHighCPU
-    expr: incus:instance_cpu_usage_ratio > 0.9
+    expr: incus:instance_cpu_usage_ratio > 0.9 and sum by (name, project, instance) (rate(incus_cpu_seconds_total[5m])) > 0.5
     for: 10m
     labels:
       severity: warning
@@ -839,7 +839,7 @@ groups:
       description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} CPU usage above 90% for 10 minutes'
 
   - alert: IncusInstanceFilesystemFull
-    expr: (1 - (incus_filesystem_avail_bytes{mountpoint="/"} / incus_filesystem_size_bytes{mountpoint="/"})) > 0.9
+    expr: (1 - (incus_filesystem_avail_bytes{mountpoint="/", fstype!="0x-1f0a1e1e"} / incus_filesystem_size_bytes{mountpoint="/", fstype!="0x-1f0a1e1e"})) > 0.9
     for: 10m
     labels:
       severity: warning
@@ -847,7 +847,7 @@ groups:
       description: 'Incus instance {{ $labels.name }} on {{ $labels.instance }} root filesystem above 90% full'
 
   - alert: IncusDaemonRestarted
-    expr: changes(incus_uptime_seconds[5m]) > 0
+    expr: resets(incus_uptime_seconds[5m]) > 0
     for: 1m
     labels:
       severity: warning
@@ -855,12 +855,12 @@ groups:
       description: 'Incus daemon on {{ $labels.instance }} was restarted'
 
   - alert: IncusWarningsPresent
-    expr: incus_warnings_total > 0
+    expr: incus_warnings{severity!="low"} > 0
     for: 10m
     labels:
       severity: warning
     annotations:
-      description: 'Incus on {{ $labels.instance }} has {{ $value }} active warnings'
+      description: 'Incus on {{ $labels.instance }} has {{ $value }} active {{ $labels.severity }} severity warnings'
 
   - alert: IncusMetricsStale
     expr: (time() - node_textfile_mtime_seconds{file="incus.prom"}) > 60
