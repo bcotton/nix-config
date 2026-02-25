@@ -52,24 +52,12 @@
     LIBVA_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
     LIBVA_MESSAGING_LEVEL = "1";
     GST_VAAPI_ALL_DRIVERS = "1";
-  }; # environment.variables = {
-  #   VDPAU_DRIVER = lib.mkIf config.hardware.opengl.enable (lib.mkDefault "va_gl");
-  # };
+  };
 
-  # hardware.graphics = {
-  #   enable = true;
-  #   extraPackages = with pkgs; [
-  #     (
-  #       if (lib.versionOlder (lib.versions.majorMinor lib.version) "23.11")
-  #       then vaapiIntel
-  #       else intel-vaapi-driver
-  #     )
-  #     libvdpau-va-gl
-  #     intel-media-driver
-  #   ];
-  # };
+  # AMD Radeon AI Pro R9700 (RDNA4 / gfx1201)
+  boot.kernelModules = ["kvm-amd" "amdgpu"];
+  hardware.amdgpu.opencl.enable = true;
 
-  boot.kernelModules = ["kvm-amd"];
   boot.extraModulePackages = [];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking

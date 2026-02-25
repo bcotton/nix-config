@@ -175,6 +175,10 @@ in {
 
   environment.systemPackages = with pkgs; [
     beets
+    (llama-cpp.override {vulkanSupport = true;})
+    vulkan-tools
+    pciutils
+    amdgpu_top
   ];
 
   services.clubcotton.harmonia = {
