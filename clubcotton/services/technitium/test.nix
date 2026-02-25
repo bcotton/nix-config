@@ -93,8 +93,20 @@ pkgs.testers.runNixOSTest {
               pxeNextServer = null;
             }
           ];
-          # Reservations skipped - API support appears incomplete in Technitium 13.6.0
-          reservations = [];
+          reservations = [
+            {
+              scope = "test-scope";
+              macAddress = "AA:BB:CC:DD:EE:01";
+              ipAddress = "192.168.2.50";
+              hostName = "test-host-1";
+            }
+            {
+              scope = "test-scope";
+              macAddress = "AA:BB:CC:DD:EE:02";
+              ipAddress = "192.168.2.51";
+              hostName = "test-host-2";
+            }
+          ];
         };
       };
 
@@ -237,12 +249,39 @@ pkgs.testers.runNixOSTest {
       assert "192.168.2.100" in scope_details, "DHCP scope starting address not correct"
       assert "192.168.2.200" in scope_details, "DHCP scope ending address not correct"
 
-      # NOTE: DHCP reservations via API appear to have issues with Technitium 13.6.0
-      # The API accepts reservation creation requests but does not persist them
-      # This is a known limitation and reservations should be configured manually via web UI
-      # or may require a different API workflow not documented in the current version
-      print("DHCP scope configuration verified successfully")
-      print("Note: Reservation testing skipped due to Technitium API limitations")
+    with subtest("DHCP reservations verified via API"):
+      # Verify reservations were created
+      reserved = server.succeed(
+        f"curl -sf 'http://localhost:5380/api/dhcp/scopes/get?token={token}&name=test-scope' | jq -r '.response.reservedLeases'"
+      ).strip()
+      # Technitium stores MACs with hyphens (AA-BB-CC-DD-EE-01), not colons
+      reserved_upper = reserved.upper()
+      assert "AA-BB-CC-DD-EE-01" in reserved_upper or "AA:BB:CC:DD:EE:01" in reserved_upper, \
+        f"Reservation for test-host-1 not found in: {reserved}"
+      assert "AA-BB-CC-DD-EE-02" in reserved_upper or "AA:BB:CC:DD:EE:02" in reserved_upper, \
+        f"Reservation for test-host-2 not found in: {reserved}"
+      assert "192.168.2.50" in reserved, f"Reservation IP 192.168.2.50 not found in: {reserved}"
+      assert "192.168.2.51" in reserved, f"Reservation IP 192.168.2.51 not found in: {reserved}"
+      print("DHCP reservations verified successfully")
+
+    with subtest("Services are idempotent (re-run succeeds)"):
+      # Restart both configuration services — they must succeed on re-run
+      # This catches non-idempotent API calls (e.g., addReservedLease errors on existing entries)
+      server.succeed("systemctl restart technitium-configure-zones.service")
+      server.wait_for_unit("technitium-configure-zones.service")
+      server.succeed("systemctl restart technitium-configure-dhcp.service")
+      server.wait_for_unit("technitium-configure-dhcp.service")
+
+      # Verify DNS records still correct after re-run
+      result = server.succeed("dig @localhost server1.lan +short").strip()
+      assert "192.168.1.10" in result, f"After idempotent re-run, expected 192.168.1.10, got {result}"
+
+      # Verify reservations still present after re-run
+      reserved = server.succeed(
+        f"curl -sf 'http://localhost:5380/api/dhcp/scopes/get?token={token}&name=test-scope' | jq -r '.response.reservedLeases'"
+      ).strip()
+      assert "192.168.2.50" in reserved, f"Reservation lost after idempotent re-run: {reserved}"
+      print("Idempotency test passed — both services re-ran successfully")
 
     with subtest("Service logs clean"):
       # Check for critical errors in logs (allow warnings)

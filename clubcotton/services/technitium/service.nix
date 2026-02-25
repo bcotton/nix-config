@@ -9,6 +9,42 @@ with lib; let
   cfg = config.services.clubcotton.${service};
   clubcotton = config.clubcotton;
 
+  # Shared bash functions for API access (used by both zone and DHCP services).
+  # Credentials are piped via stdin to avoid exposure in /proc/*/cmdline.
+  commonApiScript = ''
+    API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
+    ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
+    TOKEN=""
+
+    # Wait for API to be ready
+    wait_for_api() {
+      echo "Waiting for Technitium API to be ready..."
+      for i in {1..60}; do
+        if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
+          echo "API is ready"
+          return 0
+        fi
+        if [ $i -eq 60 ]; then
+          echo "API failed to become ready after 60 seconds"
+          exit 1
+        fi
+        sleep 1
+      done
+    }
+
+    # Login and get token (credentials piped via stdin to keep password out of process list)
+    login() {
+      TOKEN=$(printf 'user=admin&pass=%s' "$ADMIN_PASSWORD" | \
+        curl -sf -X POST "''${API_BASE}/user/login" --data @- | jq -r '.token')
+      if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+        echo "Failed to authenticate with API"
+        exit 1
+      fi
+    }
+
+    FAILURES=0
+  '';
+
   # Helper to generate zone configuration script
   generateZoneScript = zones: let
     zoneCommands =
@@ -71,10 +107,21 @@ with lib; let
   in ''
     ${scopeCommands}
 
-    # Wait for DHCP scopes to be fully operational before adding reservations.
+    # Poll for DHCP scopes to become operational before adding reservations.
     # Technitium needs time to bind scopes to network interfaces after enabling.
     echo "Waiting for DHCP scopes to become operational..."
-    sleep 3
+    for poll_i in {1..30}; do
+      enabled_count=$(curl -sf "''${API_BASE}/dhcp/scopes/list?token=''${TOKEN}" | \
+        jq '[.response.scopes[] | select(.enabled == true)] | length' 2>/dev/null || echo 0)
+      if [ "$enabled_count" -ge "${toString (length scopes)}" ]; then
+        echo "All $enabled_count scopes operational"
+        break
+      fi
+      if [ "$poll_i" -eq 30 ]; then
+        echo "WARNING: Only $enabled_count/${toString (length scopes)} scopes operational after 30s, proceeding anyway"
+      fi
+      sleep 1
+    done
 
     ${reservationCommands}
   '';
@@ -198,7 +245,7 @@ in {
             };
             interfaceName = mkOption {
               type = types.str;
-              description = "Network interface name";
+              description = "Network interface name (documentation only — Technitium auto-detects interfaces based on subnet)";
             };
             startingAddress = mkOption {
               type = types.str;
@@ -470,36 +517,7 @@ in {
       script = ''
         set -euo pipefail
 
-        API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
-        ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
-        TOKEN=""
-
-        # Wait for API to be ready
-        echo "Waiting for Technitium API to be ready..."
-        for i in {1..60}; do
-          if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
-            echo "API is ready"
-            break
-          fi
-          if [ $i -eq 60 ]; then
-            echo "API failed to become ready after 60 seconds"
-            exit 1
-          fi
-          sleep 1
-        done
-
-        # Login and get token
-        login() {
-          TOKEN=$(curl -sf -X POST "''${API_BASE}/user/login" \
-            -d "user=admin&pass=''${ADMIN_PASSWORD}" | jq -r '.token')
-
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to authenticate with API"
-            exit 1
-          fi
-        }
-
-        FAILURES=0
+        ${commonApiScript}
 
         # Create zone (idempotent — Technitium's zones/create is a no-op if zone exists)
         create_zone() {
@@ -554,6 +572,7 @@ in {
           fi
         }
 
+        wait_for_api
         login
 
         # Generated zone configuration
@@ -585,36 +604,7 @@ in {
       script = ''
         set -euo pipefail
 
-        API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
-        ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
-        TOKEN=""
-
-        # Wait for API to be ready
-        echo "Waiting for Technitium API to be ready..."
-        for i in {1..60}; do
-          if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
-            echo "API is ready"
-            break
-          fi
-          if [ $i -eq 60 ]; then
-            echo "API failed to become ready after 60 seconds"
-            exit 1
-          fi
-          sleep 1
-        done
-
-        # Login and get token
-        login() {
-          TOKEN=$(curl -sf -X POST "''${API_BASE}/user/login" \
-            -d "user=admin&pass=''${ADMIN_PASSWORD}" | jq -r '.token')
-
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to authenticate with API"
-            exit 1
-          fi
-        }
-
-        FAILURES=0
+        ${commonApiScript}
 
         # Create DHCP scope (scopes/set is idempotent)
         create_scope() {
@@ -701,6 +691,7 @@ in {
           done
         }
 
+        wait_for_api
         login
 
         echo "About to run DHCP configuration..."
@@ -725,7 +716,11 @@ in {
     };
 
     # Assertions
-    assertions = [
+    assertions = let
+      scopeNames = map (s: s.name) cfg.dhcp.scopes;
+      reservationsByScope = groupBy (r: r.scope) cfg.dhcp.reservations;
+      invalidScopeRefs = filter (r: !(elem r.scope scopeNames)) cfg.dhcp.reservations;
+    in [
       {
         assertion = cfg.mode == "secondary" -> cfg.primaryNode != null;
         message = "Primary node must be specified when mode is 'secondary'";
@@ -733,6 +728,30 @@ in {
       {
         assertion = cfg.clustering.enable -> cfg.clustering.sharedSecret != null;
         message = "Cluster shared secret must be specified when clustering is enabled";
+      }
+      # Duplicate MAC per scope (case-insensitive)
+      {
+        assertion = all (scope: let
+          macs = map (r: toLower r.macAddress) (reservationsByScope.${scope} or []);
+        in
+          length macs == length (unique macs)) (attrNames reservationsByScope);
+        message = "Technitium DHCP: duplicate MAC addresses found within the same scope";
+      }
+      # Duplicate IP per scope
+      {
+        assertion = all (scope: let
+          ips = map (r: r.ipAddress) (reservationsByScope.${scope} or []);
+        in
+          length ips == length (unique ips)) (attrNames reservationsByScope);
+        message = "Technitium DHCP: duplicate IP addresses found within the same scope";
+      }
+      # Reservation scope references must exist
+      {
+        assertion = invalidScopeRefs == [];
+        message =
+          "Technitium DHCP: reservations reference non-existent scopes: "
+          + concatStringsSep ", " (map (r: "${r.hostName} -> scope '${r.scope}'") invalidScopeRefs)
+          + ". Valid scopes: ${concatStringsSep ", " scopeNames}";
       }
     ];
   };
