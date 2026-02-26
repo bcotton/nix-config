@@ -129,6 +129,19 @@ with lib; let
       exit 1
     fi
 
+    # Phase 1.5: Dry-activate to check for destructive ZFS operations
+    echo ""
+    echo "=== Phase 1.5: Checking for destructive ZFS operations ==="
+    DRY_OUTPUT=$(${config.system.build.nixos-rebuild}/bin/nixos-rebuild dry-activate --flake "''${FLAKE}#''${HOSTNAME}" 2>&1) || true
+    echo "$DRY_OUTPUT"
+    if echo "$DRY_OUTPUT" | ${pkgs.gnugrep}/bin/grep -q "zfs destroy"; then
+      echo "FATAL: dry-activate would destroy ZFS datasets! Aborting upgrade."
+      echo "Fix disko.zfs config before retrying."
+      ${optionalString (cfg.onFailure != "") cfg.onFailure}
+      exit 1
+    fi
+    echo "OK: No destructive ZFS operations detected."
+
     # Phase 2: Activate with test (non-persistent)
     echo ""
     echo "=== Phase 2: Activating with nixos-rebuild test ==="

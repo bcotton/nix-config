@@ -9,6 +9,42 @@ with lib; let
   cfg = config.services.clubcotton.${service};
   clubcotton = config.clubcotton;
 
+  # Shared bash functions for API access (used by both zone and DHCP services).
+  # Credentials are piped via stdin to avoid exposure in /proc/*/cmdline.
+  commonApiScript = ''
+    API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
+    ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
+    TOKEN=""
+
+    # Wait for API to be ready
+    wait_for_api() {
+      echo "Waiting for Technitium API to be ready..."
+      for i in {1..60}; do
+        if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
+          echo "API is ready"
+          return 0
+        fi
+        if [ $i -eq 60 ]; then
+          echo "API failed to become ready after 60 seconds"
+          exit 1
+        fi
+        sleep 1
+      done
+    }
+
+    # Login and get token (credentials piped via stdin to keep password out of process list)
+    login() {
+      TOKEN=$(printf 'user=admin&pass=%s' "$ADMIN_PASSWORD" | \
+        curl -sf -X POST "''${API_BASE}/user/login" --data @- | jq -r '.token')
+      if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+        echo "Failed to authenticate with API"
+        exit 1
+      fi
+    }
+
+    FAILURES=0
+  '';
+
   # Helper to generate zone configuration script
   generateZoneScript = zones: let
     zoneCommands =
@@ -71,10 +107,21 @@ with lib; let
   in ''
     ${scopeCommands}
 
-    # Wait for DHCP scopes to be fully operational before adding reservations.
+    # Poll for DHCP scopes to become operational before adding reservations.
     # Technitium needs time to bind scopes to network interfaces after enabling.
     echo "Waiting for DHCP scopes to become operational..."
-    sleep 3
+    for poll_i in {1..30}; do
+      enabled_count=$(curl -sf "''${API_BASE}/dhcp/scopes/list?token=''${TOKEN}" | \
+        jq '[.response.scopes[] | select(.enabled == true)] | length' 2>/dev/null || echo 0)
+      if [ "$enabled_count" -ge "${toString (length scopes)}" ]; then
+        echo "All $enabled_count scopes operational"
+        break
+      fi
+      if [ "$poll_i" -eq 30 ]; then
+        echo "WARNING: Only $enabled_count/${toString (length scopes)} scopes operational after 30s, proceeding anyway"
+      fi
+      sleep 1
+    done
 
     ${reservationCommands}
   '';
@@ -198,7 +245,7 @@ in {
             };
             interfaceName = mkOption {
               type = types.str;
-              description = "Network interface name";
+              description = "Network interface name (documentation only — Technitium auto-detects interfaces based on subnet)";
             };
             startingAddress = mkOption {
               type = types.str;
@@ -470,69 +517,71 @@ in {
       script = ''
         set -euo pipefail
 
-        API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
-        ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
-        TOKEN=""
+        ${commonApiScript}
 
-        # Wait for API to be ready
-        echo "Waiting for Technitium API to be ready..."
-        for i in {1..60}; do
-          if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
-            echo "API is ready"
-            break
-          fi
-          if [ $i -eq 60 ]; then
-            echo "API failed to become ready after 60 seconds"
-            exit 1
-          fi
-          sleep 1
-        done
-
-        # Login and get token
-        login() {
-          TOKEN=$(curl -sf -X POST "''${API_BASE}/user/login" \
-            -d "user=admin&pass=''${ADMIN_PASSWORD}" | jq -r '.token')
-
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to authenticate with API"
-            exit 1
-          fi
-        }
-
-        # Create zone
+        # Create zone (idempotent — Technitium's zones/create is a no-op if zone exists)
         create_zone() {
           local zone=$1
           echo "Creating zone: $zone"
-          curl -sf -X POST "''${API_BASE}/zones/create?token=''${TOKEN}" \
-            -d "zone=$zone&type=Primary" > /dev/null || echo "Zone $zone may already exist"
+          response=$(curl -sf -X POST "''${API_BASE}/zones/create?token=''${TOKEN}" \
+            -d "zone=$zone&type=Primary" 2>&1)
+          if echo "$response" | grep -q '"status":"ok"'; then
+            return 0
+          elif echo "$response" | grep -q "already exists"; then
+            echo "Zone $zone already exists (ok)"
+          else
+            echo "ERROR: Failed to create zone $zone: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
-        # Add A record with optional PTR
+        # Add A record with optional PTR (idempotent: delete first, then add)
         add_a_record() {
           local zone=$1 name=$2 ip=$3 create_ptr=$4
           local fqdn="''${name}.''${zone}"
           echo "Adding A record: $fqdn -> $ip"
-          curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" > /dev/null || \
-            echo "Record $fqdn may already exist"
+
+          # Delete existing record first (ignore errors if it doesn't exist)
+          curl -sf -X POST "''${API_BASE}/zones/records/delete?token=''${TOKEN}" \
+            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip" > /dev/null 2>&1 || true
+
+          response=$(curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
+            -d "zone=$zone&type=A&domain=$fqdn&ipAddress=$ip&ptr=$create_ptr&createPtrZone=true" 2>&1)
+          if ! echo "$response" | grep -q '"status":"ok"'; then
+            echo "ERROR: Failed to add A record $fqdn: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
-        # Add CNAME record
+        # Add CNAME record (idempotent: delete first, then add)
         add_cname_record() {
           local zone=$1 name=$2 target=$3
           local fqdn="''${name}.''${zone}"
           local target_fqdn="''${target}.''${zone}"
           echo "Adding CNAME record: $fqdn -> $target_fqdn"
-          curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
-            -d "zone=$zone&type=CNAME&domain=$fqdn&cname=$target_fqdn" > /dev/null || \
-            echo "CNAME $fqdn may already exist"
+
+          # Delete existing record first (ignore errors if it doesn't exist)
+          curl -sf -X POST "''${API_BASE}/zones/records/delete?token=''${TOKEN}" \
+            -d "zone=$zone&type=CNAME&domain=$fqdn" > /dev/null 2>&1 || true
+
+          response=$(curl -sf -X POST "''${API_BASE}/zones/records/add?token=''${TOKEN}" \
+            -d "zone=$zone&type=CNAME&domain=$fqdn&cname=$target_fqdn" 2>&1)
+          if ! echo "$response" | grep -q '"status":"ok"'; then
+            echo "ERROR: Failed to add CNAME record $fqdn: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
         }
 
+        wait_for_api
         login
 
         # Generated zone configuration
         ${generateZoneScript cfg.zones}
 
+        if [ "$FAILURES" -gt 0 ]; then
+          echo "Zone configuration completed with $FAILURES error(s)"
+          exit 1
+        fi
         echo "Zone configuration complete"
       '';
     };
@@ -555,72 +604,51 @@ in {
       script = ''
         set -euo pipefail
 
-        API_BASE="http://localhost:${toString cfg.webConsolePort}/api"
-        ADMIN_PASSWORD=$(cat ${cfg.adminPasswordFile})
-        TOKEN=""
+        ${commonApiScript}
 
-        # Wait for API to be ready
-        echo "Waiting for Technitium API to be ready..."
-        for i in {1..60}; do
-          if curl -sf "''${API_BASE}/user/profile" > /dev/null 2>&1; then
-            echo "API is ready"
-            break
-          fi
-          if [ $i -eq 60 ]; then
-            echo "API failed to become ready after 60 seconds"
-            exit 1
-          fi
-          sleep 1
-        done
-
-        # Login and get token
-        login() {
-          TOKEN=$(curl -sf -X POST "''${API_BASE}/user/login" \
-            -d "user=admin&pass=''${ADMIN_PASSWORD}" | jq -r '.token')
-
-          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
-            echo "Failed to authenticate with API"
-            exit 1
-          fi
-        }
-
-        # Create DHCP scope
+        # Create DHCP scope (scopes/set is idempotent)
         create_scope() {
           local name=$1 interface=$2 start=$3 end=$4 subnet=$5 gateway=$6 dns=$7 lease=$8 domain=$9 use_this_dns=''${10} pxe_file=''${11} pxe_server=''${12}
           echo "Creating DHCP scope: $name"
 
-          local cmd="curl -sf -X POST \"''${API_BASE}/dhcp/scopes/set?token=''${TOKEN}\""
-          cmd="$cmd -d \"name=$name\""
-          cmd="$cmd -d \"startingAddress=$start\""
-          cmd="$cmd -d \"endingAddress=$end\""
-          cmd="$cmd -d \"subnetMask=$subnet\""
-          cmd="$cmd -d \"leaseTimeDays=$lease\""
-          cmd="$cmd -d \"routerAddress=$gateway\""
-          cmd="$cmd -d \"domainName=$domain\""
-          # Note: interfaceName is not supported by Technitium API - scope binds based on IP range
+          # Build curl args array (avoids eval + string concatenation)
+          local -a args=(
+            -sf -X POST "''${API_BASE}/dhcp/scopes/set?token=''${TOKEN}"
+            -d "name=$name"
+            -d "startingAddress=$start"
+            -d "endingAddress=$end"
+            -d "subnetMask=$subnet"
+            -d "leaseTimeDays=$lease"
+            -d "routerAddress=$gateway"
+            -d "domainName=$domain"
+          )
 
           if [ "$use_this_dns" = "true" ]; then
-            cmd="$cmd -d \"useThisDnsServer=true\""
+            args+=(-d "useThisDnsServer=true")
           elif [ -n "$dns" ]; then
-            cmd="$cmd -d \"dnsServers=$dns\""
+            args+=(-d "dnsServers=$dns")
           fi
 
           if [ -n "$pxe_file" ] && [ -n "$pxe_server" ]; then
-            cmd="$cmd -d \"bootFileName=$pxe_file\""
-            cmd="$cmd -d \"serverAddress=$pxe_server\""
+            args+=(-d "bootFileName=$pxe_file")
+            args+=(-d "serverAddress=$pxe_server")
           fi
 
-          response=$(eval "$cmd" 2>&1)
-          echo "API response for scope $name: $response"
-          if [ $? -ne 0 ]; then
-            echo "Error creating scope $name: $response"
-          else
+          response=$(curl "''${args[@]}" 2>&1)
+          if echo "$response" | grep -q '"status":"ok"'; then
             echo "Successfully created scope: $name"
 
             # Enable the scope after creation
             echo "Enabling scope: $name"
-            curl -sf -X POST "''${API_BASE}/dhcp/scopes/enable?token=''${TOKEN}" \
-              -d "name=$name" > /dev/null || echo "Note: Could not enable scope (may already be enabled)"
+            enable_response=$(curl -sf -X POST "''${API_BASE}/dhcp/scopes/enable?token=''${TOKEN}" \
+              -d "name=$name" 2>&1)
+            if ! echo "$enable_response" | grep -q '"status":"ok"'; then
+              echo "ERROR: Failed to enable scope $name: $enable_response"
+              FAILURES=$((FAILURES + 1))
+            fi
+          else
+            echo "ERROR: Failed to create scope $name: $response"
+            FAILURES=$((FAILURES + 1))
           fi
         }
 
@@ -658,10 +686,12 @@ in {
             else
               echo "API response for addReservedLease: $response"
               echo "ERROR: Failed to add reservation for $hostname after $max_retries attempts"
+              FAILURES=$((FAILURES + 1))
             fi
           done
         }
 
+        wait_for_api
         login
 
         echo "About to run DHCP configuration..."
@@ -671,6 +701,10 @@ in {
         # Generated DHCP configuration
         ${generateDhcpScript cfg.dhcp.scopes cfg.dhcp.reservations}
 
+        if [ "$FAILURES" -gt 0 ]; then
+          echo "DHCP configuration completed with $FAILURES error(s)"
+          exit 1
+        fi
         echo "DHCP configuration complete"
       '';
     };
@@ -682,7 +716,11 @@ in {
     };
 
     # Assertions
-    assertions = [
+    assertions = let
+      scopeNames = map (s: s.name) cfg.dhcp.scopes;
+      reservationsByScope = groupBy (r: r.scope) cfg.dhcp.reservations;
+      invalidScopeRefs = filter (r: !(elem r.scope scopeNames)) cfg.dhcp.reservations;
+    in [
       {
         assertion = cfg.mode == "secondary" -> cfg.primaryNode != null;
         message = "Primary node must be specified when mode is 'secondary'";
@@ -690,6 +728,30 @@ in {
       {
         assertion = cfg.clustering.enable -> cfg.clustering.sharedSecret != null;
         message = "Cluster shared secret must be specified when clustering is enabled";
+      }
+      # Duplicate MAC per scope (case-insensitive)
+      {
+        assertion = all (scope: let
+          macs = map (r: toLower r.macAddress) (reservationsByScope.${scope} or []);
+        in
+          length macs == length (unique macs)) (attrNames reservationsByScope);
+        message = "Technitium DHCP: duplicate MAC addresses found within the same scope";
+      }
+      # Duplicate IP per scope
+      {
+        assertion = all (scope: let
+          ips = map (r: r.ipAddress) (reservationsByScope.${scope} or []);
+        in
+          length ips == length (unique ips)) (attrNames reservationsByScope);
+        message = "Technitium DHCP: duplicate IP addresses found within the same scope";
+      }
+      # Reservation scope references must exist
+      {
+        assertion = invalidScopeRefs == [];
+        message =
+          "Technitium DHCP: reservations reference non-existent scopes: "
+          + concatStringsSep ", " (map (r: "${r.hostName} -> scope '${r.scope}'") invalidScopeRefs)
+          + ". Valid scopes: ${concatStringsSep ", " scopeNames}";
       }
     ];
   };

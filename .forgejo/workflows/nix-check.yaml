@@ -12,7 +12,7 @@ jobs:
   flake-check:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:c88527f
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
@@ -57,7 +57,7 @@ jobs:
   build-hosts:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:c88527f
       options: --user root
     steps:
       - name: Setup SSH key for distributed builds
@@ -80,27 +80,45 @@ jobs:
         run: |
           echo "Building all NixOS host system closures..."
           hosts=$(nix eval --raw '.#nixosConfigurations' --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)')
-          failed=""
-          for host in $hosts; do
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "Building $host..."
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            build_log=$(mktemp)
-            if nix build ".#nixosConfigurations.$host.config.system.build.toplevel" 2>"$build_log"; then
+          host_count=$(echo "$hosts" | wc -l)
+          echo "Found $host_count hosts to build"
+          echo ""
+
+          # Build hosts in parallel (4 at a time) to utilize all builders
+          mkdir -p /tmp/build-results
+          echo "$hosts" | xargs -P4 -I{} bash -c '
+            host="{}"
+            log="/tmp/build-results/${host}.log"
+            echo "Starting build: $host"
+            if nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" 2>"$log"; then
               echo "✓ $host built successfully"
+              echo "ok" > "/tmp/build-results/${host}.status"
             else
               echo "✗ $host FAILED to build"
-              cat "$build_log"
+              echo "fail" > "/tmp/build-results/${host}.status"
+            fi
+          '
+
+          # Report results
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Build Results:"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          failed=""
+          for host in $hosts; do
+            status=$(cat "/tmp/build-results/${host}.status" 2>/dev/null || echo "fail")
+            if [ "$status" = "ok" ]; then
+              echo "  ✓ $host"
+            else
+              echo "  ✗ $host FAILED"
+              cat "/tmp/build-results/${host}.log" 2>/dev/null
               failed="$failed $host"
             fi
-            rm -f "$build_log"
           done
-          echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           if [ -n "$failed" ]; then
             echo "FAILED hosts:$failed"
             exit 1
           else
-            echo "All hosts built successfully"
+            echo "All $host_count hosts built successfully"
           fi

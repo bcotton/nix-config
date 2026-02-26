@@ -22,6 +22,7 @@ in {
     inputs.nix-builder-config.nixosModules.coordinator
     ../../../modules/samba
     ../../../modules/prometheus/nix-build-cache-check.nix
+    ../../../modules/amdgpu
     ../../../modules/incus
     ../../../modules/systemd-network
     ../../../users/cheryl.nix
@@ -151,6 +152,7 @@ in {
     navidrome.enable = true;
     nix-cache-proxy.enable = true;
     nut-client.enable = true;
+    llama-swap.enable = true;
     ollama.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
@@ -179,6 +181,8 @@ in {
     vulkan-tools
     pciutils
     amdgpu_top
+    python3Packages.huggingface-hub
+    toolbox
   ];
 
   services.clubcotton.harmonia = {
@@ -426,6 +430,15 @@ in {
     loadModels = ["llama3.1:70b" "llama3.2:3b"];
   };
 
+  services.clubcotton.llama-swap = {
+    port = 8090;
+    modelsDir = "/models";
+    llamaCppPackage = pkgs.llama-cpp.override {vulkanSupport = true;};
+    settings = {
+      healthCheckTimeout = 120;
+    };
+  };
+
   services.clubcotton.open-webui = {
     package = unstablePkgs.open-webui.overridePythonAttrs (oldAttrs: {
       dependencies =
@@ -438,9 +451,10 @@ in {
     tailnetHostname = "llm";
     environment = {
       WEBUI_AUTH = "True";
-      ENABLE_OLLAMA_API = "True";
-      OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-      OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+      ENABLE_OLLAMA_API = "False";
+      ENABLE_OPENAI_API = "True";
+      OPENAI_API_BASE_URL = "http://127.0.0.1:8090/v1";
+      OPENAI_API_KEY = "not-needed";
     };
     environmentFile = config.age.secrets.open-webui.path;
   };
@@ -674,11 +688,22 @@ in {
   # Always run `nixos-rebuild dry-activate` before switching.
   disko.zfs = {
     enable = true;
+    # Incus manages its own datasets inside the ssdpool/local/incus zvol;
+    # these change dynamically and must not be managed by disko-zfs.
+    settings.ignoredDatasets = ["incus" "incus/*"];
     settings.datasets = {
       # --- ssdpool datasets ---
       # NOTE: ssdpool/local/database, forgejo, garage, nix-cache, nix-cache-proxy
       # are declared by their respective service modules via zfsDataset option
       "ssdpool/local" = {};
+      "ssdpool/local/models" = {
+        properties = {
+          mountpoint = "/models";
+          compression = "lz4";
+          atime = "off";
+          quota = "500G";
+        };
+      };
       "ssdpool/local/reserved" = {
         properties = {
           reservation = "200G";
@@ -789,9 +814,7 @@ in {
       "backuppool/local/nas-01/photos" = {};
       "backuppool/local/nas-01/tomcotton-audio-library" = {};
       "backuppool/local/nas-01/tomcotton-data" = {};
-      # Note: backuppool/local/nas-01/redis is NOT declared here because
-      # syncoid initial replication requires the target dataset to not exist.
-      # Syncoid creates it automatically on first run.
+      "backuppool/local/nas-01/redis" = {};
       "backuppool/local/nas-01/var-lib" = {};
       "backuppool/local/postgresql" = {
         properties = {
@@ -907,6 +930,14 @@ in {
       useTemplate = ["media"];
     };
   };
+
+  # AMD GPU monitoring (Radeon AI Pro R9700)
+  clubcotton.amdgpu-monitoring.enable = true;
+
+  # Keep both R9700 GPUs awake so metrics are always reported
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1002", ATTR{device}=="0x7551", ATTR{power/control}="on"
+  '';
 
   # Enhanced monitoring for nas-01 specific disks
   services.prometheus.exporters.smartctl = {

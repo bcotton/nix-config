@@ -29,6 +29,16 @@
             | ${pkgs.gnugrep}/bin/grep -v '_created{' \
             | ${pkgs.gnugrep}/bin/grep -v '_created ' \
             > "$TEXTFILE_DIR/incus.prom.tmp"
+
+          # Generate per-severity warning counts (the upstream metric has no labels)
+          WARN_CSV=$(${pkgs.incus}/bin/incus warning list --format csv 2>/dev/null || true)
+          echo '# HELP incus_warnings Active warnings by severity' >> "$TEXTFILE_DIR/incus.prom.tmp"
+          echo '# TYPE incus_warnings gauge' >> "$TEXTFILE_DIR/incus.prom.tmp"
+          for severity in low moderate severe; do
+            COUNT=$(echo "$WARN_CSV" | ${pkgs.gnugrep}/bin/grep -ci ",''${severity}," || true)
+            echo "incus_warnings{severity=\"$severity\"} $COUNT"
+          done >> "$TEXTFILE_DIR/incus.prom.tmp"
+
           chmod 644 "$TEXTFILE_DIR/incus.prom.tmp"
           mv "$TEXTFILE_DIR/incus.prom.tmp" "$TEXTFILE_DIR/incus.prom"
         else
