@@ -6,6 +6,7 @@
   pkgs,
   lib,
   unstablePkgs,
+  inputs,
   hostName,
   ...
 }: let
@@ -20,6 +21,7 @@ in {
     ../../../modules/node-exporter
     ../../../modules/nfs
     # nix-builder client is enabled via flake-modules/hosts.nix
+    inputs.nix-builder-config.nixosModules.cache-pusher
     ../../../modules/incus
     ../../../modules/systemd-network
   ];
@@ -82,6 +84,12 @@ in {
   };
 
   nix.settings.trusted-users = ["nix-builder"];
+
+  # Push all locally-built paths to the Harmonia cache on nas-01
+  services.nix-builder.cache-pusher = {
+    enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
+  };
 
   virtualisation.containers.enable = true;
 

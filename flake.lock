@@ -455,11 +455,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1767659366,
-        "narHash": "sha256-NiyRaI5gpt1VOMQ+AoZgC+soTPFx/laCAgeFO5j7Kms=",
+        "lastModified": 1772145597,
+        "narHash": "sha256-GfW4FpfEFtHBmX+6FR3bzc7ncgBFOuXMWxWIM6HKU28=",
         "ref": "refs/heads/main",
-        "rev": "e9bb74e69e11d97e120d9d904b12f679a435b5ee",
-        "revCount": 3,
+        "rev": "0185a50140f3529b305734faf58833b70c611c1c",
+        "revCount": 5,
         "type": "git",
         "url": "http://nas-01.lan:3000/bcotton/nix-builder-config"
       },

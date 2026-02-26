@@ -343,7 +343,7 @@ in {
   };
 
   # Nix builder SSH keys
-  age.secrets."nix-builder-ssh-key" = lib.mkIf (config.services.nix-builder.coordinator.enable or false) {
+  age.secrets."nix-builder-ssh-key" = lib.mkIf ((config.services.nix-builder.coordinator.enable or false) || (config.services.nix-builder.cache-pusher.enable or false)) {
     file = ./nix-builder-ssh-key.age;
     owner = "root";
     group = "root";
