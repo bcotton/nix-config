@@ -427,13 +427,30 @@ in {
 
   services.clubcotton.ollama = {
     acceleration = "rocm";
+    models = "/models/ollama";
     loadModels = ["llama3.1:70b" "llama3.2:3b"];
+    environmentVariables = {
+      OLLAMA_FLASH_ATTENTION = "1";
+    };
+  };
+
+  # Create /models/ollama before ollama.service namespace setup (ReadWritePaths requires it to exist).
+  systemd.services.ollama-models-dir = {
+    description = "Create Ollama models directory";
+    before = ["ollama.service"];
+    requiredBy = ["ollama.service"];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      ${pkgs.coreutils}/bin/mkdir -p /models/ollama
+      ${pkgs.coreutils}/bin/chmod 1777 /models/ollama
+    '';
   };
 
   services.clubcotton.llama-swap = {
     port = 8090;
     modelsDir = "/models";
     llamaCppPackage = pkgs.llama-cpp.override {vulkanSupport = true;};
+    defaultModelArgs = "-ngl 99 --split-mode layer --flash-attn on --no-webui";
     settings = {
       healthCheckTimeout = 120;
     };
@@ -673,6 +690,7 @@ in {
   systemd.tmpfiles.rules = [
     "d /var/lib/paperless/consume/bcotton 0775 bcotton lp - -"
     "d /var/lib/paperless/consume/tomcotton 0775 tomcotton lp - -"
+    "d /models/ollama 0755 ollama ollama - -"
   ];
 
   # Ensure users are in the lp group so cups can write files they can read
