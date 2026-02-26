@@ -465,9 +465,6 @@ in {
         DNS_SERVER_CACHE_MAXIMUM_ENTRIES = toString cfg.cacheMaximumEntries;
         DNS_SERVER_CACHE_MINIMUM_RECORD_TTL = toString cfg.cacheMinimumRecordTtl;
         DNS_SERVER_CACHE_MAXIMUM_RECORD_TTL = toString cfg.cacheMaximumRecordTtl;
-
-        # Local zone
-        DNS_SERVER_LOCAL_END_POINTS = concatStringsSep "," (map (addr: "${addr}:53") cfg.dnsListenAddresses);
       };
 
       serviceConfig = {

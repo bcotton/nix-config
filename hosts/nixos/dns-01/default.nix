@@ -27,6 +27,11 @@ in {
     group = "technitium";
   };
 
+  # Disable systemd-resolved — dns-01 IS the DNS server. The stub listener
+  # binds TCP 127.0.0.53:53 which prevents Technitium from binding 0.0.0.0:53
+  # (TCP), causing the auto-upgrade health check to fail every night.
+  services.resolved.enable = false;
+
   # Ensure that nix can get to the cache server
   networking.extraHosts = ''
     192.168.5.42 nas-01
