@@ -422,7 +422,7 @@ in {
   };
 
   services.clubcotton.ollama = {
-    acceleration = false;
+    acceleration = "rocm";
     loadModels = ["llama3.1:70b" "llama3.2:3b"];
   };
 
