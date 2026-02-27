@@ -807,6 +807,15 @@ groups:
       summary: "Loki ring has unhealthy members"
       description: "Loki ring on {{ $labels.instance }} has {{ $value }} unhealthy members"
 
+  - alert: HostLogsMissing
+    expr: loki_host_log_lines_1h == 0
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No logs from {{ $labels.hostname }}"
+      description: "Host {{ $labels.hostname }} has not sent any logs to Loki in the last hour. Check alloy-logs.service on the host."
+
 # Incus Container/VM Monitoring
 - name: incus_recording_rules
   interval: 30s

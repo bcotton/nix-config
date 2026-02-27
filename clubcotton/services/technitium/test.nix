@@ -74,6 +74,14 @@ pkgs.testers.runNixOSTest {
           }
         ];
 
+        # Test conditional forwarders
+        conditionalForwarders = [
+          {
+            zone = "example.ts.net";
+            forwarder = "192.168.1.1";
+          }
+        ];
+
         # Test DHCP
         dhcp = {
           enable = true;
@@ -215,6 +223,22 @@ pkgs.testers.runNixOSTest {
       # In test environment without internet, this will timeout or return SERVFAIL
       # We just verify the server processes the query without crashing
       server.succeed("dig @localhost nonexistent-test-domain-12345.com +time=1 +tries=1 || true")
+
+    with subtest("Conditional forwarder zone created"):
+      token = server.succeed(
+        "curl -sf -X POST 'http://localhost:5380/api/user/login' "
+        "-d 'user=admin&pass=test-password-123' | jq -r '.token'"
+      ).strip()
+      # Verify the forwarder zone exists and is type Forwarder
+      zones = server.succeed(
+        f"curl -sf 'http://localhost:5380/api/zones/list?token={token}' | jq -r '.response.zones[].name'"
+      ).strip()
+      assert "example.ts.net" in zones, f"Conditional forwarder zone 'example.ts.net' not found in: {zones}"
+      # Check zone type via zones/list (zoneType is on the zone list entry, not zones/options/get)
+      zone_type = server.succeed(
+        f"curl -sf 'http://localhost:5380/api/zones/list?token={token}' | jq -r '[.response.zones[] | select(.name==\"example.ts.net\")][0].type'"
+      ).strip()
+      assert zone_type == "Forwarder", f"Expected zone type 'Forwarder', got '{zone_type}'"
 
     with subtest("PTR records created"):
       # Check PTR record for server1 (should exist)

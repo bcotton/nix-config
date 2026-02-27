@@ -24,6 +24,7 @@ in {
     ../../../modules/prometheus/nix-build-cache-check.nix
     ../../../modules/amdgpu
     ../../../modules/incus
+    ../../../modules/loki-host-monitor
     ../../../modules/systemd-network
     ../../../users/cheryl.nix
     ./restic.nix
@@ -172,6 +173,13 @@ in {
     ntfy.baseURL = "https://ntfy.bobtail-clownfish.ts.net";
     wallabag.enable = true;
     webdav.enable = true;
+  };
+
+  # Monitor Loki for missing host log data — fires HostLogsMissing alert
+  services.loki-host-monitor = {
+    enable = true;
+    lokiUrl = "http://localhost:3100";
+    expectedHosts = ["admin" "dns-01" "imac-01" "nas-01" "nix-01" "nix-02" "nix-03" "octoprint"];
   };
 
   environment.systemPackages = with pkgs; [

@@ -34,6 +34,12 @@ Comprehensive documentation for this NixOS/nix-darwin configuration repository.
 
 ### Infrastructure
 
+- **[DNS Architecture](./DNS.md)**
+  - dns-01 Technitium + Tailscale MagicDNS interaction
+  - Conditional forwarders for split-DNS
+  - HostLogsMissing alert (loki-host-monitor)
+  - Troubleshooting DNS and log pipeline issues
+
 - **[ZFS Admin Guide](./ZFS_ADMIN_GUIDE.md)**
   - ZFS pool management
   - Dataset configuration

@@ -3,6 +3,7 @@
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 {
   config,
+  lib,
   pkgs,
   unstablePkgs,
   hostName,
@@ -27,15 +28,25 @@ in {
     group = "technitium";
   };
 
-  # Disable systemd-resolved — dns-01 IS the DNS server. The stub listener
-  # binds TCP 127.0.0.53:53 which prevents Technitium from binding 0.0.0.0:53
-  # (TCP), causing the auto-upgrade health check to fail every night.
-  services.resolved.enable = false;
+  # Re-enable resolved for Tailscale D-Bus split-DNS integration, but disable
+  # the stub listener that conflicts with Technitium's 0.0.0.0:53 TCP bind.
+  # (See PR #93 / issue #86 for the original port-53 conflict.)
+  services.resolved = {
+    enable = true;
+    extraConfig = "DNSStubListener=no";
+  };
 
-  # Ensure that nix can get to the cache server
-  networking.extraHosts = ''
-    192.168.5.42 nas-01
-  '';
+  # With the stub listener disabled, the default stub-resolv.conf
+  # (nameserver 127.0.0.53) has nothing behind it. Point resolv.conf at
+  # Technitium directly — it handles .lan authoritatively and forwards
+  # .ts.net to MagicDNS via a conditional forwarder zone (see below).
+  environment.etc."resolv.conf" = lib.mkForce {
+    mode = "0644";
+    text = ''
+      nameserver 127.0.0.1
+      search lan bobtail-clownfish.ts.net
+    '';
+  };
 
   services.clubcotton = {
     alloy-logs.enable = true;
@@ -70,6 +81,15 @@ in {
 
       dnsListenAddresses = ["0.0.0.0"];
       forwarders = ["1.1.1.1" "8.8.4.4"];
+
+      # Forward Tailscale MagicDNS domains to the Tailscale resolver so that
+      # Go programs (Alloy, etc.) using resolv.conf can resolve .ts.net names.
+      conditionalForwarders = [
+        {
+          zone = "bobtail-clownfish.ts.net";
+          forwarder = "100.100.100.100";
+        }
+      ];
 
       # Enable ad blocking
       enableBlocking = true;

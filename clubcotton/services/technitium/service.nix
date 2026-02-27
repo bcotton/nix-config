@@ -80,6 +80,13 @@ with lib; let
   in
     zoneCommands;
 
+  # Helper to generate conditional forwarder script
+  generateConditionalForwarderScript = forwarders:
+    concatMapStrings (fwd: ''
+      create_conditional_forwarder "${fwd.zone}" "${fwd.forwarder}" "${fwd.protocol}"
+    '')
+    forwarders;
+
   # Helper to generate DHCP configuration script
   generateDhcpScript = scopes: reservations: let
     scopeCommands =
@@ -374,6 +381,28 @@ in {
       description = "Static DNS zones and records";
     };
 
+    conditionalForwarders = mkOption {
+      type = types.listOf (types.submodule {
+        options = {
+          zone = mkOption {
+            type = types.str;
+            description = "Domain to forward (e.g., bobtail-clownfish.ts.net)";
+          };
+          forwarder = mkOption {
+            type = types.str;
+            description = "Nameserver IP to forward queries to";
+          };
+          protocol = mkOption {
+            type = types.str;
+            default = "Udp";
+            description = "Forwarder protocol (Udp, Tcp, Tls, Https)";
+          };
+        };
+      });
+      default = [];
+      description = "Conditional forwarder zones (forward queries for a domain to a specific nameserver).";
+    };
+
     clustering = {
       enable = mkOption {
         type = types.bool;
@@ -497,7 +526,7 @@ in {
     };
 
     # Zone configuration service
-    systemd.services.technitium-configure-zones = mkIf (cfg.zones != []) {
+    systemd.services.technitium-configure-zones = mkIf (cfg.zones != [] || cfg.conditionalForwarders != []) {
       description = "Configure Technitium DNS zones";
       after = ["technitium-dns-server.service"];
       wants = ["technitium-dns-server.service"];
@@ -569,11 +598,38 @@ in {
           fi
         }
 
+        # Create conditional forwarder zone (idempotent)
+        create_conditional_forwarder() {
+          local zone=$1 forwarder=$2 protocol=$3
+          echo "Creating conditional forwarder: $zone -> $forwarder ($protocol)"
+          response=$(curl -sf -X POST "''${API_BASE}/zones/create?token=''${TOKEN}" \
+            -d "zone=$zone&type=Forwarder&forwarder=$forwarder&forwarderProtocol=$protocol" 2>&1)
+          if echo "$response" | grep -q '"status":"ok"'; then
+            true
+          elif echo "$response" | grep -q "already exists"; then
+            echo "Forwarder zone $zone already exists (ok)"
+          else
+            echo "ERROR: Failed to create forwarder zone $zone: $response"
+            FAILURES=$((FAILURES + 1))
+            return
+          fi
+          # Configure the forwarder nameserver and protocol
+          response=$(curl -sf -X POST "''${API_BASE}/zones/options/set?token=''${TOKEN}" \
+            -d "zone=$zone&forwarder=$forwarder&dnssecValidation=false&forwarderProtocol=$protocol" 2>&1)
+          if ! echo "$response" | grep -q '"status":"ok"'; then
+            echo "ERROR: Failed to configure forwarder for $zone: $response"
+            FAILURES=$((FAILURES + 1))
+          fi
+        }
+
         wait_for_api
         login
 
         # Generated zone configuration
         ${generateZoneScript cfg.zones}
+
+        # Generated conditional forwarder configuration
+        ${generateConditionalForwarderScript cfg.conditionalForwarders}
 
         if [ "$FAILURES" -gt 0 ]; then
           echo "Zone configuration completed with $FAILURES error(s)"
