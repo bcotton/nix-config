@@ -82,43 +82,100 @@ jobs:
           hosts=$(nix eval --raw '.#nixosConfigurations' --apply 'x: builtins.concatStringsSep "\n" (builtins.attrNames x)')
           host_count=$(echo "$hosts" | wc -l)
           echo "Found $host_count hosts to build"
-          echo ""
 
-          # Build hosts in parallel (4 at a time) to utilize all builders
+          # Pre-build diagnostics
+          echo ""
+          echo "::group::Nix store info (pre-build)"
+          nix store info 2>&1 || true
+          df -h /nix 2>/dev/null || true
+          echo "::endgroup::"
+
+          # Build hosts sequentially - remote builders handle parallelism internally
           mkdir -p /tmp/build-results
-          echo "$hosts" | xargs -P4 -I{} bash -c '
-            host="{}"
-            log="/tmp/build-results/${host}.log"
-            echo "Starting build: $host"
-            if nix build ".#nixosConfigurations.${host}.config.system.build.toplevel" 2>"$log"; then
-              echo "✓ $host built successfully"
-              echo "ok" > "/tmp/build-results/${host}.status"
-            else
-              echo "✗ $host FAILED to build"
-              echo "fail" > "/tmp/build-results/${host}.status"
-            fi
-          '
-
-          # Report results
-          echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "Build Results:"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          total_start=$SECONDS
           failed=""
+          succeeded=""
+
           for host in $hosts; do
-            status=$(cat "/tmp/build-results/${host}.status" 2>/dev/null || echo "fail")
-            if [ "$status" = "ok" ]; then
-              echo "  ✓ $host"
+            echo ""
+            echo "::group::Build $host"
+
+            # Dry-run to show cache hit stats
+            echo "--- Dry-run for $host ---"
+            drv=".#nixosConfigurations.${host}.config.system.build.toplevel"
+            dry_output=$(nix build "$drv" --dry-run 2>&1) || true
+            will_build=$(echo "$dry_output" | grep -c "will be built" || true)
+            will_fetch=$(echo "$dry_output" | grep -c "will be fetched" || true)
+            echo "  derivations to build: $will_build"
+            echo "  store paths to fetch: $will_fetch"
+            echo ""
+
+            # Timed build
+            host_start=$SECONDS
+            if nix build "$drv" --out-link "/tmp/build-results/${host}.link" 2>&1; then
+              elapsed=$(( SECONDS - host_start ))
+              echo ""
+              echo "OK $host built successfully in ${elapsed}s"
+              echo "ok" > "/tmp/build-results/${host}.status"
+              echo "$elapsed" > "/tmp/build-results/${host}.time"
+              succeeded="$succeeded $host"
             else
-              echo "  ✗ $host FAILED"
-              cat "/tmp/build-results/${host}.log" 2>/dev/null
+              elapsed=$(( SECONDS - host_start ))
+              echo ""
+              echo "FAIL $host FAILED after ${elapsed}s"
+              echo "fail" > "/tmp/build-results/${host}.status"
+              echo "$elapsed" > "/tmp/build-results/${host}.time"
               failed="$failed $host"
             fi
+            echo "::endgroup::"
           done
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          total_elapsed=$(( SECONDS - total_start ))
+
+          # Always print results summary
+          echo ""
+          echo "============================================"
+          echo "Build Results (total: ${total_elapsed}s)"
+          echo "============================================"
+          for host in $hosts; do
+            status=$(cat "/tmp/build-results/${host}.status" 2>/dev/null || echo "unknown")
+            elapsed=$(cat "/tmp/build-results/${host}.time" 2>/dev/null || echo "?")
+            if [ "$status" = "ok" ]; then
+              echo "  OK  $host  (${elapsed}s)"
+            else
+              echo "  FAIL  $host  (${elapsed}s)"
+            fi
+          done
+          echo "============================================"
+
           if [ -n "$failed" ]; then
             echo "FAILED hosts:$failed"
             exit 1
           else
-            echo "All $host_count hosts built successfully"
+            echo "All $host_count hosts built successfully in ${total_elapsed}s"
           fi
+
+      - name: Push build results to binary cache
+        if: always()
+        run: |
+          echo "Pushing successful build results to binary cache..."
+          pushed=0
+          push_failed=0
+
+          for link in /tmp/build-results/*.link; do
+            [ -e "$link" ] || continue
+            host=$(basename "$link" .link)
+            store_path=$(readlink -f "$link")
+            echo "::group::Push $host ($store_path)"
+            if nix copy --to ssh://nix-builder@nas-01.lan "$store_path" 2>&1; then
+              echo "OK pushed $host to cache"
+              pushed=$((pushed + 1))
+            else
+              echo "WARNING: failed to push $host to cache (non-fatal)"
+              push_failed=$((push_failed + 1))
+            fi
+            echo "::endgroup::"
+          done
+
+          echo ""
+          echo "Cache push: $pushed succeeded, $push_failed failed"

@@ -21,6 +21,7 @@ in {
     ../../../modules/node-exporter
     ../../../modules/nfs
     inputs.nix-builder-config.nixosModules.coordinator
+    inputs.nix-builder-config.nixosModules.cache-pusher
     ../../../modules/incus
     ../../../modules/incus-cluster
     ../../../modules/systemd-network
@@ -158,6 +159,12 @@ in {
         supportedFeatures = ["nixos-test" "benchmark" "big-parallel" "kvm"];
       }
     ];
+  };
+
+  # Push all locally-built paths to the Harmonia cache on nas-01
+  services.nix-builder.cache-pusher = {
+    enable = true;
+    sshKeyPath = config.age.secrets."nix-builder-ssh-key".path;
   };
 
   # Cache client already enabled via flake-modules/hosts.nix with defaults
