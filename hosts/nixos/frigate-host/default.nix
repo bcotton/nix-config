@@ -103,6 +103,16 @@ in {
   #   enableSSHSupport = true;
   # };
 
+  # frigate-host is on VLAN 20 which takes ~90s for the default route to
+  # appear at boot. The upstream tailscaled-autoconnect service only waits
+  # for tailscaled.service, not for the network to be routable, so it times
+  # out before tailscale can reach the control plane.
+  systemd.services.tailscaled-autoconnect = {
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    serviceConfig.TimeoutStartSec = "180s";
+  };
+
   services.clubcotton = {
     alloy-logs.enable = true;
 
