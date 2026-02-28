@@ -644,7 +644,43 @@
       kubectl
       opentofu
 
-      inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default
+      # Override bun to 1.3.10 for opencode build (nixpkgs has 1.3.9, opencode 1.2.15+ needs ^1.3.10)
+      # Also patch missing .github/TEAM_MEMBERS (upstream nix source filtering excludes .github/)
+      # Remove these overrides when nixpkgs updates bun to >= 1.3.10 and upstream fixes source filtering
+      ((inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
+          bun = unstablePkgs.bun.overrideAttrs (finalAttrs: prev: {
+            version = "1.3.10";
+            passthru =
+              prev.passthru
+              // {
+                sources = {
+                  "aarch64-darwin" = unstablePkgs.fetchurl {
+                    url = "https://github.com/oven-sh/bun/releases/download/bun-v${finalAttrs.version}/bun-darwin-aarch64.zip";
+                    hash = "sha256-ggNOh8nZtDmOphmu4u7V0qaMgVfppq4tEFLYTVM8zY0=";
+                  };
+                  "aarch64-linux" = unstablePkgs.fetchurl {
+                    url = "https://github.com/oven-sh/bun/releases/download/bun-v${finalAttrs.version}/bun-linux-aarch64.zip";
+                    hash = "sha256-+l7LJcr6jo9ch6D4M3GdRt0K8KhseDfYBlMSEtVWNtM=";
+                  };
+                  "x86_64-darwin" = unstablePkgs.fetchurl {
+                    url = "https://github.com/oven-sh/bun/releases/download/bun-v${finalAttrs.version}/bun-darwin-x64-baseline.zip";
+                    hash = "sha256-+WhsTk52DbTN53oPH60F5VJki5ycv6T3/Jp+wmufMmc=";
+                  };
+                  "x86_64-linux" = unstablePkgs.fetchurl {
+                    url = "https://github.com/oven-sh/bun/releases/download/bun-v${finalAttrs.version}/bun-linux-x64.zip";
+                    hash = "sha256-9XvAGH45Yj3nFro6OJ/aVIay175xMamAulTce3M9Lgg=";
+                  };
+                };
+              };
+          });
+        })
+        .overrideAttrs {
+          # Upstream nix source filtering excludes .github/ but build script reads .github/TEAM_MEMBERS
+          preBuild = ''
+            mkdir -p .github
+            touch .github/TEAM_MEMBERS
+          '';
+        })
       # Build beads locally with Go 1.26 - nixpkgs Go 1.25.5 is too old for dolthub/driver
       (let
         buildGoModule126 = unstablePkgs.buildGoModule.override {go = unstablePkgs.go_1_26;};
