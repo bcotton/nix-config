@@ -650,6 +650,7 @@
       ((inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.default.override {
           bun = unstablePkgs.bun.overrideAttrs (finalAttrs: prev: {
             version = "1.3.10";
+            __intentionallyOverridingVersion = true;
             passthru =
               prev.passthru
               // {
