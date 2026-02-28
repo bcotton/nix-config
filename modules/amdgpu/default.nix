@@ -27,117 +27,132 @@ with lib; let
     fi
 
     # Extract metrics per device using jq
+    # HELP/TYPE headers are emitted once; device loop emits only data points
     echo "$JSON" | $JQ -r '
-      .devices[] |
-      .Info as $info |
-      .Sensors as $sensors |
-      .VRAM as $vram |
-      .gpu_activity as $activity |
-      .gpu_metrics as $gm |
+      # Helper to extract labels per device
+      def labels: (.Info.DeviceName // "unknown") as $name | (.Info.PCI // "unknown") as $pci | {$name, $pci};
 
-      # Labels
-      ($info.DeviceName // "unknown") as $name |
-      ($info.PCI // "unknown") as $pci |
-
-      # Temperature metrics
+      # Temperature
       "# HELP amdgpu_temperature_celsius GPU temperature in degrees Celsius.",
       "# TYPE amdgpu_temperature_celsius gauge",
-      (if $sensors["Edge Temperature"].value then
-        "amdgpu_temperature_celsius{device=\"\($pci)\",name=\"\($name)\",sensor=\"edge\"} \($sensors["Edge Temperature"].value)"
-      else empty end),
-      (if $sensors["Junction Temperature"].value then
-        "amdgpu_temperature_celsius{device=\"\($pci)\",name=\"\($name)\",sensor=\"junction\"} \($sensors["Junction Temperature"].value)"
-      else empty end),
-      (if $sensors["Memory Temperature"].value then
-        "amdgpu_temperature_celsius{device=\"\($pci)\",name=\"\($name)\",sensor=\"memory\"} \($sensors["Memory Temperature"].value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors["Edge Temperature"].value then
+          "amdgpu_temperature_celsius{device=\"\($l.pci)\",name=\"\($l.name)\",sensor=\"edge\"} \(.Sensors["Edge Temperature"].value)"
+        else empty end),
+        (if .Sensors["Junction Temperature"].value then
+          "amdgpu_temperature_celsius{device=\"\($l.pci)\",name=\"\($l.name)\",sensor=\"junction\"} \(.Sensors["Junction Temperature"].value)"
+        else empty end),
+        (if .Sensors["Memory Temperature"].value then
+          "amdgpu_temperature_celsius{device=\"\($l.pci)\",name=\"\($l.name)\",sensor=\"memory\"} \(.Sensors["Memory Temperature"].value)"
+        else empty end)
+      ),
 
-      # Power metrics
+      # Power
       "# HELP amdgpu_power_watts GPU power draw in watts.",
       "# TYPE amdgpu_power_watts gauge",
-      (if $sensors["Average Power"].value then
-        "amdgpu_power_watts{device=\"\($pci)\",name=\"\($name)\"} \($sensors["Average Power"].value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors["Average Power"].value then
+          "amdgpu_power_watts{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Sensors["Average Power"].value)"
+        else empty end)
+      ),
 
       # Power cap
       "# HELP amdgpu_power_cap_watts GPU power cap in watts.",
       "# TYPE amdgpu_power_cap_watts gauge",
-      (if $info["Power Cap"].current then
-        "amdgpu_power_cap_watts{device=\"\($pci)\",name=\"\($name)\"} \($info["Power Cap"].current)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Info["Power Cap"].current then
+          "amdgpu_power_cap_watts{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Info["Power Cap"].current)"
+        else empty end)
+      ),
 
       # Fan speed
       "# HELP amdgpu_fan_rpm GPU fan speed in RPM.",
       "# TYPE amdgpu_fan_rpm gauge",
-      (if $sensors.Fan.value then
-        "amdgpu_fan_rpm{device=\"\($pci)\",name=\"\($name)\"} \($sensors.Fan.value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors.Fan.value then
+          "amdgpu_fan_rpm{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Sensors.Fan.value)"
+        else empty end)
+      ),
       "# HELP amdgpu_fan_max_rpm GPU maximum fan speed in RPM.",
       "# TYPE amdgpu_fan_max_rpm gauge",
-      (if $sensors["Fan Max"].value then
-        "amdgpu_fan_max_rpm{device=\"\($pci)\",name=\"\($name)\"} \($sensors["Fan Max"].value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors["Fan Max"].value then
+          "amdgpu_fan_max_rpm{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Sensors["Fan Max"].value)"
+        else empty end)
+      ),
 
       # Clock speeds
       "# HELP amdgpu_clock_mhz GPU clock speed in MHz.",
       "# TYPE amdgpu_clock_mhz gauge",
-      (if $sensors.GFX_SCLK.value then
-        "amdgpu_clock_mhz{device=\"\($pci)\",name=\"\($name)\",clock=\"gfx\"} \($sensors.GFX_SCLK.value)"
-      else empty end),
-      (if $sensors.GFX_MCLK.value then
-        "amdgpu_clock_mhz{device=\"\($pci)\",name=\"\($name)\",clock=\"mem\"} \($sensors.GFX_MCLK.value)"
-      else empty end),
-      (if $sensors.FCLK.value then
-        "amdgpu_clock_mhz{device=\"\($pci)\",name=\"\($name)\",clock=\"fabric\"} \($sensors.FCLK.value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors.GFX_SCLK.value then
+          "amdgpu_clock_mhz{device=\"\($l.pci)\",name=\"\($l.name)\",clock=\"gfx\"} \(.Sensors.GFX_SCLK.value)"
+        else empty end),
+        (if .Sensors.GFX_MCLK.value then
+          "amdgpu_clock_mhz{device=\"\($l.pci)\",name=\"\($l.name)\",clock=\"mem\"} \(.Sensors.GFX_MCLK.value)"
+        else empty end),
+        (if .Sensors.FCLK.value then
+          "amdgpu_clock_mhz{device=\"\($l.pci)\",name=\"\($l.name)\",clock=\"fabric\"} \(.Sensors.FCLK.value)"
+        else empty end)
+      ),
 
       # GPU activity
       "# HELP amdgpu_gpu_busy_percent GPU utilization percentage.",
       "# TYPE amdgpu_gpu_busy_percent gauge",
-      (if $activity.GFX.value != null then
-        "amdgpu_gpu_busy_percent{device=\"\($pci)\",name=\"\($name)\",engine=\"gfx\"} \($activity.GFX.value)"
-      else empty end),
-      (if $activity.Memory.value != null then
-        "amdgpu_gpu_busy_percent{device=\"\($pci)\",name=\"\($name)\",engine=\"memory\"} \($activity.Memory.value)"
-      else empty end),
-      (if $activity.MediaEngine.value != null then
-        "amdgpu_gpu_busy_percent{device=\"\($pci)\",name=\"\($name)\",engine=\"media\"} \($activity.MediaEngine.value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .gpu_activity.GFX.value != null then
+          "amdgpu_gpu_busy_percent{device=\"\($l.pci)\",name=\"\($l.name)\",engine=\"gfx\"} \(.gpu_activity.GFX.value)"
+        else empty end),
+        (if .gpu_activity.Memory.value != null then
+          "amdgpu_gpu_busy_percent{device=\"\($l.pci)\",name=\"\($l.name)\",engine=\"memory\"} \(.gpu_activity.Memory.value)"
+        else empty end),
+        (if .gpu_activity.MediaEngine.value != null then
+          "amdgpu_gpu_busy_percent{device=\"\($l.pci)\",name=\"\($l.name)\",engine=\"media\"} \(.gpu_activity.MediaEngine.value)"
+        else empty end)
+      ),
 
       # VRAM usage
       "# HELP amdgpu_vram_bytes GPU VRAM in bytes.",
       "# TYPE amdgpu_vram_bytes gauge",
-      (if $vram["Total VRAM"].value then
-        "amdgpu_vram_bytes{device=\"\($pci)\",name=\"\($name)\",type=\"total\"} \($vram["Total VRAM"].value * 1048576)"
-      else empty end),
-      (if $vram["Total VRAM Usage"].value then
-        "amdgpu_vram_bytes{device=\"\($pci)\",name=\"\($name)\",type=\"used\"} \($vram["Total VRAM Usage"].value * 1048576)"
-      else empty end),
-      (if $vram["Total GTT"].value then
-        "amdgpu_vram_bytes{device=\"\($pci)\",name=\"\($name)\",type=\"gtt_total\"} \($vram["Total GTT"].value * 1048576)"
-      else empty end),
-      (if $vram["Total GTT Usage"].value then
-        "amdgpu_vram_bytes{device=\"\($pci)\",name=\"\($name)\",type=\"gtt_used\"} \($vram["Total GTT Usage"].value * 1048576)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .VRAM["Total VRAM"].value then
+          "amdgpu_vram_bytes{device=\"\($l.pci)\",name=\"\($l.name)\",type=\"total\"} \(.VRAM["Total VRAM"].value * 1048576)"
+        else empty end),
+        (if .VRAM["Total VRAM Usage"].value then
+          "amdgpu_vram_bytes{device=\"\($l.pci)\",name=\"\($l.name)\",type=\"used\"} \(.VRAM["Total VRAM Usage"].value * 1048576)"
+        else empty end),
+        (if .VRAM["Total GTT"].value then
+          "amdgpu_vram_bytes{device=\"\($l.pci)\",name=\"\($l.name)\",type=\"gtt_total\"} \(.VRAM["Total GTT"].value * 1048576)"
+        else empty end),
+        (if .VRAM["Total GTT Usage"].value then
+          "amdgpu_vram_bytes{device=\"\($l.pci)\",name=\"\($l.name)\",type=\"gtt_used\"} \(.VRAM["Total GTT Usage"].value * 1048576)"
+        else empty end)
+      ),
 
       # Voltage
       "# HELP amdgpu_voltage_mv GPU voltage in millivolts.",
       "# TYPE amdgpu_voltage_mv gauge",
-      (if $sensors.VDDGFX.value then
-        "amdgpu_voltage_mv{device=\"\($pci)\",name=\"\($name)\",rail=\"gfx\"} \($sensors.VDDGFX.value)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors.VDDGFX.value then
+          "amdgpu_voltage_mv{device=\"\($l.pci)\",name=\"\($l.name)\",rail=\"gfx\"} \(.Sensors.VDDGFX.value)"
+        else empty end)
+      ),
 
       # PCIe link
       "# HELP amdgpu_pcie_link_speed_gen Current PCIe link generation.",
       "# TYPE amdgpu_pcie_link_speed_gen gauge",
-      (if $sensors["PCIe Link Speed"].gen then
-        "amdgpu_pcie_link_speed_gen{device=\"\($pci)\",name=\"\($name)\"} \($sensors["PCIe Link Speed"].gen)"
-      else empty end),
+      (.devices[] | labels as $l |
+        (if .Sensors["PCIe Link Speed"].gen then
+          "amdgpu_pcie_link_speed_gen{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Sensors["PCIe Link Speed"].gen)"
+        else empty end)
+      ),
       "# HELP amdgpu_pcie_link_width Current PCIe link width.",
       "# TYPE amdgpu_pcie_link_width gauge",
-      (if $sensors["PCIe Link Speed"].width then
-        "amdgpu_pcie_link_width{device=\"\($pci)\",name=\"\($name)\"} \($sensors["PCIe Link Speed"].width)"
-      else empty end)
+      (.devices[] | labels as $l |
+        (if .Sensors["PCIe Link Speed"].width then
+          "amdgpu_pcie_link_width{device=\"\($l.pci)\",name=\"\($l.name)\"} \(.Sensors["PCIe Link Speed"].width)"
+        else empty end)
+      )
     ' > "$TMP_FILE"
 
     chmod 644 "$TMP_FILE"
