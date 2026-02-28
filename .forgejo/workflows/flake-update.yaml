@@ -9,9 +9,15 @@ jobs:
   update-flake:
     runs-on: ubuntu-latest
     container:
-      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:fe32792
+      image: forgejo.bobtail-clownfish.ts.net/bcotton/nix-ci-runner:a0ddfa0
       options: --user root
     steps:
+      - name: Setup SSH key for distributed builds
+        run: |
+          mkdir -p /run/secrets
+          echo "${{ secrets.NIX_BUILDER_KEY }}" > /run/secrets/nix-builder-key
+          chmod 600 /run/secrets/nix-builder-key
+
       - name: Setup git
         run: |
           git config --global user.email "actions@forgejo.local"
