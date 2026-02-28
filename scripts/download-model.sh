@@ -92,6 +92,11 @@ fi
 echo "Downloading model files..."
 ssh "root@${HOST}" "hf download '${REPO_ID}' --include '${INCLUDE}' --local-dir '${MODEL_DIR}'"
 
+# Flatten any subdirectories — some repos (e.g., unsloth) nest GGUFs in quant subdirs
+echo ""
+echo "Moving any nested .gguf files to ${MODEL_DIR}..."
+ssh "root@${HOST}" "find '${MODEL_DIR}' -mindepth 2 -name '*.gguf' -exec mv -v {} '${MODEL_DIR}/' \\; && find '${MODEL_DIR}' -mindepth 1 -maxdepth 1 -type d -empty -delete"
+
 echo ""
 echo "Download complete. Listing model files..."
 echo ""

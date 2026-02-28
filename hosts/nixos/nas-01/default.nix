@@ -154,6 +154,7 @@ in {
     nix-cache-proxy.enable = true;
     nut-client.enable = true;
     llama-swap.enable = true;
+    ollama.enable = true;
     open-webui.enable = true;
     paperless.enable = true;
     pinchflat.enable = true;
@@ -184,7 +185,7 @@ in {
 
   environment.systemPackages = with pkgs; [
     beets
-    (llama-cpp.override {vulkanSupport = true;})
+    (unstablePkgs.llama-cpp.override {vulkanSupport = true;})
     vulkan-tools
     pciutils
     amdgpu_top
@@ -432,12 +433,40 @@ in {
     };
   };
 
+  services.clubcotton.ollama = {
+    acceleration = "rocm";
+    models = "/models/ollama";
+    loadModels = ["llama3.1:70b" "llama3.2:3b"];
+    environmentVariables = {
+      OLLAMA_FLASH_ATTENTION = "1";
+    };
+  };
+
+  # Create /models/ollama before ollama.service namespace setup (ReadWritePaths requires it to exist).
+  systemd.services.ollama-models-dir = {
+    description = "Create Ollama models directory";
+    before = ["ollama.service"];
+    requiredBy = ["ollama.service"];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      ${pkgs.coreutils}/bin/mkdir -p /models/ollama
+      ${pkgs.coreutils}/bin/chmod 1777 /models/ollama
+    '';
+  };
+
   services.clubcotton.llama-swap = {
     port = 8090;
     modelsDir = "/models";
-    llamaCppPackage = pkgs.llama-cpp.override {vulkanSupport = true;};
+    llamaCppPackage = unstablePkgs.llama-cpp.override {vulkanSupport = true;};
+    defaultModelArgs = "-ngl 99 --split-mode layer --flash-attn on --no-webui";
     settings = {
-      healthCheckTimeout = 120;
+      healthCheckTimeout = 300;
+      models = {
+        "glm-5-ud-iq2_xxs" = {
+          cmd = "${lib.getExe' (unstablePkgs.llama-cpp.override {vulkanSupport = true;}) "llama-server"} --port \${PORT} -m /models/GLM-5-UD-IQ2_XXS-00001-of-00006.gguf -ngl 16 --split-mode layer --flash-attn on --no-webui";
+          ttl = 600;
+        };
+      };
     };
   };
 
@@ -675,6 +704,7 @@ in {
   systemd.tmpfiles.rules = [
     "d /var/lib/paperless/consume/bcotton 0775 bcotton lp - -"
     "d /var/lib/paperless/consume/tomcotton 0775 tomcotton lp - -"
+    "d /models/ollama 0755 ollama ollama - -"
   ];
 
   # Ensure users are in the lp group so cups can write files they can read
