@@ -177,7 +177,7 @@ in {
 
   environment.systemPackages = with pkgs; [
     beets
-    (llama-cpp.override {vulkanSupport = true;})
+    (unstablePkgs.llama-cpp.override {vulkanSupport = true;})
     vulkan-tools
     pciutils
     amdgpu_top
@@ -449,10 +449,16 @@ in {
   services.clubcotton.llama-swap = {
     port = 8090;
     modelsDir = "/models";
-    llamaCppPackage = pkgs.llama-cpp.override {vulkanSupport = true;};
+    llamaCppPackage = unstablePkgs.llama-cpp.override {vulkanSupport = true;};
     defaultModelArgs = "-ngl 99 --split-mode layer --flash-attn on --no-webui";
     settings = {
-      healthCheckTimeout = 120;
+      healthCheckTimeout = 300;
+      models = {
+        "glm-5-ud-iq2_xxs" = {
+          cmd = "${lib.getExe' (unstablePkgs.llama-cpp.override {vulkanSupport = true;}) "llama-server"} --port \${PORT} -m /models/GLM-5-UD-IQ2_XXS-00001-of-00006.gguf -ngl 16 --split-mode layer --flash-attn on --no-webui";
+          ttl = 600;
+        };
+      };
     };
   };
 
